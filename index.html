@@ -294,6 +294,11 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .prog-link>svg{color:var(--text-muted);flex:none}
 .prog-link.spento{opacity:.45;pointer-events:none}
 .prog-nota{font-size:11.5px;color:var(--text-muted);margin:0}
+#lnkVeloce{opacity:.6;pointer-events:none}
+.chip-arr{font-style:normal;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;background:var(--sf2);color:var(--text-muted);border:1px solid var(--border)}
+.pi.gr{background:var(--grw2);color:var(--gr2)}
+.shot-zoom{display:block;position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--border);aspect-ratio:2/1;background:#1f2937;cursor:zoom-in}
+.shot-zoom img{position:absolute;top:50%;left:50%;width:200%;max-width:none!important;transform:translate(-50%,-50%);border:0!important;border-radius:0!important}
 </style>
 </head>
 <body>
@@ -1500,13 +1505,14 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
  var N8='https://n8n.srv1030489.hstgr.cloud/webhook/';
  function $(s,c){return (c||document).querySelector(s);}
- var IC={lay:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v14M15 5v14"/>',el:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',ext:'<path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>'};
+ var IC={lay:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v14M15 5v14"/>',el:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',vel:'<path d="M4 19 9 6l5 9 3-5 3 9z"/>',ext:'<path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>'};
  function ico(k,n){n=n||15;return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+IC[k]+'</svg>';}
  function via(){
   var pv=$('#pvgisMapResult'),cPv=pv&&pv.closest('.pc');if(!cPv)return setTimeout(via,150);
   var c=document.createElement('section');c.className='pc';c.id='cardProgetto';
   c.innerHTML='<div class="ph"><span class="pi am">'+ico('lay')+'</span><div><b>Progetto impianto</b><small>Layout del tetto e progettazione elettrica</small></div><span class="px"></span></div>'
-   +'<div class="pb"><a class="prog-link" id="lnkLayout" target="_blank" rel="noopener"><span class="pi">'+ico('lay')+'</span><span><b>Layout del tetto</b><small>Configura impianto: falde, moduli, potenza installabile</small></span>'+ico('ext',14)+'</a>'
+   +'<div class="pb"><a class="prog-link arr" id="lnkVeloce" aria-disabled="true" title="In arrivo: contorno delle falde come nel configuratore WhatsApp"><span class="pi gr">'+ico('vel')+'</span><span><b>Layout veloce <i class="chip-arr">in arrivo</i></b><small>Contorna le falde e ottieni subito lo schema dei moduli</small></span>'+ico('ext',14)+'</a>'
+   +'<a class="prog-link" id="lnkLayout" target="_blank" rel="noopener"><span class="pi">'+ico('lay')+'</span><span><b>Layout completo</b><small>Configura impianto: falde, moduli, potenza installabile</small></span>'+ico('ext',14)+'</a>'
    +'<a class="prog-link" id="lnkElettrica" target="_blank" rel="noopener"><span class="pi am">'+ico('el')+'</span><span><b>Progettazione elettrica</b><small>Stringhe, inverter e scheda di progetto</small></span>'+ico('ext',14)+'</a>'
    +'<p class="prog-nota" id="progNota"></p></div>';
   cPv.after(c);
@@ -1517,6 +1523,12 @@ document.addEventListener('DOMContentLoaded', function(){
    if(ok){lay.href=N8+'configura-impianto?preventivo_id='+encodeURIComponent(pid);ele.href=N8+'progettazione-elettrica?preventivo_id='+encodeURIComponent(pid);}else{lay.removeAttribute('href');ele.removeAttribute('href');}
    nota.textContent=ok?'':(!pid?'Si accendono quando il preventivo è salvato e ha la posizione del tetto.':'Manca la posizione del tetto: centra la mappa e premi «Salva posizione tetto».');nota.style.display=ok?'none':'';}
   agg();setInterval(agg,700);
+  /* «Vista satellite»: interruttore come gli altri del portale */
+  var ms=$('#mapSatellite');if(ms&&!ms.dataset.sw){ms.dataset.sw='1';var box=ms.parentNode,lb=$('label[for="mapSatellite"]',box);var l=document.createElement('label');l.className='swl';ms.classList.add('sw-in');ms.removeAttribute('style');l.appendChild(ms);l.appendChild(document.createTextNode('Vista satellite'));if(lb)lb.remove();box.removeAttribute('style');box.appendChild(l);}
+  /* screenshot salvato: ingrandito sul tetto (la croce è al centro); un clic lo apre intero */
+  var sp=$('#screenshotPreview'),si=$('#screenshotImg');if(sp&&si&&!sp.dataset.zoom){sp.dataset.zoom='1';var t=sp.firstElementChild;if(t)t.textContent='Screenshot salvato · ingrandito sul tetto';
+   var w=document.createElement('a');w.className='shot-zoom';w.target='_blank';w.rel='noopener';w.title='Apri lo screenshot intero';si.parentNode.insertBefore(w,si);w.appendChild(si);si.removeAttribute('style');
+   var ag=function(){w.href=si.src||'#';};si.addEventListener('load',ag);ag();}
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,0);});else setTimeout(via,0);
 })();
