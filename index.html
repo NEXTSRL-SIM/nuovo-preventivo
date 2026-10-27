@@ -285,6 +285,16 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .pc.az-larga{margin-top:16px}
 @media (max-width:900px){.g2.az-pari>.col>.pc{order:0!important}}
 </style>
+<style id="progetto-css">
+#btnConfiguraImpianto{display:none!important}
+#cardProgetto .pb{display:flex;flex-direction:column;gap:10px;padding-top:14px}
+.prog-link{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:12px;padding:11px 13px;background:var(--surface);color:var(--text)!important;text-decoration:none!important;transition:border-color .15s,box-shadow .15s}
+.prog-link:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--acw)}
+.prog-link>span:nth-child(2){flex:1;min-width:0}.prog-link b{display:block;font-size:13px;font-weight:700}.prog-link small{display:block;font-size:11.5px;color:var(--text-muted);margin-top:1px}
+.prog-link>svg{color:var(--text-muted);flex:none}
+.prog-link.spento{opacity:.45;pointer-events:none}
+.prog-nota{font-size:11.5px;color:var(--text-muted);margin:0}
+</style>
 </head>
 <body>
 <div class="container">
@@ -1479,6 +1489,34 @@ document.addEventListener('DOMContentLoaded', function(){
   /* un lead o un preventivo caricati oggi sono privati: i dati azienda non sono ancora salvati */
   ['existing_lead','prevSelect'].forEach(function(id){var s=$('#'+id);if(s)s.addEventListener('change',function(){if(TIPO!=='privato')tipo('privato');});});
   window.__tipoContatto=function(){return TIPO;};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,0);});else setTimeout(via,0);
+})();
+</script>
+<script id="progetto-js">
+/* PORTALE NEXT-110: scheda «Progetto impianto» in Mappa tetto, sotto Analisi PVGIS (Sante 27/10).
+   I due collegamenti ci sono sempre quando il preventivo è salvato e ha la posizione del tetto, senza risalvare la mappa.
+   Sostituisce il tasto «Configura Impianto» che compariva solo dopo «Salva posizione tetto». */
+(function(){
+ var N8='https://n8n.srv1030489.hstgr.cloud/webhook/';
+ function $(s,c){return (c||document).querySelector(s);}
+ var IC={lay:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M9 5v14M15 5v14"/>',el:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',ext:'<path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>'};
+ function ico(k,n){n=n||15;return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+IC[k]+'</svg>';}
+ function via(){
+  var pv=$('#pvgisMapResult'),cPv=pv&&pv.closest('.pc');if(!cPv)return setTimeout(via,150);
+  var c=document.createElement('section');c.className='pc';c.id='cardProgetto';
+  c.innerHTML='<div class="ph"><span class="pi am">'+ico('lay')+'</span><div><b>Progetto impianto</b><small>Layout del tetto e progettazione elettrica</small></div><span class="px"></span></div>'
+   +'<div class="pb"><a class="prog-link" id="lnkLayout" target="_blank" rel="noopener"><span class="pi">'+ico('lay')+'</span><span><b>Layout del tetto</b><small>Configura impianto: falde, moduli, potenza installabile</small></span>'+ico('ext',14)+'</a>'
+   +'<a class="prog-link" id="lnkElettrica" target="_blank" rel="noopener"><span class="pi am">'+ico('el')+'</span><span><b>Progettazione elettrica</b><small>Stringhe, inverter e scheda di progetto</small></span>'+ico('ext',14)+'</a>'
+   +'<p class="prog-nota" id="progNota"></p></div>';
+  cPv.after(c);
+  var lay=$('#lnkLayout',c),ele=$('#lnkElettrica',c),nota=$('#progNota',c),ultimo='';
+  function agg(){var pid=($('#last_saved_id')||{}).value||($('#existing_prev_id')||{}).value||'';
+   var pos=!!(($('#map_lat')||{}).value&&($('#map_lon')||{}).value);var ok=!!pid&&pos,k=pid+'|'+pos;if(k===ultimo)return;ultimo=k;
+   [lay,ele].forEach(function(a){a.classList.toggle('spento',!ok);if(ok)a.removeAttribute('aria-disabled');else a.setAttribute('aria-disabled','true');});
+   if(ok){lay.href=N8+'configura-impianto?preventivo_id='+encodeURIComponent(pid);ele.href=N8+'progettazione-elettrica?preventivo_id='+encodeURIComponent(pid);}else{lay.removeAttribute('href');ele.removeAttribute('href');}
+   nota.textContent=ok?'':(!pid?'Si accendono quando il preventivo è salvato e ha la posizione del tetto.':'Manca la posizione del tetto: centra la mappa e premi «Salva posizione tetto».');nota.style.display=ok?'none':'';}
+  agg();setInterval(agg,700);
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,0);});else setTimeout(via,0);
 })();
