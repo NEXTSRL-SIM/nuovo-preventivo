@@ -101,7 +101,18 @@
     #status.success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;display:block}
     #status.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;display:block}
     #status.loading{background:var(--accent-bg);color:var(--accent);border:1px solid #c4b5fd;display:block}
-  </style>
+  /* PORTALE NEXT-110 (27/10): contratto di manutenzione a quattro riquadri, come il mockup */
+#acc-manut .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+#acc-manut .mopt{position:relative;display:flex;gap:10px;align-items:flex-start;border:1px solid var(--ln,#E2E7EE);border-radius:10px;padding:12px 14px;cursor:pointer;margin:0;font-weight:400}
+#acc-manut .mopt input{position:absolute;opacity:0;pointer-events:none}
+#acc-manut .mopt .mrd{width:15px;height:15px;border:1.5px solid var(--ink3,#6B7686);border-radius:50%;margin-top:2px;flex:none;box-sizing:border-box}
+#acc-manut .mopt b{display:block;font-size:13.5px;color:var(--ink,#111827)}
+#acc-manut .mopt small{display:block;font-size:12px;color:var(--ink3,#6B7686);margin-top:3px}
+#acc-manut .mopt:has(input:checked){border-color:var(--ac,#0891B2);background:var(--acw,#E0F4F9)}
+#acc-manut .mopt:has(input:checked) .mrd{border:4.5px solid var(--ac,#0891B2)}
+#acc-manut .mopt:has(input:focus-visible){outline:2px solid var(--ac,#0891B2);outline-offset:2px}
+@media (max-width:520px){#acc-manut .mgrid{grid-template-columns:1fr}}
+</style>
 <style id="portale">
 /* PORTALE NEXT-110: grafica del portale sopra la pagina di prima */
 :root{--bg:#F2F4F7;--surface:#fff;--border:#E2E7EE;--text:#111827;--text-dim:#3F4A5A;--text-muted:#6B7686;--text-hint:#94A3B8;--accent:#0891B2;--accent-bg:rgba(8,145,178,.07);--input-bg:#fff;--teal:#0891B2;--teal-bg:rgba(8,145,178,.07);--teal-border:#BFE6EF;--sf:#fff;--sf2:#F8FAFC;--ln:#E2E7EE;--ink:#111827;--ink2:#3F4A5A;--ink3:#6B7686;--ac:#0891B2;--acw:#ECFEFF;--gr:#15803D;--grw:#DCFCE7;--am:#B45309;--amw:#FEF3C7}
@@ -465,14 +476,12 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
   </div>
   <div class="accordion-body" id="acc-manut-body">
     <p class="muted" style="margin-bottom:12px">Seleziona o inserisci il costo annuo di manutenzione. Comparirà nella tabella analisi economica.</p>
-    <fieldset><legend>Tipo contratto</legend>
-      <div class="options">
-        <label class="opt"><input type="radio" name="manut_tipo" value="nessuno" checked onchange="setManutCosto(0)" /><span>Nessuno (in garanzia)</span></label>
-        <label class="opt"><input type="radio" name="manut_tipo" value="silver" onchange="setManutCosto(150)" /><span>Silver — 6 anni · €150/anno</span></label>
-        <label class="opt"><input type="radio" name="manut_tipo" value="gold" onchange="setManutCosto(250)" /><span>Gold — 12 anni · €250/anno</span></label>
-        <label class="opt"><input type="radio" name="manut_tipo" value="custom" onchange="setManutCosto(null)" /><span>Personalizzato</span></label>
-      </div>
-    </fieldset>
+    <div class="mgrid" role="radiogroup" aria-label="Tipo contratto">
+      <label class="mopt"><input type="radio" name="manut_tipo" value="nessuno" checked onchange="setManutCosto(0)" /><span class="mrd"></span><span><b>Nessuno</b><small>in garanzia</small></span></label>
+      <label class="mopt"><input type="radio" name="manut_tipo" value="silver" onchange="setManutCosto(150)" /><span class="mrd"></span><span><b>Silver</b><small>6 anni · € 150/anno</small></span></label>
+      <label class="mopt"><input type="radio" name="manut_tipo" value="gold" onchange="setManutCosto(250)" /><span class="mrd"></span><span><b>Gold</b><small>12 anni · € 250/anno</small></span></label>
+      <label class="mopt"><input type="radio" name="manut_tipo" value="custom" onchange="setManutCosto(null)" /><span class="mrd"></span><span><b>Personalizzato</b><small>costo a scelta</small></span></label>
+    </div>
     <div class="param-row" style="margin-top:12px"><label for="manut_eur">Costo manutenzione annua</label><input type="number" id="manut_eur" name="manut_eur" step="10" min="0" value="0" style="max-width:120px" /><span class="param-unit">€/anno</span></div>
     <label style="margin-top:12px">Note manutenzione</label>
     <textarea name="note_manut" rows="2" placeholder="Dettagli contratto, incluso/escluso..."></textarea>
