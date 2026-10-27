@@ -233,6 +233,24 @@ body>.container>.card{background:transparent!important;border:0!important;paddin
 .invia-card>div:first-child span{color:var(--text)!important}.invia-card>div:first-child span+span{color:var(--text-muted)!important}
 .invia-card>div:first-child svg{stroke:var(--accent)!important;background:var(--acw);border-radius:8px;padding:6px;width:28px;height:28px;box-sizing:border-box}
 .invia-card>div:nth-child(2){background:var(--surface)!important}
+#prevBox{border:0!important;background:transparent!important;padding:0!important;margin:16px 0 4px!important}
+#prevBox>div:first-child{font-size:10px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)!important;font-weight:800!important;margin-bottom:10px!important}
+.scelte{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;margin:0!important}
+.scelte .opt{display:flex!important;align-items:flex-start;gap:11px!important;border:1.5px solid var(--border)!important;border-radius:12px!important;padding:12px 13px!important;background:var(--surface)!important;color:var(--text)!important;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
+.scelte .opt:hover{border-color:var(--accent)!important}
+.scelte .opt input{position:absolute;opacity:0;pointer-events:none}
+.scelte .opt .si{width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:var(--sf2);color:var(--text-muted);flex:none;transition:all .15s}
+.scelte .opt b{display:block;font-size:13px;font-weight:700}.scelte .opt small{display:block;font-size:11.5px;color:var(--text-muted);font-weight:500;margin-top:2px;line-height:1.4}
+.scelte .opt .ck{margin-left:auto;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);flex:none;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
+.scelte .opt:has(input:checked){border-color:var(--accent)!important;background:var(--acw)!important;box-shadow:0 0 0 3px var(--acw)}
+.scelte .opt:has(input:checked) .si{background:var(--accent);color:#fff}
+.scelte .opt:has(input:checked) .ck{background:var(--accent);border-color:var(--accent)}
+.scelte .opt:has(input:checked) .ck::after{content:'✓'}
+#prevSelectWrap{margin-top:12px!important}
+#reinviaBox{margin:12px 0 0!important}
+.btn-reinvia{border-radius:999px!important;background:var(--surface)!important;border:1px solid var(--border)!important;color:var(--text-dim)!important;font-weight:700!important}
+.btn-reinvia:hover{border-color:var(--accent)!important;color:var(--accent)!important}
+@media (max-width:700px){.scelte{grid-template-columns:1fr}}
 @media (max-width:900px){.g2,.g2m{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
 </style>
 </head>
@@ -1284,7 +1302,16 @@ document.addEventListener('DOMContentLoaded', function(){
   var ant=el('div','anteprima',ico('pin')+'<span>L\'anteprima del tetto compare appena c\'è l\'indirizzo</span>'); c2.b.appendChild(ant);
   var c3=card('gear','','Impostazione','Chi segue e che tipo di lavoro'); var vs=$('#vendor'); var lv=$('label[for="vendor"]',T); if(lv)lv.remove();
   c3.b.appendChild(riga('Agente *',vs)); $$(':scope>fieldset',T).forEach(function(fs){var r=daFieldset(fs);if(r)c3.b.appendChild(r);});
+
   sposta(L,c1.c,c2.c); sposta(Rr,c3.c); sposta(g,L,Rr); T.insertBefore(g,T.firstChild);
+  /* «Cosa vuoi fare?» a due schede */
+  var pb=$('#prevBox'); if(pb){var po=pb.querySelector('.options'); if(po){po.classList.add('scelte');
+   var D={new_prev:['doc','Nuovo preventivo','Un\'offerta nuova per questo contatto'],edit_prev:['gear','Modifica esistente','Riapri un preventivo già fatto e correggilo']};
+   $$('label.opt',po).forEach(function(l){var r=l.querySelector('input');var d=D[r&&r.value];if(!d)return;var sp=l.querySelector('span');if(sp)sp.remove();
+    l.insertAdjacentHTML('beforeend','<span class="si">'+ico(d[0])+'</span><span><b>'+d[1]+'</b><small>'+d[2]+'</small></span><span class="ck"></span>');});}}
+  /* etichette corte come nel mockup */
+  $$('label.opt span').forEach(function(s){var t=s.textContent.trim();var m={'Detrazione fiscale 50%':'Detrazione 50%','Nessuna agevolazione':'Nessuna'};if(m[t])s.textContent=m[t];});
+
   /* anteprima satellitare dall'indirizzo */
   var TK=null;
   function tk(){ if(TK) return TK; var s=[...document.scripts].map(function(x){return x.textContent;}).join('\n'); var m=s.match(/access_token=(pk\.[A-Za-z0-9_\-]+)'\+'([A-Za-z0-9_\-\.]+)/); if(m) TK=m[1]+m[2]; return TK; }
