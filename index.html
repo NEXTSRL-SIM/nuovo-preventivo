@@ -263,6 +263,28 @@ body>.container>.card{background:transparent!important;border:0!important;paddin
 @media (max-width:700px){.scelte{grid-template-columns:1fr}}
 @media (max-width:900px){.g2,.g2m{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
 </style>
+<style id="azienda-css">
+/* PORTALE NEXT-110: Privato / Azienda */
+.az-sg{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:var(--sf2)}
+.az-sg button{border:0;border-right:1px solid var(--border);background:transparent;padding:6px 12px;font:600 12.5px Manrope,sans-serif;color:var(--text-muted);cursor:pointer}
+.az-sg button:last-child{border-right:0}.az-sg button.on{background:var(--acw);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.az-sg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.az-chip{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--sf2);color:var(--text-muted);border:1px solid var(--border);white-space:nowrap}
+.az-h:empty{display:none}.az-h{margin:4px 0 0!important}
+.az-sede{margin:0 0 4px}
+.row.az3>div:first-child{flex:2}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace!important}
+input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!important}
+.az-tok{color:#16a34a!important}.az-tko{color:#dc2626!important}
+.seg .opt.opt-arr{opacity:.45;cursor:not-allowed}
+#cardAzienda input:disabled,#cardLegale input:disabled{opacity:.7}
+/* azienda: Contatto|Dati azienda e Indirizzo|Legale rappresentante a coppie, alte uguali */
+.g2.az-pari{align-items:stretch}.g2.az-pari>.col{display:contents}
+.g2.az-pari>.col>.pc{display:flex;flex-direction:column}.g2.az-pari>.col>.pc>.pb{flex:1}
+.g2.az-pari>.col:first-child>.pc:nth-child(1){order:1}.g2.az-pari #cardAzienda{order:2}.g2.az-pari>.col:first-child>.pc:nth-child(2){order:3}.g2.az-pari #cardLegale{order:4}
+.pc.az-larga{margin-top:16px}
+@media (max-width:900px){.g2.az-pari>.col>.pc{order:0!important}}
+</style>
 </head>
 <body>
 <div class="container">
@@ -1391,6 +1413,74 @@ document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){pulisci(document.body);try{if(window._map&&window._map.invalidateSize)window._map.invalidateSize();}catch(e){}},1500);
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',via);else via();
+})();
+</script>
+<script id="azienda-js">
+/* PORTALE NEXT-110: Privato / Azienda nel Nuovo preventivo — per ora solo la grafica approvata da Sante (27/10).
+   Con Azienda «Cognome» diventa «Ragione sociale» e si salva come oggi (full_name = ragione sociale); «Nome» si nasconde.
+   Referente, Dati azienda e Legale rappresentante NON hanno name e non partono finché non c'è la tabella aziende
+   (documento claude/preventivo-aziende-il-disegno.md). */
+(function(){
+ function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [].slice.call((c||document).querySelectorAll(s));}
+ function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+ var IC={az:'<path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/>',lr:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
+ function ico(k){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+IC[k]+'</svg>';}
+ function card(k,tit,sub){var c=el('section','pc');c.innerHTML='<div class="ph"><span class="pi vi">'+ico(k)+'</span><div><b>'+tit+'</b><small>'+sub+'</small></div><span class="px"></span></div><div class="pb"></div>';return {c:c,b:$('.pb',c),x:$('.px',c),h:$('.ph',c)};}
+ function f(id,lab,ph,cls,extra){return '<div><label for="'+id+'">'+lab+'</label><input id="'+id+'" type="text" placeholder="'+(ph||'')+'" autocomplete="off"'+(cls?' class="'+cls+'"':'')+(extra||'')+'><p class="muted az-h" id="'+id+'_h"></p></div>';}
+ function via(){
+  var T=$('#tabContatto'),g=T&&$(':scope>.g2',T);if(!g){return setTimeout(via,100);}
+  var L=g.children[0],Rr=g.children[1],c1=L.children[0],c2=L.children[1],c3=Rr.children[0];
+  var form=$('#leadForm')||document.forms[0];
+  var sgT=el('span','az-sg');sgT.id='sgTipo';sgT.setAttribute('role','group');sgT.setAttribute('aria-label','Tipo di contatto');
+  sgT.innerHTML='<button type="button" data-v="privato" class="on">Privato</button><button type="button" data-v="azienda">Azienda</button>';
+  var px=$('.px',c1);px.insertBefore(sgT,px.firstChild);
+  var ln=$('#last_name'),fn=$('#first_name'),lnL=$('label[for="last_name"]'),fnBox=fn.parentNode;
+  var pAz=el('div','row');pAz.id='azRef';pAz.style.display='none';
+  pAz.innerHTML=f('az_referente','Referente','Es. Marco Bianchi')+f('az_ruolo','Ruolo','Es. Ufficio tecnico');
+  ln.closest('.row').after(pAz);
+  var cAz=card('az','Dati azienda','Per contratto e fattura: la sede può essere diversa dall\'impianto');cAz.c.id='cardAzienda';cAz.c.hidden=true;
+  cAz.x.innerHTML='<span class="az-chip" title="Si salveranno quando ci sarà la tabella delle aziende">in arrivo</span>';
+  cAz.b.innerHTML='<div class="row">'+f('az_piva','Partita IVA *','11 cifre','mono',' maxlength="13"')+f('az_cf','Codice fiscale azienda','','mono',' maxlength="16"')+'</div>'
+   +'<div class="section-label">Sede legale</div>'
+   +'<label class="swl az-sede"><input type="checkbox" class="sw-in" id="az_swSede">Uguale all\'indirizzo dell\'impianto</label>'
+   +f('az_via','Via + numero civico *','Es. Viale della Repubblica, 54')
+   +'<div class="row az3">'+f('az_comune','Comune *','')+f('az_cap','CAP','','mono',' maxlength="5"')+f('az_prov','Prov.','','mono',' maxlength="2"')+'</div>'
+   +'<div class="section-label">Fattura elettronica</div>'
+   +'<div class="row">'+f('az_sdi','Codice destinatario SDI','7 caratteri','mono',' maxlength="7"')+f('az_pec','PEC','')+'</div>'
+   +f('az_mailamm','Email amministrazione','amministrazione@azienda.it');
+  var cLr=card('lr','Legale rappresentante','Firma il contratto a nome dell\'azienda');cLr.c.id='cardLegale';cLr.c.hidden=true;
+  cLr.x.innerHTML='<label class="swl"><input type="checkbox" class="sw-in" id="az_swRef">È il referente</label>';
+  cLr.b.innerHTML='<div class="row">'+f('az_lrcog','Cognome *','')+f('az_lrnom','Nome *','')+'</div>'+f('az_lrcf','Codice fiscale *','','mono',' maxlength="16"');
+  Rr.insertBefore(cLr.c,c3);Rr.insertBefore(cAz.c,cLr.c);
+  function pivaOk(p){p=String(p||'').replace(/\s/g,'').replace(/^IT/i,'');if(!/^\d{11}$/.test(p))return false;var t=0;for(var i=0;i<11;i++){var n=+p[i];if(i%2===1){n*=2;if(n>9)n-=9;}t+=n;}return t%10===0;}
+  function esito(id,ok,si,no){var i=$('#'+id),h=$('#'+id+'_h');var v=i.value.trim();i.classList.toggle('az-ko',!!v&&!ok);i.classList.toggle('az-ok',!!v&&ok);h.textContent=!v?'':(ok?si:no);h.className='muted az-h '+(v?(ok?'az-tok':'az-tko'):'');}
+  function controlla(){esito('az_piva',pivaOk($('#az_piva').value),'partita IVA valida','la cifra di controllo non torna: ricontrolla');
+   esito('az_lrcf',/^[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]$/i.test($('#az_lrcf').value.trim()),'forma corretta','non sembra un codice fiscale di persona');
+   var sd=$('#az_sdi');sd.value=sd.value.toUpperCase();esito('az_sdi',/^[A-Z0-9]{7}$/.test(sd.value),'7 caratteri','servono 7 caratteri (0000000 se usa la PEC)');}
+  function copiaRef(){if(!$('#az_swRef').checked)return;var p=$('#az_referente').value.trim().split(/\s+/);$('#az_lrnom').value=(p[0]||'').toUpperCase();$('#az_lrcog').value=p.slice(1).join(' ').toUpperCase();}
+  var SEDE=[['az_via','address'],['az_comune','city'],['az_cap','zip'],['az_prov','province']];
+  function copiaSede(){if(!$('#az_swSede').checked)return;SEDE.forEach(function(x){$('#'+x[0]).value=$('#'+x[1]).value;});}
+  $('#az_swRef').addEventListener('change',function(){$('#az_lrnom').disabled=this.checked;$('#az_lrcog').disabled=this.checked;copiaRef();});
+  $('#az_swSede').addEventListener('change',function(){var on=this.checked;SEDE.forEach(function(x){$('#'+x[0]).disabled=on;});copiaSede();});
+  cAz.b.addEventListener('input',function(e){if(e.target.id==='az_piva'&&!$('#az_cf').dataset.mano)$('#az_cf').value=$('#az_piva').value.replace(/\D/g,'');if(e.target.id==='az_cf')$('#az_cf').dataset.mano='1';controlla();});
+  cLr.b.addEventListener('input',controlla);pAz.addEventListener('input',copiaRef);c2.addEventListener('input',copiaSede);
+  var TIPO='privato';
+  function tipo(v){TIPO=v;var az=v==='azienda';$$('button',sgT).forEach(function(b){b.classList.toggle('on',b.dataset.v===v);});
+   lnL.textContent=az?'Ragione sociale *':'Cognome *';ln.placeholder=az?'Es. SOLARIS IMPIANTI S.R.L.':'Es. ROSSI';
+   fnBox.hidden=az;fn.required=!az;if(az)fn.value='';
+   pAz.style.display=az?'':'none';cAz.c.hidden=!az;cLr.c.hidden=!az;
+   /* privato: Impostazione a destra come oggi; azienda: quattro schede a coppie alte uguali e Impostazione sotto, larga */
+   g.classList.toggle('az-pari',az);if(az){g.after(c3);c3.classList.add('az-larga');}else{Rr.appendChild(c3);c3.classList.remove('az-larga');}
+   var det=form.querySelector('input[name="tipo_agevolazione"][value="detrazione"]');
+   if(det){det.disabled=az;det.parentNode.classList.toggle('opt-arr',az);det.parentNode.title=az?'La detrazione del 50% è per i privati':'';
+    if(az&&det.checked){var n=form.querySelector('input[name="tipo_agevolazione"][value="nessuna"]');if(n){n.checked=true;n.dispatchEvent(new Event('change',{bubbles:true}));}}}
+   var sm=$('.ph small',c1);if(sm)sm.textContent=az?'Lead nuovo o cliente già in archivio · azienda':'Lead nuovo o cliente già in archivio';}
+  sgT.addEventListener('click',function(e){var b=e.target.closest('button');if(b)tipo(b.dataset.v);});
+  /* un lead o un preventivo caricati oggi sono privati: i dati azienda non sono ancora salvati */
+  ['existing_lead','prevSelect'].forEach(function(id){var s=$('#'+id);if(s)s.addEventListener('change',function(){if(TIPO!=='privato')tipo('privato');});});
+  window.__tipoContatto=function(){return TIPO;};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,0);});else setTimeout(via,0);
 })();
 </script>
 </body>
