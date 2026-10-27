@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Modulo Preventivi — Next S.r.l.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    :root{
+      --bg:#f8f7fb;--surface:#fff;--border:#e8e5f0;--text:#1e1b2e;
+      --text-dim:#6b5f99;--text-muted:#9b8fc7;--text-hint:#b0a8cc;
+      --accent:#7c3aed;--accent-bg:rgba(124,58,237,0.06);--input-bg:#faf9fd;
+      --success:#16a34a;--error:#dc2626;--warning-bg:#fffbeb;
+      --warning-border:#fbbf24;--warning-text:#92400e;
+      --teal:#0c8278;--teal-bg:rgba(12,130,120,0.06);--teal-border:#b8dbd7;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);padding:28px 32px;min-height:100vh}
+    .container{max-width:780px;margin:0 auto}
+    .card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:28px 32px}
+    .page-header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+    .page-icon{width:40px;height:40px;border-radius:10px;background:var(--teal-bg);border:1px solid var(--teal-border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .page-icon svg{width:20px;height:20px;stroke:var(--teal);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    h1{font-size:19px;font-weight:600;color:var(--text)}
+    .subtitle{font-size:13px;color:var(--text-muted);margin:0 0 20px;padding-left:54px}
+    .pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;background:var(--teal-bg);color:var(--teal);font-size:11px;font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+    .pill span{font-weight:600;margin-left:4px}
+    .mode-badge{padding:3px 10px;border-radius:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+    .mode-badge.new{background:rgba(22,163,74,.1);color:#16a34a}
+    .mode-badge.edit{background:rgba(217,119,6,.08);color:#d97706}
+    .tabs{display:flex;border-bottom:2px solid var(--border);margin:16px 0 20px}
+    .tab-btn{flex:1;padding:10px 12px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s}
+    .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .tab-btn:hover{color:var(--accent)}
+    label{display:block;font-size:12px;font-weight:500;color:var(--text-dim);margin:14px 0 5px}
+    input[type="text"],input[type="email"],input[type="tel"],input[type="number"],select,textarea{width:100%;padding:9px 13px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--input-bg);outline:none;transition:border .2s}
+    select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239b8fc7' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.08)}
+    textarea{resize:vertical;min-height:56px}
+    input[readonly]{background:#f3f0fa;color:var(--text-muted)}
+    .row{display:flex;gap:12px;align-items:flex-start}
+    .row>div{flex:1}
+    .muted{font-size:11px;color:var(--text-hint);margin-top:4px}
+    .section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+    fieldset{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0}
+    legend{padding:0 8px;font-size:11px;font-weight:500;color:var(--text-dim)}
+    .options{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .opt{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all .15s;color:var(--text)}
+    .opt:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+    .opt input[type="radio"],.opt input[type="checkbox"]{accent-color:var(--accent);margin:0}
+    .opt-cliente{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--accent-bg);cursor:pointer;color:var(--accent);font-weight:500;transition:all .15s;margin-bottom:12px;width:fit-content}
+    .opt-cliente:hover{border-color:var(--accent);background:rgba(124,58,237,.10)}
+    .opt-cliente input{accent-color:var(--accent);margin:0}
+    #prevBox{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:14px 0;background:var(--accent-bg);display:none}
+    #reinviaBox{display:none;margin:14px 0}
+    .btn-reinvia{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:8px;border:1px solid var(--warning-border);background:var(--warning-bg);color:var(--warning-text);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+    .btn-reinvia:hover{background:#fef3c7}
+    .product-section{border:1.5px solid var(--teal-border);border-radius:10px;padding:16px;margin-top:14px;background:#fafdfb}
+    .product-section .section-title{font-size:14px;font-weight:600;color:var(--teal);margin:0 0 12px}
+    .product-row{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px;color:var(--text)}
+    .product-row input[type="checkbox"],.product-row input[type="radio"]{accent-color:var(--teal);margin:0;flex-shrink:0}
+    .product-row span.label{flex:1;font-size:12.5px}
+    .product-row select,.product-row input[type="number"],.product-row input[type="text"]{max-width:140px;padding:6px 10px;font-size:12px}
+    .totale-row{margin-top:14px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:var(--text)}
+    .totale-row input[type="number"]{max-width:160px}
+    .cfg-group{border-top:1px solid var(--teal-border);margin:12px 0 0;padding-top:12px}
+    .cfg-group-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:8px}
+    .bat-list{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+    .bat-list .opt{width:fit-content}
+    .altro-desc{width:100%;margin-top:6px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--input-bg);outline:none}
+    .altro-desc:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(12,130,120,.08)}
+    #fv_altro_area,#heat_altro_area{display:none;margin-top:4px}
+    #generaBox{border:2px solid var(--teal);border-radius:10px;padding:20px;margin-top:16px;background:linear-gradient(135deg,#f0fdf9,#fafdfb);box-shadow:0 4px 16px rgba(12,130,120,.1)}
+    #generaBox .genera-title{font-size:15px;font-weight:700;color:var(--teal);margin-bottom:4px}
+    #generaBox .genera-sub{font-size:12px;color:var(--text-muted);margin-bottom:14px}
+    .genera-row{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-genera{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+    .btn-genera:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-genera.solo{background:#fafdfb;color:var(--teal);border:1.5px solid var(--teal)}
+    .btn-genera.ridotto{background:#e6f7f5;color:var(--teal);border:1.5px solid var(--teal)}
+    .btn-genera.esteso{background:var(--teal);color:#fff;border:1.5px solid var(--teal)}
+    .genera-desc{font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6}
+    #generaStatus{margin-top:10px;font-size:13px;font-weight:500}
+    .card-percorso{display:flex;align-items:flex-start;gap:12px;padding:13px;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;transition:all .15s;margin-bottom:8px}
+    .card-percorso.selected{border-color:var(--accent);background:var(--accent-bg)}
+    .card-percorso input[type="radio"]{margin-top:2px;accent-color:var(--accent);flex-shrink:0}
+    .card-percorso .cp-title{font-size:13px;font-weight:600;color:var(--text)}
+    .card-percorso .cp-desc{font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.4}
+    .sub-box{margin-top:12px;padding:12px;border-radius:8px;border:1px solid #c4b5fd;background:rgba(124,58,237,0.04)}
+    .sub-box-label{font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:8px}
+    .actions{display:flex;justify-content:space-between;gap:10px;margin-top:24px}
+    .btn{padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;transition:all .15s}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-primary:hover{background:#5b21b6;box-shadow:0 4px 12px rgba(124,58,237,.25)}
+    .btn-secondary{background:transparent;color:var(--text-muted);border:1px solid var(--border)}
+    .btn-secondary:hover{background:var(--accent-bg)}
+    #status{margin-top:14px;font-size:13px;font-weight:500;padding:11px 16px;border-radius:8px;min-height:0}
+    #status:empty{display:none;padding:0}
+    #status.success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;display:block}
+    #status.error{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;display:block}
+    #status.loading{background:var(--accent-bg);color:var(--accent);border:1px solid #c4b5fd;display:block}
+  </style>
+<style id="portale">
+/* PORTALE NEXT-110: grafica del portale sopra la pagina di prima */
+:root{--bg:#F2F4F7;--surface:#fff;--border:#E2E7EE;--text:#111827;--text-dim:#3F4A5A;--text-muted:#6B7686;--text-hint:#94A3B8;--accent:#0891B2;--accent-bg:rgba(8,145,178,.07);--input-bg:#fff;--teal:#0891B2;--teal-bg:rgba(8,145,178,.07);--teal-border:#BFE6EF;--sf:#fff;--sf2:#F8FAFC;--ln:#E2E7EE;--ink:#111827;--ink2:#3F4A5A;--ink3:#6B7686;--ac:#0891B2;--acw:#ECFEFF;--gr:#15803D;--grw:#DCFCE7;--am:#B45309;--amw:#FEF3C7}
+:root[data-tema="scuro"]{--bg:#0F141B;--surface:#161D27;--border:#263243;--text:#E6EBF2;--text-dim:#CBD5E1;--text-muted:#94A3B8;--text-hint:#64748B;--accent:#22D3EE;--accent-bg:rgba(34,211,238,.08);--input-bg:#0F1620;--teal:#22D3EE;--teal-bg:rgba(34,211,238,.08);--teal-border:#1E4A57;--sf:#161D27;--sf2:#131A23;--ln:#263243;--ink:#E6EBF2;--ink2:#CBD5E1;--ink3:#94A3B8;--acw:rgba(34,211,238,.1);--grw:rgba(52,211,153,.12);--amw:rgba(245,158,11,.15)}
+body{font-family:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;padding:22px 24px 40px!important}
+button,input,select,textarea,.btn,.tab-btn,.btn-genera,.btn-reinvia,.altro-desc{font-family:inherit!important}
+.container{max-width:1080px!important;margin:0!important}
+.card{border-radius:14px!important;border-color:var(--border)!important;padding:22px 26px!important;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+h1{font-size:22px!important;font-weight:800!important;letter-spacing:-.02em}
+.page-icon{background:var(--acw)!important;border-color:transparent!important}.page-icon svg{stroke:var(--accent)!important}
+.pill{background:var(--sf)!important;border:1px solid var(--border);color:var(--text-muted)!important;border-radius:999px!important}
+.tabs{counter-reset:passo;border:1px solid var(--border)!important;border-radius:14px;padding:4px;gap:4px;background:var(--surface);margin:16px 0 22px!important;flex-wrap:wrap}
+.tab-btn{flex:0 1 auto!important;display:inline-flex;align-items:center;gap:8px;border:0!important;margin:0!important;border-radius:10px;padding:8px 14px!important;font-weight:600!important;color:var(--text-muted)!important;font-size:12.5px!important}
+.tab-btn::before{counter-increment:passo;content:counter(passo);width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex:none}
+.tab-btn.active{background:var(--accent)!important;color:#fff!important}
+:root[data-tema="scuro"] .tab-btn.active{color:#0B1A1A!important}
+.tab-btn:hover:not(.active){background:var(--accent-bg)}
+label{color:var(--text-dim)!important;font-weight:600!important}
+input[type="text"],input[type="email"],input[type="tel"],input[type="number"],select,textarea{border-radius:8px!important;border-color:var(--border)!important;background-color:var(--input-bg)!important;color:var(--text)!important}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-bg)!important}
+input[readonly]{background:var(--sf2)!important}
+fieldset{border-radius:12px!important}
+.opt{border-radius:999px!important}.opt:hover,.opt-cliente:hover{border-color:var(--accent)!important}
+.opt-cliente{border-radius:999px!important}
+.product-section{background:var(--surface)!important;border-color:var(--teal-border)!important;border-radius:12px!important}
+#generaBox{background:var(--surface)!important;border:1.5px solid var(--accent)!important;box-shadow:0 0 0 3px var(--accent-bg)!important;border-radius:14px!important}
+.btn{border-radius:999px!important;font-weight:700!important}
+.btn-primary:hover{background:#0E7490!important;box-shadow:0 4px 12px rgba(8,145,178,.25)!important}
+.btn-genera{border-radius:999px!important;font-weight:700!important}
+.btn-genera.ridotto{background:var(--accent-bg)!important}
+.btn-genera.solo{background:var(--surface)!important}
+.sub-box{border-color:var(--teal-border)!important;background:var(--accent-bg)!important}
+.card-percorso{border-radius:12px!important}
+#status.loading{border-color:var(--teal-border)!important}
+.tab-content input[type="text"],.tab-content select{min-height:36px}
+
+/* PORTALE NEXT-110: finestre a video del portale al posto degli avvisi del browser */
+.velo{position:fixed;inset:0;background:rgba(15,20,27,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:90}
+.fin{background:var(--sf,#fff);color:var(--ink,#111827);border:1px solid var(--ln,#E6E8EE);border-radius:16px;width:100%;max-width:480px;box-shadow:0 20px 50px rgba(16,24,40,.25);overflow:hidden;font-family:inherit}
+.fin .fh{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 8px}
+.fin .fh .fi{width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:16px;font-weight:800}
+.fin .fh b{display:block;font-size:15px;font-weight:800}
+.fin .fm{padding:4px 20px 16px 66px;font-size:13.5px;line-height:1.55;color:var(--ink2,#3F4A5A)}
+.fin .fp{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--ln,#E6E8EE);background:var(--sf2,#F8FAFC)}
+.fin .fb{border:1px solid var(--ln,#E6E8EE);background:var(--sf,#fff);color:var(--ink2,#3F4A5A);border-radius:999px;padding:8px 16px;font:700 12.5px inherit;font-family:inherit;cursor:pointer}
+.fin .fb.si{background:var(--ac,#0891B2);border-color:var(--ac,#0891B2);color:#fff}
+.fin .fb.rosso{background:#DC2626;border-color:#DC2626;color:#fff}
+.fin .gira{width:16px;height:16px;border:2px solid var(--acw,#ECFEFF);border-top-color:var(--ac,#0891B2);border-radius:50%;animation:fgira .8s linear infinite;display:inline-block;vertical-align:-3px;margin-right:8px}
+@keyframes fgira{to{transform:rotate(360deg)}}
+
+</style><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><meta name="robots" content="noindex,nofollow">
+<style id="impagina">
+/* PORTALE NEXT-110: impaginazione del mockup (schede a due colonne, barra dei passi, barra in fondo) */
+body>.container>.card{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}
+.container{max-width:1240px!important}
+.page-header,.subtitle,.page-icon{display:none!important}
+.ph2{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.ph2 h1{margin:0}.ph2 p{font-size:12.5px;color:var(--text-muted);margin-top:3px}
+.ph2 .pill{margin:0 0 2px!important}
+.tabs{box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.tab-btn.fatto::before{content:'✓';background:var(--accent-bg);border-color:transparent;color:var(--accent)}
+.tab-btn.fatto{color:var(--text-dim)!important}
+.g2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+.g2m{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);min-width:0}
+.pc>.ph{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border)}
+.pc>.ph .pi{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-bg);color:var(--accent);flex:none;font-size:14px}
+.pc>.ph b{font-size:13.5px;font-weight:700;display:block}.pc>.ph small{font-size:11.5px;color:var(--text-muted);display:block}
+.pc>.ph .px{margin-left:auto}
+.pc>.pb{padding:4px 18px 16px}
+.pc>.pb>label:first-child,.pc>.pb>.row:first-child label{margin-top:12px}
+.pc>.pf{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--sf2);border-radius:0 0 14px 14px}
+.fr{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)}
+.fr:last-child{border-bottom:0}.fr>span{font-size:12.5px;font-weight:700;color:var(--text-dim)}
+.fr>.options,.fr>select{margin:0!important}
+.pc .options.seg,.seg{display:inline-flex!important;flex-wrap:wrap;gap:0!important;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:var(--sf2);width:fit-content}
+.seg .opt{white-space:nowrap;border:0!important;border-right:1px solid var(--border)!important;border-radius:0!important;background:transparent!important;padding:7px 12px!important;font-weight:600;color:var(--text-muted)!important}
+.seg .opt:last-child{border-right:0!important}
+.seg .opt input{position:absolute;opacity:0;pointer-events:none}
+.seg .opt:has(input:checked){background:var(--accent-bg)!important;color:var(--accent)!important;box-shadow:inset 0 -2px 0 var(--accent)}
+.opt-cliente.sw{border:0!important;background:transparent!important;padding:0!important;margin:0!important;color:var(--text-dim)!important;font-weight:700;font-size:12.5px;gap:9px}
+.opt-cliente.sw input{appearance:none;-webkit-appearance:none;width:30px;height:17px;border-radius:999px;background:var(--border);position:relative;cursor:pointer;transition:background .15s;margin:0}
+.opt-cliente.sw input::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.opt-cliente.sw input:checked{background:var(--accent)}.opt-cliente.sw input:checked::after{left:15px}
+.accordion-section{border:1px solid var(--border)!important;border-radius:14px!important;background:var(--surface)!important;overflow:hidden;margin:0!important;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.accordion-header{background:var(--surface)!important;padding:13px 18px!important;border-bottom:1px solid var(--border)}
+.accordion-header .acc-label{font-size:13.5px!important;font-weight:700!important;color:var(--text)!important}
+.accordion-header input[type=checkbox]{appearance:none!important;-webkit-appearance:none!important;width:30px!important;height:17px!important;min-width:30px;border-radius:999px!important;background:var(--border)!important;border:0!important;position:relative;cursor:pointer;order:3;margin:0 0 0 auto!important;padding:0!important;accent-color:auto}
+.accordion-header input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.accordion-header input[type=checkbox]:checked{background:var(--accent)!important}.accordion-header input[type=checkbox]:checked::after{left:15px}
+.accordion-header .acc-arrow{order:4;color:var(--text-muted)!important}
+.accordion-body{padding:6px 18px 16px!important}
+.accordion-body .product-section{border:0!important;padding:0!important;margin:0!important;background:transparent!important}
+.intro{font-size:12.5px;color:var(--text-muted);margin:0 0 12px}
+#mapContainer{border-radius:12px;overflow:hidden;margin:14px 0 4px}
+.barra-fondo{position:sticky;bottom:10px;z-index:30;margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 24px rgba(16,24,40,.08);padding:10px 12px 10px 18px;display:flex;align-items:center;gap:10px}
+.barra-fondo #btnReset{border:0!important;background:transparent!important;color:var(--text-dim)!important;padding:8px 10px!important}
+.barra-fondo #btnSubmit{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important}
+.barra-fondo .avanti{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+:root[data-tema="scuro"] .barra-fondo .avanti{color:#0B1A1A}
+.barra-fondo #status{margin:0!important;padding:6px 10px!important;font-size:12px!important}
+.barra-fondo .sp{flex:1}
+@media (max-width:900px){.g2,.g2m{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="pill">Data:<span id="todayLabel"></span></div>
+    <div class="page-header">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h1>Modulo Preventivi <span id="modeBadge" class="mode-badge new">NUOVO</span></h1>
+    </div>
+    <p class="subtitle">Crea un preventivo per un nuovo lead o per un cliente esistente.</p>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-tab="contatto">Dati Contatto</button>
+      <button type="button" class="tab-btn" data-tab="prodotti">Prodotti</button>
+      <button type="button" class="tab-btn" data-tab="mappa">Mappa Tetto</button>
+      <button type="button" class="tab-btn" data-tab="impianto">Impianto Esistente</button>
+      <button type="button" class="tab-btn" data-tab="genera">📄 Genera Preventivo</button>
+    </div>
+    <form id="prevForm" onsubmit="return false">
+      <input type="hidden" name="submitted_at" id="submitted_at" />
+      <input type="hidden" name="existing_lead_id" id="existing_lead_id" />
+      <input type="hidden" name="existing_prev_id" id="existing_prev_id" />
+      <input type="hidden" name="mode" id="mode" value="new" />
+      <input type="hidden" name="last_saved_id" id="last_saved_id" />
+      <input type="hidden" name="fonte_lead" id="fonte_lead" value="leads" />
+      <input type="hidden" id="map_lat" name="map_lat" />
+      <input type="hidden" id="map_lon" name="map_lon" />
+      <input type="hidden" id="map_screenshot_url" name="map_screenshot_url" />
+
+      <!-- TAB 1 -->
+      <div id="tabContatto"><label class="opt-cliente" id="labelCliente"><input type="checkbox" id="prev_a_cliente" onchange="toggleFonteLead(this.checked)" />Preventivo a cliente esistente</label><label for="existing_lead" id="labelDropdown">Lead</label><select id="existing_lead"><option value="">&#10133; Nuovo lead</option></select><p class="muted" id="hintDropdown">Seleziona un lead o lascia "Nuovo lead" per crearne uno.</p><div id="prevBox"><div style="font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px">Cosa vuoi fare?</div><div class="options"><label class="opt"><input type="radio" name="prev_mode" value="new_prev" checked /><span>Nuovo preventivo</span></label><label class="opt"><input type="radio" name="prev_mode" value="edit_prev" /><span>Modifica preventivo esistente</span></label></div><div id="prevSelectWrap" style="display:none;margin-top:8px"><label for="prevSelect">Seleziona preventivo</label><select id="prevSelect"><option value="">— Seleziona preventivo —</option></select></div></div><div id="reinviaBox"><button type="button" id="btnReinvia" class="btn-reinvia">&#128260; Reinvia preventivo</button><div id="reinviaStatus" style="margin-top:6px;font-size:12px"></div></div><div class="section-label">Dati anagrafici</div><div class="row"><div><label for="last_name">Cognome *</label><input id="last_name" name="last_name" type="text" required placeholder="Es. ROSSI" /></div><div><label for="first_name">Nome *</label><input id="first_name" name="first_name" type="text" required placeholder="Es. MARIO" /></div></div><div class="row"><div><label for="phone">Telefono *</label><input id="phone" name="phone" type="tel" required placeholder="Es. 333 1234567" /></div><div><label for="phone_2">Telefono 2</label><input id="phone_2" name="phone_2" type="tel" placeholder="Alternativo" /></div></div><label for="email">Email</label><input id="email" name="email" type="email" placeholder="esempio@dominio.it" /><div class="section-label">Indirizzo impianto</div><label for="address">Via + numero civico *</label><input id="address" name="address" type="text" required placeholder="Es. Via Roma, 12" /><div class="row"><div style="flex:2"><label for="city">Comune *</label><input id="city" name="city" type="text" required placeholder="Es. Treviso" /></div><div><label for="zip">CAP</label><input id="zip" name="zip" type="text" placeholder="31100" maxlength="5" /></div><div><label for="province">Prov.</label><input id="province" name="province" type="text" placeholder="TV" maxlength="2" /></div></div><label for="vendor">Agente *</label><select id="vendor" name="vendor" required><option value="">Caricamento agenti...</option></select><fieldset><legend>Tipologia intervento</legend><div class="options"><label class="opt"><input type="radio" name="product_type" value="fotovoltaico" checked /><span>Fotovoltaico</span></label><label class="opt"><input type="radio" name="product_type" value="termico" /><span>Termico</span></label></div></fieldset><fieldset><legend>Agevolazione fiscale</legend><div class="options"><label class="opt"><input type="radio" name="tipo_agevolazione" value="detrazione" /><span>Detrazione fiscale 50%</span></label><label class="opt"><input type="radio" name="tipo_agevolazione" value="conto_termico" /><span>Conto Termico 3.0</span></label><label class="opt"><input type="radio" name="tipo_agevolazione" value="nessuna" checked /><span>Nessuna agevolazione</span></label></div></fieldset></div>
+
+      <!-- TAB 2 -->
+      <div id="tabProdotti" style="display:none">
+<style>
+.accordion-section{border:1.5px solid var(--teal-border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.accordion-header{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--teal-bg);cursor:pointer;user-select:none}
+.accordion-header input[type="checkbox"]{accent-color:var(--teal);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.accordion-header .acc-label{font-size:13px;font-weight:600;color:var(--teal);flex:1}
+.accordion-header .acc-arrow{font-size:10px;color:var(--teal);transition:transform .2s}
+.accordion-header.open .acc-arrow{transform:rotate(180deg)}
+.accordion-body{display:none;padding:16px 14px;background:var(--surface)}
+.accordion-body.open{display:block}
+.sub-accordion{border:1px solid var(--teal-border);border-radius:8px;margin-top:10px;overflow:hidden}
+.sub-accordion-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fdfc;cursor:pointer}
+.sub-accordion-header input[type="checkbox"]{accent-color:var(--teal);flex-shrink:0}
+.sub-accordion-header .sub-label{font-size:12px;font-weight:500;color:var(--teal);flex:1}
+.sub-accordion-body{display:none;padding:12px;border-top:1px solid var(--teal-border);background:white}
+.sub-accordion-body.open{display:block}
+.param-row{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12px;color:var(--text)}
+.param-row label{flex:1;font-size:12px;color:var(--text-dim);margin:0}
+.param-row input[type="number"]{max-width:120px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--input-bg)}
+.param-unit{font-size:11px;color:var(--text-muted);white-space:nowrap}
+</style>
+<div class="accordion-section" id="acc-fv">
+  <div class="accordion-header" id="acc-fv-hdr" onclick="toggleAccordion('fv')">
+    <input type="checkbox" name="section_fv" id="section_fv" onchange="toggleAccordionCheck('fv',this.checked)" onclick="event.stopPropagation()" checked />
+    <span class="acc-label">☀️ Impianto Fotovoltaico</span>
+    <span class="acc-arrow" id="acc-fv-arrow">▼</span>
+  </div>
+  <div class="accordion-body open" id="acc-fv-body">
+    <div class="product-section" style="border:none;padding:0;background:transparent;margin-top:0">
+      <div class="row" style="margin-top:0;align-items:flex-start"><div style="flex:2"><label for="fv_consumi_kwh" style="margin-top:0">Consumi annui (kWh)</label><input type="number" name="fv_consumi_kwh" id="fv_consumi_kwh" step="100" min="0" placeholder="Es. 4500" oninput="suggerisciKwp()" /><div id="hintKwp" style="font-size:11px;color:var(--teal);background:var(--teal-bg);padding:3px 8px;border-radius:20px;margin-top:3px;display:none"></div></div><div><label for="fv_kwp" style="margin-top:0">Potenza (kWp)</label><input type="number" name="fv_kwp" id="fv_kwp" step="0.01" min="0" placeholder="Es. 6.0" oninput="calcolaAutoconsumo()" /></div></div>
+      <label>Modulo fotovoltaico</label><select name="fv_pannello" id="fv_pannello"><option value="">— Caricamento... —</option><option value="AIKO_485">AIKO 485 Wp — Neostar 3S+54</option><option value="AIKO_485">AIKO 485 Wp — Neostar 3S+54</option><option value="LONGI_410">LONGi 410 Wp— LR5-54HIH-410M</option><option value="LONGI_490">LONGi 490 Wp</option><option value="FU400M">FuturaSun Silk Nova Orange 400W</option></select>
+      <p class="muted">Dati da Odoo (aggiornamento automatico)</p>
+      <fieldset style="margin-top:12px"><legend>Fornitura</legend><div class="options"><label class="opt"><input type="radio" name="fv_fornitura" value="monofase" checked /><span>Monofase</span></label><label class="opt"><input type="radio" name="fv_fornitura" value="trifase" /><span>Trifase</span></label></div></fieldset>
+      <div class="cfg-group"><div class="cfg-group-label">Inverter</div><div class="product-row"><input type="checkbox" name="fv_inv_ibrido" id="fv_inv_ibrido" value="1" /><span style="font-size:12px;white-space:nowrap">Ibrido</span><input type="checkbox" name="fv_inv_tradizionale" id="fv_inv_trad" value="1" style="margin-left:6px"/><span style="font-size:12px;white-space:nowrap">Tradizionale</span><select name="fv_inv_brand" id="fv_inv_brand" style="max-width:110px" onchange="updateInverterOptions()"><option value="WECO">WECO</option><option value="ZCS">ZCS Azzurro</option></select><select name="fv_inv_potenza" id="fv_inv_potenza" style="max-width:240px"><option value="">Potenza...</option></select></div></div>
+      <div class="cfg-group"><div class="cfg-group-label">Batteria di accumulo</div><div class="bat-list"><label class="opt"><input type="radio" name="fv_bat_tipo" value="WECO_5" id="bat_weco5" /><span>WECO 5,12 kWh</span></label><label class="opt"><input type="radio" name="fv_bat_tipo" value="WECO_16" id="bat_weco16" /><span>WECO 16 kWh</span></label><label class="opt"><input type="radio" name="fv_bat_tipo" value="ZCS" id="bat_zcs" /><span>ZCS Azzurro 5,12 kWh</span></label><label class="opt"><input type="radio" name="fv_bat_tipo" value="nessuna" id="bat_nessuna" checked /><span>Nessuna</span></label></div><div class="product-row" style="margin-top:8px"><span class="label">Capacità complessiva (kWh)</span><input type="number" name="fv_kwh" id="fv_kwh" step="0.01" min="0" placeholder="0" style="max-width:100px"/></div></div>
+      <div class="cfg-group"><div class="cfg-group-label">Altri componenti</div><div class="product-row"><input type="checkbox" name="fv_ottimizzatori" id="cb_ottimiz" value="1" /><span class="label">Ottimizzatori</span></div><div class="product-row"><input type="checkbox" name="fv_staz_auto" id="cb_staz" value="1" /><span class="label">Stazione di ricarica auto</span></div><div class="product-row"><input type="checkbox" name="fv_altro_enabled" id="cb_fv_altro" value="1" onchange="document.getElementById('fv_altro_area').style.display=this.checked?'block':'none'" /><span class="label">Altro</span></div><div id="fv_altro_area"><input type="text" name="fv_altro_desc" class="altro-desc" placeholder="Descrizione componenti aggiuntivi..." /></div></div>
+      <div class="totale-row" style="margin-top:14px"><span>Totale FV (€)</span><input type="number" step="0.01" min="0" name="fv_totale_eur" /></div>
+      <label for="note_fv" style="margin-top:14px">Note impianto FV</label>
+      <textarea name="note_fv" id="note_fv" rows="2" placeholder="Note, richieste speciali..."></textarea>
+    </div>
+    <div class="sub-accordion" id="sub-params">
+      <div class="sub-accordion-header" onclick="toggleSubAccordion('params')">
+        <input type="checkbox" id="sub_params_cb" onchange="toggleSubAccordionCheck('params',this.checked)" onclick="event.stopPropagation()" />
+        <span class="sub-label">📊 Parametri Analisi Economica</span>
+        <span style="font-size:9px;color:var(--teal)" id="sub-params-arrow">▼</span>
+      </div>
+      <div class="sub-accordion-body" id="sub-params-body">
+        <p class="muted" style="margin-bottom:10px">Valori di default usati per il calcolo. Modificabili dall'agente per ogni preventivo.</p>
+        <div style="background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:10px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.8px">Resa solare PVGIS</div><div style="font-size:11px;color:var(--text-muted);margin-top:1px">Producibilità specifica dalle coordinate mappa</div></div>
+          <div style="text-align:right"><span id="display_resa_kwh_kwp" style="font-size:18px;font-weight:700;color:var(--teal)">—</span><span style="font-size:11px;color:var(--text-muted);margin-left:3px">kWh/kWp</span><div id="display_pvgis_kwh" style="font-size:10px;color:var(--text-muted)"></div></div>
+        </div>
+        <input type="hidden" name="pvgis_e_y_kwh" id="pvgis_e_y_kwh_input" />
+        <input type="hidden" name="resa_kwh_kwp" id="resa_kwh_kwp_input" />
+        <div class="param-row"><label for="p_tariffa">Tariffa acquisto energia elettrica</label><input type="number" id="p_tariffa" name="tariffa_energia_eur" step="0.01" min="0" max="2" value="0.30" /><span class="param-unit">€/kWh</span></div>
+        <div class="param-row"><label for="p_rid">Tariffa RID (vendita in rete)</label><input type="number" id="p_rid" name="tariffa_rid_eur" step="0.01" min="0" max="1" value="0.14" /><span class="param-unit">€/kWh</span></div>
+        <div class="param-row"><label for="p_cer">Tariffa incentivo CER</label><input type="number" id="p_cer" name="tariffa_cer_eur" step="0.01" min="0" max="1" value="0.06" /><span class="param-unit">€/kWh</span></div>
+        <div class="param-row"><label for="p_quota_cer">Quota energia condivisa CER</label><input type="number" id="p_quota_cer" name="quota_energia_condivisa" step="1" min="0" max="100" value="50" /><span class="param-unit">%</span></div>
+        <div class="param-row"><label for="p_inc">Incremento costo energia</label><input type="number" id="p_inc" name="incremento_costo_pct" step="0.1" min="0" max="20" value="3.0" /><span class="param-unit">%/anno</span></div>
+        <div class="param-row"><label for="p_deg">Degrado moduli</label><input type="number" id="p_deg" name="degrado_moduli_pct" step="0.1" min="0" max="5" value="0.5" /><span class="param-unit">%/anno</span></div>
+        <div class="param-row"><label for="p_apc">Autoconsumo stimato <span style="font-size:10px;color:var(--teal)">(calcolato — modificabile)</span></label><input type="number" id="p_apc" name="autoconsumo_pct" step="1" min="0" max="100" placeholder="Calcolato automaticamente" oninput="this.dataset.manuale='1'" title="Valore calcolato automaticamente — modificabile" /><span class="param-unit">%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="accordion-section" id="acc-heat">
+  <div class="accordion-header" id="acc-heat-hdr" onclick="toggleAccordion('heat')">
+    <input type="checkbox" name="section_heat" id="section_heat" onchange="toggleAccordionCheck('heat',this.checked)" onclick="event.stopPropagation()" />
+    <span class="acc-label">🔥 Riscaldamento / Climatizzazione</span>
+    <span class="acc-arrow" id="acc-heat-arrow">▼</span>
+  </div>
+  <div class="accordion-body" id="acc-heat-body">
+    <div class="product-row"><input type="checkbox" name="heat_pigma50_enabled" value="1" /><span class="label">Pigma Advance+ Aria Next M Hybrid 50 link R32</span><select name="heat_pigma50_taglia"><option value="">Taglia...</option><option value="25">25</option><option value="30">30</option><option value="35">35</option></select></div>
+    <div class="product-row"><input type="checkbox" name="heat_pigma80_enabled" value="1" /><span class="label">Pigma Advance+ Aria Next M Hybrid 80 link R32</span><select name="heat_pigma80_taglia"><option value="">Taglia...</option><option value="25">25</option><option value="30">30</option><option value="35">35</option></select></div>
+    <div class="product-row"><input type="checkbox" name="heat_valvole_enabled" value="1" /><span class="label">Valvole termostatiche</span><input type="number" name="heat_valvole_num" min="0" placeholder="N." /></div>
+    <div class="product-row"><input type="checkbox" name="clima_alys25" value="1" /><span class="label">Climatizzatore Ariston — Alys 25</span></div>
+    <div class="product-row"><input type="checkbox" name="clima_alys35" value="1" /><span class="label">Climatizzatore Ariston — Alys 35</span></div>
+    <div class="product-row"><input type="checkbox" name="clima_alys50" value="1" /><span class="label">Climatizzatore Ariston — Alys 50</span></div>
+    <div class="product-row"><input type="checkbox" name="clima_prios70" value="1" /><span class="label">Climatizzatore Ariston — Prios 70</span></div>
+    <div class="product-row"><input type="checkbox" name="clima_dual50" value="1" /><span class="label">Climatizzatore Ariston — Dual 50 / Alys 32</span></div>
+    <div class="product-row"><input type="checkbox" name="heat_kit_wifi" value="1" /><span class="label">Kit WiFi Ariston</span></div>
+    <div class="product-row"><input type="checkbox" name="heat_altro_enabled" id="cb_h_altro" value="1" onchange="document.getElementById('heat_altro_area').style.display=this.checked?'block':'none'" /><span class="label">Altro</span></div>
+    <div id="heat_altro_area" style="display:none"><input type="text" name="heat_altro_desc" class="altro-desc" placeholder="Descrizione altro termico..." /></div>
+    <div class="totale-row" style="margin-top:14px"><span>Totale termico (€)</span><input type="number" step="0.01" min="0" name="heat_totale_eur" /></div>
+    <label for="note_termico" style="margin-top:14px">Note impianto termico</label>
+    <textarea name="note_termico" id="note_termico" rows="2" placeholder="Note, richieste speciali..."></textarea>
+  </div>
+</div>
+<div class="accordion-section" id="acc-manut">
+  <div class="accordion-header" id="acc-manut-hdr" onclick="toggleAccordion('manut')">
+    <input type="checkbox" name="section_manut" id="section_manut" onchange="toggleAccordionCheck('manut',this.checked)" onclick="event.stopPropagation()" />
+    <span class="acc-label">🔧 Contratto di Manutenzione</span>
+    <span class="acc-arrow" id="acc-manut-arrow">▼</span>
+  </div>
+  <div class="accordion-body" id="acc-manut-body">
+    <p class="muted" style="margin-bottom:12px">Seleziona o inserisci il costo annuo di manutenzione. Comparirà nella tabella analisi economica.</p>
+    <fieldset><legend>Tipo contratto</legend>
+      <div class="options">
+        <label class="opt"><input type="radio" name="manut_tipo" value="nessuno" checked onchange="setManutCosto(0)" /><span>Nessuno (in garanzia)</span></label>
+        <label class="opt"><input type="radio" name="manut_tipo" value="silver" onchange="setManutCosto(150)" /><span>Silver — 6 anni · €150/anno</span></label>
+        <label class="opt"><input type="radio" name="manut_tipo" value="gold" onchange="setManutCosto(250)" /><span>Gold — 12 anni · €250/anno</span></label>
+        <label class="opt"><input type="radio" name="manut_tipo" value="custom" onchange="setManutCosto(null)" /><span>Personalizzato</span></label>
+      </div>
+    </fieldset>
+    <div class="param-row" style="margin-top:12px"><label for="manut_eur">Costo manutenzione annua</label><input type="number" id="manut_eur" name="manut_eur" step="10" min="0" value="0" style="max-width:120px" /><span class="param-unit">€/anno</span></div>
+    <label style="margin-top:12px">Note manutenzione</label>
+    <textarea name="note_manut" rows="2" placeholder="Dettagli contratto, incluso/escluso..."></textarea>
+  </div>
+</div>
+<label style="margin-top:4px;display:block">Note generali</label>
+<textarea name="note_generali" rows="2" placeholder="Note generali sul contatto o sul progetto..."></textarea>
+<fieldset style="margin-top:14px"><legend>Modalità di pagamento</legend><div class="options"><label class="opt"><input type="radio" name="pagamento_tipo" value="standard" checked /><span>Standard — 30% ordine · 50% merce pronta · 20% installazione</span></label><label class="opt"><input type="radio" name="pagamento_tipo" value="personalizzato" /><span>Personalizzato (indicare nelle note)</span></label></div></fieldset>
+<script>
+/* PORTALE NEXT-110: Nuovo preventivo fuori da n8n (era GET /portale-preventivi). Stessa pagina e stesse chiamate ai webhook n8n,
+   ma senza chiave di servizio nel browser: testo standard della mail e catalogo inverter passano dalla funzione
+   preventivi-config, protetta dalla password della regia. Conferme e avvisi sono finestre a video del portale. */
+var CFG='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/preventivi-config';
+var PASS='';try{PASS=sessionStorage.getItem('regia_pass')||'';}catch(e){}
+function cfgFetch(url,opts){opts=opts||{};
+ if(url.indexOf('catalogo_prodotti')>=0)return fetch(CFG+'?t='+encodeURIComponent(PASS)+'&cosa=inverter');
+ var m=url.match(/chiave=eq\.([a-z_]+)/),ch=m?m[1]:'';
+ if((opts.method||'GET').toUpperCase()==='PATCH'){var b={};try{b=JSON.parse(opts.body||'{}');}catch(e){}
+  return fetch(CFG,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:PASS,chiave:ch,valore:b.valore})});}
+ return fetch(CFG+'?t='+encodeURIComponent(PASS)+'&chiave='+encodeURIComponent(ch));}
+window.addEventListener('message',function(e){var d=e.data||{};
+ if(d.tipo==='tema'&&(d.tema==='chiaro'||d.tema==='scuro'))document.documentElement.setAttribute('data-tema',d.tema);
+ if(d.tipo==='pass'&&d.pass&&!PASS){PASS=d.pass;try{sessionStorage.setItem('regia_pass',PASS)}catch(x){}}});
+try{var t0=window.parent.document.documentElement.getAttribute('data-tema');if(t0)document.documentElement.setAttribute('data-tema',t0);}catch(e){}
+if(!PASS){try{window.parent.postMessage({tipo:'chiedi_pass'},'*');}catch(e){}}
+
+/* PORTALE NEXT-110: finestre a video (chiedi, avvisa, attendi) al posto di confirm/alert del browser */
+function fChiudi(){var v=document.getElementById('fVelo');if(v)v.remove();}
+function fEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fApri(tipo,titolo,testoHtml,bottoni){fChiudi();var col={chiedi:['var(--acw,#ECFEFF)','var(--ac,#0891B2)','?'],ok:['var(--grw,#DCFCE7)','var(--gr,#16A34A)','✓'],attenzione:['var(--amw,#FEF3C7)','var(--am,#B45309)','!'],errore:['#FEE2E2','#DC2626','×'],attesa:['var(--acw,#ECFEFF)','var(--ac,#0891B2)','…']}[tipo]||['#eee','#333','·'];
+ var v=document.createElement('div');v.className='velo';v.id='fVelo';
+ v.innerHTML='<div class="fin" role="dialog" aria-modal="true"><div class="fh"><span class="fi" style="background:'+col[0]+';color:'+col[1]+'">'+col[2]+'</span><div><b>'+fEsc(titolo)+'</b></div></div><div class="fm">'+testoHtml+'</div>'+(bottoni&&bottoni.length?'<div class="fp">'+bottoni.map(function(b,i){return '<button class="fb '+(b[1]||'')+'" data-fb="'+i+'">'+fEsc(b[0])+'</button>';}).join('')+'</div>':'')+'</div>';
+ document.body.appendChild(v);
+ return new Promise(function(ok){v.addEventListener('click',function(e){var b=e.target.closest('[data-fb]');if(b){var i=+b.getAttribute('data-fb');fChiudi();ok(bottoni[i][2]);}else if(e.target===v&&tipo!=='attesa'){fChiudi();ok(null);}});
+  var s=v.querySelector('.fb.si,.fb.rosso');if(s)s.focus();});}
+function chiedi(titolo,testoHtml,si,rosso){return fApri('chiedi',titolo,testoHtml,[['Annulla','',false],[si||'Conferma',rosso?'rosso':'si',true]]);}
+function avvisa(tipo,titolo,testoHtml){return fApri(tipo,titolo,testoHtml,[['Chiudi','si',true]]);}
+function attendi(testo){fApri('attesa',testo||'Un momento…','<span class="gira"></span>'+fEsc(testo||'Sto lavorando…'),[]);}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var v=document.getElementById('fVelo');if(v&&!v.querySelector('.gira'))v.click();}});
+
+function chiediTesto(titolo,etichetta,segnaposto){return new Promise(function(ok){
+ fApri('chiedi',titolo,'<label style="display:block;margin:0 0 6px;font-size:12px;font-weight:600">'+fEsc(etichetta)+'</label><input id="fTesto" type="email" placeholder="'+fEsc(segnaposto||'')+'" style="width:100%">',[['Annulla','',null],['Invia','si','__testo__']])
+ .then(function(r){ok(r==='__testo__'?(window.__fTesto||'').trim()||null:null);});
+ var i=document.getElementById('fTesto');if(i){i.focus();i.addEventListener('input',function(){window.__fTesto=i.value;});i.addEventListener('keydown',function(ev){if(ev.key==='Enter'){window.__fTesto=i.value;var b=document.querySelector('#fVelo .fb.si');if(b)b.click();}});}
+});}
+function avvisaBreve(msg){msg=String(msg==null?'':msg);var t=/^\s*✅/.test(msg)||/(success|ripristinato|salvato|inviata)/i.test(msg)&&!/errore|❌/i.test(msg)?'ok':(/errore|❌|non si puo|non trovata/i.test(msg)?'errore':'attenzione');
+ var tit={ok:'Fatto',errore:'Qualcosa non va',attenzione:'Attenzione'}[t];avvisa(t,tit,fEsc(msg.replace(/^\s*[✅❌]\s*/,'')).replace(/\n/g,'<br>'));}
+</script><script>
+function toggleAccordion(id){var body=document.getElementById('acc-'+id+'-body');var arrow=document.getElementById('acc-'+id+'-arrow');var isOpen=body.classList.contains('open');body.classList.toggle('open',!isOpen);if(arrow)arrow.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';}
+function toggleAccordionCheck(id,checked){var body=document.getElementById('acc-'+id+'-body');var arrow=document.getElementById('acc-'+id+'-arrow');body.classList.toggle('open',checked);if(arrow)arrow.style.transform=checked?'rotate(180deg)':'rotate(0deg)';}
+function toggleSubAccordion(id){var body=document.getElementById('sub-'+id+'-body');var arrow=document.getElementById('sub-'+id+'-arrow');var cb=document.getElementById('sub_'+id+'_cb');var isOpen=body.classList.contains('open');body.classList.toggle('open',!isOpen);if(cb)cb.checked=!isOpen;if(arrow)arrow.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';}
+function toggleSubAccordionCheck(id,checked){var body=document.getElementById('sub-'+id+'-body');var arrow=document.getElementById('sub-'+id+'-arrow');body.classList.toggle('open',checked);if(arrow)arrow.style.transform=checked?'rotate(180deg)':'rotate(0deg)';}
+function setManutCosto(val){var el=document.getElementById('manut_eur');if(val!==null)el.value=val;el.readOnly=(val!==null);el.style.background=(val!==null)?'#f3f0fa':'';}
+</script>
+      </div>
+
+      <!-- TAB 3 -->
+      <div id="tabMappa" style="display:none"><div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Centra la mappa esattamente sul tetto del cliente, poi premi <strong style="color:var(--teal)">Salva posizione</strong>.</div><div id="mapCoordBar" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:8px;margin-bottom:12px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--teal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 00-8-8z"/></svg><span id="mapCoordText">Nessuna posizione salvata — muovi la mappa e premi Salva</span></div><div id="mapContainer" style="width:100%;height:420px;border-radius:10px;border:1.5px solid var(--teal-border);overflow:hidden;position:relative"><div id="map" style="width:100%;height:100%"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:1000"><svg width="40" height="40" viewBox="0 0 40 40"><line x1="20" y1="2" x2="20" y2="16" stroke="#0c8278" stroke-width="2.5" stroke-linecap="round"/><line x1="20" y1="24" x2="20" y2="38" stroke="#0c8278" stroke-width="2.5" stroke-linecap="round"/><line x1="2" y1="20" x2="16" y2="20" stroke="#0c8278" stroke-width="2.5" stroke-linecap="round"/><line x1="24" y1="20" x2="38" y2="20" stroke="#0c8278" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="4" fill="none" stroke="#0c8278" stroke-width="2.5"/></svg></div></div><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center"><button type="button" class="btn btn-primary" onclick="salvaPosizioneMap()" style="background:var(--teal);border:none">📍 Salva posizione tetto</button><button type="button" class="btn btn-secondary" onclick="centramappa()" style="font-size:13px">🔍 Centra su indirizzo</button><div style="margin-left:autodisplay:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)"><input type="checkbox" id="mapSatellite" checked onchange="toggleMapLayer(this.checked)" style="accent-color:var(--teal)"><label for="mapSatellite" style="margin:0;font-size:12px;color:var(--text-muted);cursor:pointer">Vista satellite</label></div></div><div id="pvgisMapResult" style="display:none;margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px"><div style="font-size:13px;font-weight:600;color:#065f46;margin-bottom:10px">📊 Analisi PVGIS — dalla posizione mappa</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div style="text-align:center;background:#fff;border-radius:8px;padding:10px;border:1px solid #bbf7d0"><div style="font-size:20px;font-weight:700;color:#059669" id="mr_kwh">—</div><div style="font-size:11px;color:var(--text-muted)">kWh/anno</div></div><div style="text-align:center;background:#fff;border-radius:8px;padding:10px;border:1px solid #bbf7d0"><div style="font-size:20px;font-weight:700;color:#059669" id="mr_payback">—</div><div style="font-size:11px;color:var(--text-muted)">Payback</div></div><div style="text-align:center;background:#fff;border-radius:8px;padding:10px;border:1px solid #bbf7d0"><div style="font-size:20px;font-weight:700;color:#059669" id="mr_roi">—</div><div style="font-size:11px;color:var(--text-muted)">ROI 20 anni</div></div></div><div id="mr_status" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div></div><div id="screenshotPreview" style="display:none;margin-top:12px"><div style="font-size:12px;font-weight:500;color:var(--text-dim);margin-bottom:6px">Screenshot salvato:</div><img id="screenshotImg" style="max-width:100%;border-radius:8px;border:1px solid var(--border)" /></div></div>
+
+      <!-- TAB 4 -->
+      <div id="tabImpianto" style="display:none"><div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Indica se il cliente ha già un impianto fotovoltaico e il percorso commerciale da proporre.</div><fieldset><legend>Impianto fotovoltaico esistente</legend><div class="options"><label class="opt"><input type="radio" name="imp_esistente" id="imp_no" value="no" checked onchange="toggleImpEsistente(false)" /><span>Nessun impianto esistente</span></label><label class="opt"><input type="radio" name="imp_esistente" id="imp_si" value="si" onchange="toggleImpEsistente(true)" /><span>Ha già un impianto FV</span></label></div></fieldset><div id="impEsistenteBox" style="display:none"><div class="product-section" style="margin-top:16px"><div class="section-title">📋 Dati impianto esistente</div><div class="row"><div><label for="imp_kwp">Potenza impianto (kWp)</label><input type="number" name="imp_kwp" id="imp_kwp" step="0.1" min="0" placeholder="Es. 3.0" /></div><div><label for="imp_anno">Anno installazione</label><input type="number" name="imp_anno" id="imp_anno" min="2000" max="2025" placeholder="Es. 2018" /></div></div><label for="imp_conto_energia">Conto Energia</label><select name="imp_conto_energia" id="imp_conto_energia"><option value="nessuno">Nessuno / Non incentivato</option><option value="1">1° Conto Energia</option><option value="2">2° Conto Energia</option><option value="3">3° Conto Energia</option><option value="4">4° Conto Energia</option><option value="5">5° Conto Energia</option><option value="altro">Altro</option></select><fieldset style="margin-top:14px"><legend>Sistema di accumulo attuale</legend><div class="options"><label class="opt"><input type="radio" name="imp_ha_accumulo" value="no" checked onchange="document.getElementById('impAccumuloBox').style.display='none'" /><span>Non presente</span></label><label class="opt"><input type="radio" name="imp_ha_accumulo" value="si" onchange="document.getElementById('impAccumuloBox').style.display='flex'" /><span>Presente</span></label></div><div id="impAccumuloBox" style="display:none;margin-top:10px;align-items:center;gap:10px"><label style="margin:0;white-space:nowrap;font-size:12px">Capacità (kWh)</label><input type="number" name="imp_accumulo_kwh" id="imp_accumulo_kwh" step="0.1" min="0" placeholder="Es. 5.12" style="max-width:160px" /></div></fieldset></div><div class="product-section" style="margin-top:14px"><div class="section-title">🎯 Percorso commerciale</div><div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Seleziona cosa proporre al cliente</div><div class="card-percorso" id="cardRifacimento" onclick="selectPercorso('rifacimento')"><input type="radio" name="imp_percorso" value="rifacimento" /><div><div class="cp-title">🔄 Rifacimento totale</div><div class="cp-desc">Smontaggio impianto esistente e installazione nuovo impianto completo</div></div></div><div class="card-percorso" id="cardAccumulo" onclick="selectPercorso('accumulo')"><input type="radio" name="imp_percorso" value="accumulo" /><div style="width:100%"><div class="cp-title">🔋 Aggiunta accumulo</div><div class="cp-desc">Inverter ibrido + sistema di accumulo</div><div id="accumuloSubBox" style="display:none;margin-top:12px" class="sub-box"><div class="sub-box-label">Tipologia intervento:</div><div class="options" style="flex-direction:column"><label class="opt"><input type="radio" name="imp_accumulo_tipo" value="retrofit" checked /><span>Retrofit — vecchio inverter rimane, si aggiunge ibrido secondario + batterie + meter</span></label><label class="opt"><input type="radio" name="imp_accumulo_tipo" value="sostituzione" /><span>Sostituzione inverter — nuovo inverter ibrido completo + batterie</span></label></div></div></div></div><div class="card-percorso" id="cardAmpliamento" onclick="selectPercorso('ampliamento')"><input type="radio" name="imp_percorso" value="ampliamento" /><div><div class="cp-title">⚡ Ampliamento</div><div class="cp-desc">Aggiunta di kWp all'impianto esistente, con o senza accumulo</div></div></div></div><label style="margin-top:14px">Note impianto esistente</label><textarea name="imp_note" rows="2" placeholder="Note sul vecchio impianto, stato, marca, anomalie..."></textarea></div></div>
+
+      <!-- TAB 5 GENERA -->
+      <div id="tabGenera" style="display:none">
+<!-- BLOCCO PDF GIA GENERATI -->
+<div id="pdfSalvatiBox" style="display:none;margin-bottom:14px;border:1.5px solid var(--teal-border);border-radius:10px;overflow:hidden">
+  <div style="background:var(--teal-bg);padding:10px 14px;font-size:12px;font-weight:700;color:var(--teal)">📄 PDF già generati — richiama senza rigenarare</div>
+  <div style="padding:12px 14px;background:white;display:flex;flex-direction:column;gap:8px" id="pdfSalvatiList"></div>
+</div>
+<script>
+function mostraPdfSalvati(dati) {
+  var tipi = [
+    {key:'pdf_ridotto_url', label:'Preventivo Ridotto (PR)'},
+    {key:'pdf_esteso_url',  label:'Preventivo Esteso (PE)'},
+    {key:'pdf_solo_url',    label:'Solo Offerta (SP)'}
+  ];
+  var trovati = tipi.filter(function(t){ return dati[t.key]; });
+  if (!trovati.length) return;
+  window._pdfUrls = window._pdfUrls || {};
+  var _mappa = { pdf_ridotto_url:'ridotto', pdf_esteso_url:'esteso', pdf_solo_url:'solo' };
+  trovati.forEach(function(t){ window._pdfUrls[_mappa[t.key]] = dati[t.key]; });
+  var lista = document.getElementById('pdfSalvatiList');
+  lista.innerHTML = '';
+  trovati.forEach(function(t) {
+    var url = dati[t.key];
+    var nome = url.split('/').pop();
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    row.innerHTML =
+      '<span style="flex:1;font-size:11px;color:#444;word-break:break-all">'+t.label+'</span>' +
+      '<a href="'+url+'" target="_blank" style="background:var(--teal);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none">⬇ Scarica</a>' +
+      '<button onclick="inviaMailPdf(\''+url+'\',\''+nome+'\')" style="background:var(--teal-bg);color:var(--teal);border:1.5px solid var(--teal-border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">✉ Invia email</button>';
+    lista.appendChild(row);
+  });
+  document.getElementById('pdfSalvatiBox').style.display = 'block';
+}
+
+async function inviaMailPdf(url, nome) {
+  var email = await chiediTesto('Invia il PDF per email','Indirizzo email del destinatario','nome@esempio.it');
+  if (!email) return;
+  var pid = document.getElementById('preventivo_id') ? document.getElementById('preventivo_id').value : '';
+  fetch('https://n8n.srv1030489.hstgr.cloud/webhook/invia-pdf-email', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({pdf_url: url, nome_file: nome, email: email, preventivo_id: pid})
+  }).then(function(r){ return r.json(); })
+    .then(function(){ avvisaBreve('Email inviata con successo!'); })
+    .catch(function(){ avvisaBreve('Errore invio email.'); });
+}
+</script>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Salva prima i dati nei tab precedenti, poi scegli il tipo di report da generare.</div>
+        <div id="generaBox" style="border:2px solid var(--teal);border-radius:10px;padding:20px;background:linear-gradient(135deg,#f0fdf9,#fafdfb);box-shadow:0 4px 16px rgba(12,130,120,.1)">
+          <div class="genera-title">📄 Genera Report Preventivo</div>
+          <div class="genera-sub">Scegli il formato da generare</div>
+          <div class="genera-row">
+            <button type="button" class="btn-genera solo" onclick="generaPreventivo('solo')">📋 Solo preventivo</button>
+            <button type="button" class="btn-genera ridotto" onclick="generaPreventivo('ridotto')">📊 Preventivo ridotto</button>
+            <button type="button" class="btn-genera esteso" disabled style="opacity:.4;cursor:not-allowed;background:#ccc;border-color:#ccc;color:#666" title="Funzionalità in arrivo">📈 Preventivo esteso</button>
+          </div>
+          <div class="genera-desc">
+            <strong>Solo preventivo:</strong> elenco componenti, offerta economica dettagliata, modalità di pagamento e firme.<br>
+            <strong>Ridotto:</strong> come Solo preventivo + analisi del sito con mappa satellite, orizzonte solare e dati PVGIS + analisi energetica ed economica con piano finanziario 20 anni.<br>
+            <strong style="color:var(--text-hint)">Esteso:</strong> <span style="color:var(--text-hint)">come Ridotto + progetto layout tetto con calcolo della potenza massima installabile. <em>(funzionalità in arrivo)</em></span>
+          </div>
+          <div id="generaStatus" style="margin-top:10px;font-size:13px;font-weight:500"></div>
+        </div>
+        <div id="downloadBox" style="display:none;margin-top:16px;padding:14px;border:1.5px solid var(--teal-border);border-radius:10px;background:var(--teal-bg)">
+          <div style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:10px">📥 Scarica PDF</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="button" id="btnDownloadSolo" class="btn-genera solo" onclick="scaricaPdf('solo')">📋 Scarica Solo preventivo</button>
+            <button type="button" id="btnDownloadRidotto" class="btn-genera ridotto" onclick="scaricaPdf('ridotto')">📊 Scarica Preventivo ridotto</button>
+            <button type="button" id="btnDownloadEsteso" class="btn-genera esteso" disabled style="opacity:.4;cursor:not-allowed;background:#ccc;border-color:#ccc;color:#666" title="Funzionalità in arrivo">📈 Scarica Preventivo esteso</button>
+          </div>
+          <div id="downloadStatus" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
+        </div>
+
+        <!-- ═══ SEZIONE INVIA — AGGIORNATA ═══ -->
+        <div style="margin-top:14px;border:1.5px solid var(--teal-border);border-radius:10px;overflow:hidden">
+          <div style="background:var(--teal);padding:11px 16px;display:flex;align-items:center;gap:10px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 4 12 13 22 4"/></svg>
+            <span style="font-size:13px;font-weight:700;color:white;flex:1;letter-spacing:0.3px">Invia Preventivo al Cliente</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.65)">da commerciale@next-srl.eu</span>
+          </div>
+          <div style="padding:16px;background:var(--teal-bg);display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+              <div style="flex:1;min-width:150px">
+                <label style="display:block;margin:0 0 4px;font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.6px">Tipo PDF</label>
+                <select id="inviaTipoSel" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--teal-border);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text)">
+                  <option value="solo">📋 Solo preventivo</option>
+                  <option value="ridotto">📊 Preventivo ridotto</option>
+                  <option value="esteso">📈 Preventivo esteso</option>
+                </select>
+              </div>
+              <div style="flex:2;min-width:200px">
+                <label style="display:block;margin:0 0 4px;font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.6px">Email cliente *</label>
+                <input type="email" id="inviaEmailEl" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--teal-border);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text)" placeholder="email@cliente.it" />
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--teal-border);border-radius:8px;padding:10px 14px">
+              <label style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);cursor:pointer;font-weight:500;margin:0">
+                <input type="checkbox" id="cbEmail2" onchange="toggleEmail2(this.checked)" style="accent-color:var(--teal);width:15px;height:15px;flex-shrink:0">
+                Aggiungi secondo destinatario (opzionale)
+              </label>
+              <div id="email2Box" style="display:none;margin-top:8px">
+                <input type="email" id="inviaEmail2El" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--teal-border);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--input-bg);color:var(--text)" placeholder="secondo@email.it" />
+              </div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--teal-border);border-radius:8px;overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(12,130,120,0.07);border-bottom:1px solid var(--teal-border)">
+                <span style="font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.6px">Testo email</span>
+                <button type="button" onclick="salvaTestoStandard()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid var(--teal-border);background:var(--surface);color:var(--teal);font-size:11px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer" title="Sovrascrive il testo standard per tutti i prossimi invii">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                    Salva testo standard
+                </button>
+                <button type="button" onclick="ripristinaTestoStandard()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:11px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;margin-left:6px" title="Rimette il testo standard originale, quello con i segnaposto">
+                  &#8634; Ripristina
+                </button>
+              </div>
+              <textarea id="testoEmailEl" rows="6" style="width:100%;padding:10px 13px;border:none;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;resize:vertical;line-height:1.65;display:block" placeholder="Caricamento testo standard..."></textarea>
+              <div style="padding:5px 13px 7px;font-size:10px;color:var(--text-hint);background:var(--surface);border-top:0.5px solid var(--border)">
+                Il riepilogo dati preventivo e il bottone di download vengono aggiunti automaticamente.
+              </div>
+            </div>
+            <button type="button" onclick="inviaPreventivo()" style="padding:12px 20px;border-radius:8px;background:var(--accent);color:white;border:none;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.background='#5b21b6'" onmouseout="this.style.background='var(--accent)'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 4 12 13 22 4"/></svg>
+              Invia Preventivo al Cliente
+            </button>
+            <div id="inviaStatus" style="font-size:12px;font-weight:500;text-align:center"></div>
+          </div>
+        </div>
+        <!-- ═══ FINE SEZIONE INVIA ═══ -->
+
+      </div>
+
+      <div class="actions"><button type="reset" class="btn btn-secondary" id="btnReset">Svuota</button><button type="submit" class="btn btn-primary" id="btnSubmit">Salva</button></div>
+      <div id="status"></div>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  var SUBMIT_EP='https://n8n.srv1030489.hstgr.cloud/webhook/preventivo-submit';
+  var LEAD_LIST_EP='https://n8n.srv1030489.hstgr.cloud/webhook/prev-lead-list';
+  var CLIENT_EP='https://n8n.srv1030489.hstgr.cloud/webhook/client-list';
+  var LEAD_PREV_EP='https://n8n.srv1030489.hstgr.cloud/webhook/lead-preventivi';
+  var VENDOR_EP='https://n8n.srv1030489.hstgr.cloud/webhook/vendor-list';
+  var REINVIA_EP='https://n8n.srv1030489.hstgr.cloud/webhook/reinvia-preventivo';
+  var GENERA_EP='https://n8n.srv1030489.hstgr.cloud/webhook/genera-preventivo';
+  var MODULI_EP='https://n8n.srv1030489.hstgr.cloud/webhook/odoo-pannelli-fv';
+  var form=document.getElementById('prevForm');
+  var statusEl=document.getElementById('status');
+  var todayLabel=document.getElementById('todayLabel');
+  var submittedAt=document.getElementById('submitted_at');
+  var existingLead=document.getElementById('existing_lead');
+  var modeBadge=document.getElementById('modeBadge');
+  var btnSubmit=document.getElementById('btnSubmit');
+  var resetBtn=document.getElementById('btnReset');
+  var lastNameInp=document.getElementById('last_name');
+  var firstNameInp=document.getElementById('first_name');
+  var emailInp=document.getElementById('email');
+  var phoneInp=document.getElementById('phone');
+  var phone2Inp=document.getElementById('phone_2');
+  var vendorSel=document.getElementById('vendor');
+  var existingLeadId=document.getElementById('existing_lead_id');
+  var existingPrevId=document.getElementById('existing_prev_id');
+  var lastSavedId=document.getElementById('last_saved_id');
+  var modeInput=document.getElementById('mode');
+  var fonteInput=document.getElementById('fonte_lead');
+  var prevBox=document.getElementById('prevBox');
+  var prevSelectWrap=document.getElementById('prevSelectWrap');
+  var prevSelect=document.getElementById('prevSelect');
+  var prevModeRadios=document.querySelectorAll('input[name="prev_mode"]');
+  var reinviaBox=document.getElementById('reinviaBox');
+  var btnReinvia=document.getElementById('btnReinvia');
+  var reinviaStatus=document.getElementById('reinviaStatus');
+  var tabButtons=document.querySelectorAll('.tab-btn');
+  var prevData=[];
+  tabButtons.forEach(function(b){b.addEventListener('click',function(){
+    document.getElementById('tabContatto').style.display=(b.dataset.tab==='contatto')?'block':'none';
+    document.getElementById('tabProdotti').style.display=(b.dataset.tab==='prodotti')?'block':'none';
+    document.getElementById('tabMappa').style.display=(b.dataset.tab==='mappa')?'block':'none';
+    document.getElementById('tabImpianto').style.display=(b.dataset.tab==='impianto')?'block':'none';
+    document.getElementById('tabGenera').style.display=(b.dataset.tab==='genera')?'block':'none';
+    tabButtons.forEach(function(x){x.classList.toggle('active',x.dataset.tab===b.dataset.tab);});
+    if(b.dataset.tab==='mappa')setTimeout(function(){initMap();},100);
+    });});
+  window.toggleImpEsistente=function(h){document.getElementById('impEsistenteBox').style.display=h?'block':'none';if(!h){document.getElementById('accumuloSubBox').style.display='none';['cardRifacimento','cardAccumulo','cardAmpliamento'].forEach(function(id){var c=document.getElementById(id);if(c)c.classList.remove('selected');});}};
+  window.selectPercorso=function(tipo){['cardRifacimento','cardAccumulo','cardAmpliamento'].forEach(function(id){document.getElementById(id).classList.remove('selected');});var mp={rifacimento:'cardRifacimento',accumulo:'cardAccumulo',ampliamento:'cardAmpliamento'};document.getElementById(mp[tipo]).classList.add('selected');document.getElementById('accumuloSubBox').style.display=(tipo==='accumulo')?'block':'none';var r=document.querySelector('input[name="imp_percorso"][value="'+tipo+'"]');if(r)r.checked=true;};
+  var TIPI_LABEL={solo:'Solo preventivo',ridotto:'Preventivo ridotto',esteso:'Preventivo esteso'};
+  window.generaPreventivo=function(tipo){
+    var pid=lastSavedId.value||existingPrevId.value||prevSelect.value||'';
+    var gs=document.getElementById('generaStatus');
+    if(!pid){gs.style.color='var(--error)';gs.textContent='Salva prima il preventivo (tab Dati Contatto).';return;}
+    var label=TIPI_LABEL[tipo]||tipo;
+    gs.style.color='var(--text-muted)';
+    gs.innerHTML='⏳ Generazione '+label+'... <span id="gsTimer">60</span>s';
+    fetch(GENERA_EP+'?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo).catch(function(){});
+    var secs=60;
+    var iv=setInterval(function(){secs--;var el=document.getElementById('gsTimer');if(el)el.textContent=secs;if(secs<=0)clearInterval(iv);},1000);
+    var poll=function(){
+      fetch('https://n8n.srv1030489.hstgr.cloud/webhook/get-pdf-url?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo)
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(j){
+          if(j&&j.url){
+            clearInterval(iv);
+            window._pdfUrls[tipo]=j.url;
+            gs.style.color='var(--success)';
+            gs.innerHTML='✅ '+label+' pronto — <a href="'+j.url+'" target="_blank" style="color:var(--teal);font-weight:600">📄 Apri PDF</a>';
+            document.getElementById('downloadBox').style.display='block';
+          } else if(secs>0){setTimeout(poll,3000);}
+          else{gs.style.color='var(--error)';gs.textContent='PDF non pronto. Ripremi il tasto.';}
+        }).catch(function(){});
+    };
+    setTimeout(poll,5000);
+  };
+  window._pdfUrls={};
+  window.scaricaPdf=function(tipo){
+    var pid=lastSavedId.value||existingPrevId.value||prevSelect.value||'';
+    var ds=document.getElementById('downloadStatus');
+    if(window._pdfUrls[tipo]){_scaricaUrl(window._pdfUrls[tipo],tipo);return;}
+    ds.textContent='⏳ Recupero URL...';
+    fetch('https://n8n.srv1030489.hstgr.cloud/webhook/get-pdf-url?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo)
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(j){
+        if(j&&j.url){window._pdfUrls[tipo]=j.url;_scaricaUrl(j.url,tipo);}
+        else{ds.style.color='var(--error)';ds.textContent='PDF non trovato. Generalo prima.';}
+      }).catch(function(){ds.textContent='Errore recupero PDF.';});
+  };
+  function _scaricaUrl(url,tipo){
+    var ds=document.getElementById('downloadStatus');
+    ds.style.color='var(--text-muted)';ds.textContent='⬇️ Download in corso...';
+    var filename=decodeURIComponent(url.split('/').pop());
+    fetch(url).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.blob();})
+      .then(function(blob){
+        var blobUrl=URL.createObjectURL(blob);
+        var a=document.createElement('a');a.href=blobUrl;a.download=filename;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        setTimeout(function(){URL.revokeObjectURL(blobUrl);},5000);
+        ds.style.color='var(--success)';ds.textContent='✅ PDF scaricato: '+filename;
+        setTimeout(function(){ds.textContent='';},4000);
+      }).catch(function(){ds.style.color='var(--text-muted)';ds.textContent='Apertura PDF...';window.open(url,'_blank');setTimeout(function(){ds.textContent='';},3000);});
+  }
+
+  /* ═══ INVIA PREVENTIVO — AGGIORNATO CON email2 e testo personalizzato ═══ */
+  window.inviaPreventivo=async function(){
+    var pid=lastSavedId.value||existingPrevId.value||prevSelect.value||'';
+    var tipo=document.getElementById('inviaTipoSel').value;
+    var email=document.getElementById('inviaEmailEl').value.trim();
+    var cb2=document.getElementById('cbEmail2');
+    var email2El=document.getElementById('inviaEmail2El');
+    var email2=cb2&&cb2.checked&&email2El?email2El.value.trim():'';
+    var testoEl=document.getElementById('testoEmailEl');
+    var testo=testoEl?testoEl.value.trim():'';
+    var st=document.getElementById('inviaStatus');
+    if(!pid){st.style.color='var(--error)';st.textContent='Salva prima il preventivo.';return;}
+    if(!email){st.style.color='var(--error)';st.textContent='Inserisci l\'email del cliente.';return;}
+    if(!window._pdfUrls[tipo]){st.style.color='var(--error)';st.textContent='Genera prima il PDF \''+tipo+'\'.';return;}
+    var dest=email+(email2?' + '+email2:'');
+    if(!await chiedi('Invia il preventivo','Mando il preventivo a <b>'+fEsc(dest)+'</b>?<br><br>Parte la mail al cliente con il PDF allegato.','Invia')){return;}
+    st.style.color='var(--text-muted)';st.textContent='⏳ Invio in corso...';
+    fetch('https://n8n.srv1030489.hstgr.cloud/webhook/invia-preventivo-cliente',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({preventivo_id:pid,tipo:tipo,pdf_url:window._pdfUrls[tipo],
+        email_cliente:email,email_2:email2,testo_email:testo,
+                cliente_nome:((document.getElementById('last_name').value||'')+' '+(document.getElementById('first_name').value||'')).trim(),
+        oggetto:'Preventivo impianto fotovoltaico — '+(window._titolo(document.getElementById('first_name').value)+' '+window._titolo(document.getElementById('last_name').value)).trim()})
+    }).then(function(r){
+      if(r.ok){st.style.color='var(--success)';st.textContent='✅ Preventivo inviato a '+dest+'!';}
+      else{st.style.color='var(--error)';st.textContent='❌ Errore invio ('+r.status+'). Riprova.';}
+    }).catch(function(){st.style.color='var(--error)';st.textContent='❌ Errore di rete.';});
+  };
+
+  /* ═══ NUOVE FUNZIONI: toggleEmail2, salvaTestoStandard, _caricaTestoEmail ═══ */
+  var SK_CONF='';
+  var SB_CONF='https://pnxhthrheqeucoisifjw.supabase.co';
+
+  window.toggleEmail2=function(checked){
+    document.getElementById('email2Box').style.display=checked?'block':'none';
+  };
+
+ /* ═══ TESTO DELLA MAIL: compilazione dei segnaposto ═══ */
+
+  /* MARA -> Mara ,  DE LUCA -> De Luca ,  d'angelo -> D'Angelo */
+  window._titolo=function(s){
+    return String(s||'').toLowerCase().replace(/(^|[\s'’\-])([a-zà-öø-ÿ])/g,
+      function(m,sep,ch){return sep+ch.toUpperCase();});
+  };
+
+  /* 9.84 -> 9,84   16 -> 16 */
+  window._numero=function(v){
+    var n=parseFloat(String(v).replace(',','.'));
+    if(!isFinite(n))return '';
+    return String(Math.round(n*100)/100).replace('.',',');
+  };
+
+  /* il backup si legge dalle note finche non c'e la spunta:
+     accende la riga solo se la frase che lo nomina non lo nega */
+  window._backupPrevisto=function(note){
+    var trovato=false;
+    String(note||'').toLowerCase().split(/[.;\n•]/).forEach(function(frase){
+      if(!/back\s*-?\s*up/.test(frase))return;
+      if(/\b(non|senza|escluso|esclusa|esclusi|opzional\w*|a richiesta|da quotare|da valutare|eventual\w*|preventivar\w*)\b/.test(frase))return;
+      trovato=true;
+    });
+    return trovato;
+  };
+
+  window._compilaEmail=function(modello){
+    var g=function(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';};
+
+    var prov=g('province').toUpperCase();
+        var note=g('note_fv')+' '+g('imp_note')+' '+g('note_generali')+' '+g('fv_altro_desc');
+    var _rad=function(nome){var e=document.querySelector('input[name="'+nome+'"]:checked');return e?e.value:'';};
+    var _batKwh={WECO_5:'5,12',WECO_16:'16',ZCS:'5,12'};
+    var _accumuloOfferto=_batKwh[_rad('fv_bat_tipo')]||'';
+
+    var valori={
+      cliente:(window._titolo(g('first_name'))+' '+window._titolo(g('last_name'))).trim(),
+      nome:window._titolo(g('first_name')),
+      potenza:window._numero(g('fv_kwp')),
+            accumulo:_accumuloOfferto||window._numero(g('imp_accumulo_kwh')),
+      venditore:g('vendor'),
+      backup:window._backupPrevisto(note)?'incluso — continuità di alimentazione in caso di interruzione di rete':'',
+      friuli:(['UD','PN','GO','TS'].indexOf(prov)>=0)?', pratica per il contributo della Regione Friuli Venezia Giulia':''
+    };
+
+    var testo=String(modello||'');
+    testo=testo.replace(/\{\{friuli\}\}/g,valori.friuli);
+
+    ['cliente','nome','potenza','accumulo','venditore','backup'].forEach(function(k){
+      if(valori[k]!==''&&valori[k]!=null){
+        testo=testo.replace(new RegExp('\{\{'+k+'\}\}','g'),valori[k]);
+      }
+    });
+
+    /* via le righe rimaste con un segnaposto non risolto */
+    testo=testo.split('\n').filter(function(riga){return !/\{\{[a-z_]+\}\}/.test(riga);}).join('\n');
+    return testo.replace(/\n{3,}/g,'\n\n').trim();
+  };
+
+  window._caricaTestoEmail=function(){
+    var testoEl=document.getElementById('testoEmailEl');
+    if(!testoEl||testoEl.dataset.loaded)return;
+
+    var metti=function(modello){
+      window._modelloEmail=modello;
+      testoEl.value=window._compilaEmail(modello);
+      testoEl.dataset.loaded='1';
+    };
+
+    cfgFetch(SB_CONF+'/rest/v1/configurazioni?chiave=eq.email_preventivo_testo&select=valore',{
+      headers:{'apikey':SK_CONF,'Authorization':'Bearer '+SK_CONF}
+    }).then(function(r){return r.json();})
+      .then(function(d){
+        if(d&&d.length&&d[0].valore)metti(d[0].valore);
+        else metti('Le inviamo il preventivo per il Suo impianto fotovoltaico.\n\nCordiali saluti,\n\nNext S.r.l.');
+      })
+      .catch(function(){
+        metti('Le inviamo il preventivo per il Suo impianto fotovoltaico.\n\nCordiali saluti,\nNext S.r.l.');
+      });
+  };
+
+window.ripristinaTestoStandard=async function(){
+    if(!await chiedi('Ripristino del testo standard','Rimetto il testo standard <b>originale</b>, quello con i segnaposto?<br><br>Vale per tutti i preventivi da adesso in poi.','Ripristina'))return;
+    cfgFetch(SB_CONF+'/rest/v1/configurazioni?chiave=eq.email_preventivo_testo_originale&select=valore',{
+      headers:{'apikey':SK_CONF,'Authorization':'Bearer '+SK_CONF}
+    }).then(function(r){return r.json();})
+      .then(function(d){
+        if(!d||!d.length||!d[0].valore){avvisaBreve('Copia originale non trovata.');return;}
+        var orig=d[0].valore;
+        return cfgFetch(SB_CONF+'/rest/v1/configurazioni?chiave=eq.email_preventivo_testo',{
+          method:'PATCH',
+          headers:{'apikey':SK_CONF,'Authorization':'Bearer '+SK_CONF,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({valore:orig,updated_at:new Date().toISOString()})
+        }).then(function(r){
+          if(!r.ok){avvisaBreve('Errore nel ripristino (HTTP '+r.status+').');return;}
+          window._modelloEmail=orig;
+          var t=document.getElementById('testoEmailEl');
+          if(t){t.value=window._compilaEmail(orig);}
+          avvisaBreve('Testo standard ripristinato.');
+        });
+      }).catch(function(){avvisaBreve('Errore di rete.');});
+  };
+
+  window.salvaTestoStandard=async function(){
+    var testoEl=document.getElementById('testoEmailEl');
+    var scritto=testoEl?testoEl.value.trim():'';
+    if(!scritto){avvisaBreve('Il testo è vuoto.');return;}
+
+    var modello=window._modelloEmail||'';
+    var intoccato=modello&&(scritto===window._compilaEmail(modello));
+    var daSalvare=intoccato?modello:scritto;
+
+    if(!intoccato&&!/\{\{[a-z_]+\}\}/.test(scritto)){
+      if(!await chiedi('Attenzione','Il testo che stai salvando contiene i dati di <b>questo</b> cliente (nome, potenza…) e non i segnaposto. Diventerebbe il testo standard per tutti i preventivi.<br><br>Salvare lo stesso?','Salva lo stesso',true))return;
+    } else if(!await chiedi('Nuovo testo standard','Salvo questo come <b>nuovo testo standard</b>?<br><br>Sostituisce il testo attuale per tutti i preventivi.','Salva')){
+      return;
+    }
+
+    cfgFetch(SB_CONF+'/rest/v1/configurazioni?chiave=eq.email_preventivo_testo',{
+      method:'PATCH',
+      headers:{'apikey':SK_CONF,'Authorization':'Bearer '+SK_CONF,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({valore:daSalvare,updated_at:new Date().toISOString()})
+    }).then(function(r){
+      if(r.ok){window._modelloEmail=daSalvare;avvisaBreve('✅ Testo standard salvato!');}
+      else{avvisaBreve('❌ Errore (HTTP '+r.status+').');}
+    }).catch(function(){avvisaBreve('❌ Errore di rete.');});
+  };
+
+  /* ═══ TAB HANDLER — auto-popola email + carica testo email ═══ */
+  (function(){
+    var genTab=document.querySelector('[data-tab="genera"]');
+        if(genTab){genTab.addEventListener('click',function(){
+      var emailEl=document.getElementById('inviaEmailEl');
+      var src=document.getElementById('email');
+      var testoEl=document.getElementById('testoEmailEl');
+      var chiave=((document.getElementById('first_name')||{}).value||'')+'|'
+                +((document.getElementById('last_name')||{}).value||'')+'|'
+                +((src||{}).value||'');
+      if(testoEl&&testoEl.dataset.per!==chiave){
+        testoEl.dataset.per=chiave;
+        testoEl.dataset.loaded='';
+        if(emailEl&&src)emailEl.value=src.value;
+      } else if(emailEl&&!emailEl.value&&src&&src.value){
+        emailEl.value=src.value;
+      }
+      window._caricaTestoEmail();
+    });}
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MODIFICA 1 — caricamento dinamico inverter da catalogo_prodotti
+     ═══════════════════════════════════════════════════════════════════ */
+  // Cache catalogo inverter (caricato una volta, riusato)
+  window._catalogoInverter = null;
+
+  window.caricaCatalogoInverter = function(){
+    if (window._catalogoInverter) return Promise.resolve(window._catalogoInverter);
+    var SB = 'https://pnxhthrheqeucoisifjw.supabase.co';
+    var SK = '';
+    return cfgFetch(SB + '/rest/v1/catalogo_prodotti?tipo=eq.inverter&attivo=eq.true&select=id,brand,modello,codice_preventivo,potenza_wp,trifase&order=brand,potenza_wp', {
+      headers: { 'apikey': SK, 'Authorization': 'Bearer ' + SK }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      window._catalogoInverter = Array.isArray(d) ? d : [];
+      return window._catalogoInverter;
+    })
+    .catch(function(){ window._catalogoInverter = []; return []; });
+  };
+
+  // Array STORICI hardcoded — mantenuti per non perdere gli inverter già usati
+  // Vengono mostrati PRIMA di quelli dal catalogo Supabase
+  var INVERTER_STORICI_ZCS = [
+    [3,  '3 kW — Azzurro 3.0 Pro'],
+    [4,  '4 kW — Azzurro 4.0 Pro'],
+    [5,  '5 kW — Azzurro 5.0 Pro'],
+    [6,  '6 kW — Azzurro 6.0 Pro (max mono)'],
+    [8,  '8 kW — Azzurro 8.0 Pro (trifase)'],
+    [10, '10 kW — Azzurro 10.0 Pro (trifase)'],
+    [12, '12 kW — Azzurro 12.0 Pro (trifase)'],
+    [15, '15 kW — Azzurro 15.0 Pro (trifase)']
+  ];
+  var INVERTER_STORICI_WECO = [
+    [3,  '3 kW — ESY-3K'],
+    [4,  '4 kW — ESY-4K'],
+    [5,  '5 kW — ESY-5K'],
+    [6,  '6 kW — ESY-6K (max mono)'],
+    [8,  '8 kW (trifase)'],
+    [10, '10 kW (trifase)'],
+    [12, '12 kW (trifase)'],
+    [15, '15 kW (trifase)']
+  ];
+
+  window.updateInverterOptions = function(){
+    var brand = document.getElementById('fv_inv_brand').value;
+    var sel   = document.getElementById('fv_inv_potenza');
+    var cur   = sel.value;
+    sel.innerHTML = '<option value="">Caricamento...</option>';
+
+    // 1) Inverter storici (sempre presenti, value = numero kW per retro-compat)
+    var listaStorici = (brand === 'ZCS') ? INVERTER_STORICI_ZCS : INVERTER_STORICI_WECO;
+
+    window.caricaCatalogoInverter().then(function(catalogo){
+      // 2) Inverter NUOVI dal catalogo Supabase (value = codice_preventivo).
+      //    PATTERN: solo i prodotti con codice_preventivo che inizia per "WECO-XTR3-LV-",
+      //    "WECO-XTR" o altri pattern di SERIE NUOVE (non gli storici WECO/ZCS che sono
+      //    già hardcoded sopra). Se aggiungi nuove serie in futuro, basta che il
+      //    codice_preventivo segua un pattern univoco e aggiungerlo qui.
+      var brandFilter = brand.toUpperCase();
+            var PATTERN_NUOVI = brandFilter === 'WECO'
+        ? ['WECO-XTR3-LV-', 'WECO-XTR', 'WECO-ESX']      // pattern per le serie WECO nuove
+        : [];                                  // ZCS: nessuna nuova serie in catalogo → array vuoto
+      var listaDB = catalogo.filter(function(p){
+        if (!p.codice_preventivo) return false;
+        for (var i = 0; i < PATTERN_NUOVI.length; i++) {
+          if (p.codice_preventivo.indexOf(PATTERN_NUOVI[i]) === 0) return true;
+        }
+        return false;
+      });
+      listaDB.sort(function(a, b){ return (a.potenza_wp || 0) - (b.potenza_wp || 0); });
+
+      sel.innerHTML = '<option value="">Potenza / modello...</option>';
+
+      // 3) Appendi PRIMA gli storici (mantenuti com'erano)
+      listaStorici.forEach(function(item){
+        var kw = item[0];
+        var label = item[1];
+        var o = document.createElement('option');
+        o.value = String(kw);                  // es. "6" (retro-compat: come prima)
+        o.setAttribute('data-kw', kw);
+        o.setAttribute('data-codice', '');     // storici NON hanno codice_preventivo
+        o.setAttribute('data-modello', label);
+        o.textContent = label;
+        sel.appendChild(o);
+      });
+
+      // 4) Appendi DOPO i nuovi dal catalogo (value = codice_preventivo)
+      listaDB.forEach(function(p){
+        var kw    = (p.potenza_wp || 0) / 1000;
+        var fase  = p.trifase ? ' (trifase)' : ' (monofase)';
+        var label = kw + ' kW — ' + p.modello + fase;
+        var o = document.createElement('option');
+        o.value = p.codice_preventivo || '';   // es. "WECO-XTR3-LV-10K"
+        o.setAttribute('data-kw', kw);
+        o.setAttribute('data-codice', p.codice_preventivo || '');
+        o.setAttribute('data-modello', p.modello || '');
+        o.setAttribute('data-trifase', p.trifase ? '1' : '0');
+        o.textContent = label;
+        sel.appendChild(o);
+      });
+
+      // 5) Ripristina selezione precedente
+      if (cur) {
+        // Match esatto su value (funziona sia per "6" storici sia per "WECO-XTR3-LV-10K" nuovi)
+        var found = false;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === cur) { sel.selectedIndex = i; found = true; break; }
+        }
+        // Fallback: se cur è un numero non trovato (es. caricamento da vecchio preventivo)
+        if (!found && /^\d+(\.\d+)?$/.test(cur)) {
+          var curKw = parseFloat(cur);
+          for (var j = 0; j < sel.options.length; j++) {
+            if (parseFloat(sel.options[j].getAttribute('data-kw')) === curKw) {
+              sel.selectedIndex = j;
+              break;
+            }
+          }
+        }
+      }
+    });
+  };
+  /* ═══════════════════════════════════════════════════════════════════
+     FINE MODIFICA 1
+     ═══════════════════════════════════════════════════════════════════ */
+
+  window.suggerisciKwp=function(){
+    var kwh=parseFloat(document.getElementById('fv_consumi_kwh').value);
+    var hint=document.getElementById('hintKwp');
+    if(!kwh){hint.style.display='none';}
+    else{var sug=Math.round((kwh/1150)*10)/10;hint.textContent='Suggerito: '+sug+' kWp';hint.style.display='inline-block';var kwpEl=document.getElementById('fv_kwp');if(!kwpEl.value)kwpEl.value=sug;}
+    calcolaAutoconsumo();
+  };
+  window.calcolaAutoconsumo=function(){
+    var kwh=parseFloat(document.getElementById('fv_consumi_kwh').value)||0;
+    var kwp=parseFloat(document.getElementById('fv_kwp').value)||0;
+    var apcEl=document.getElementById('p_apc');
+    if(!apcEl||apcEl.dataset.manuale==='1')return;
+    if(kwh>0&&kwp>0){var prod_est=kwp*1150;var apc_raw=Math.min(kwh/prod_est*0.55,0.35);var apc_max=Math.min(kwh/prod_est,0.90);var apc=Math.round(Math.min(Math.max(apc_raw,0.20),apc_max)*100);apcEl.value=apc;apcEl.placeholder='';}
+    else{apcEl.value='';apcEl.placeholder='Calcolato automaticamente';}
+  };
+  window.toggleFonteLead=function(isCliente){fonteInput.value=isCliente?'clienti':'leads';if(isCliente){document.getElementById('labelDropdown').textContent='Cliente';document.getElementById('hintDropdown').textContent='Seleziona un cliente dalla rubrica.';existingLead.innerHTML='<option value="">Caricamento clienti...</option>';loadClientList();}else{document.getElementById('labelDropdown').textContent='Lead';document.getElementById('hintDropdown').textContent='Seleziona un lead o lascia "Nuovo lead" per crearne uno.';existingLead.innerHTML='<option value="">&#10133; Nuovo lead</option>';loadLeads();}existingLeadId.value='';existingPrevId.value='';prevBox.style.display='none';clearAnag();clearProducts();updateMode();};
+  function setNow(){var n=new Date();todayLabel.textContent=n.toLocaleString('it-IT');submittedAt.value=n.toISOString();}
+  setNow();
+  function setField(name,val){var el=form.querySelector('[name="'+name+'"]');if(el)el.value=(val!==null&&val!==undefined)?val:'';}
+  function setCheckbox(name,val){var cb=form.querySelector('[name="'+name+'"]');if(cb)cb.checked=!!val;}
+  function setRadio(name,val){form.querySelectorAll('input[name="'+name+'"]').forEach(function(r){r.checked=(r.value===(val||''));});}
+  function updateMode(){var isEx=!!existingLeadId.value;var pmr=document.querySelector('input[name="prev_mode"]:checked');var pm=pmr?pmr.value:'new_prev';if(!isEx){modeInput.value='new';modeBadge.textContent='NUOVO';modeBadge.className='mode-badge new';btnSubmit.textContent='Salva';reinviaBox.style.display='none';}else if(pm==='new_prev'){modeInput.value='new_prev';modeBadge.textContent='NUOVO PREV';modeBadge.className='mode-badge new';btnSubmit.textContent='Salva';existingPrevId.value='';reinviaBox.style.display='none';}else{modeInput.value='edit_prev';modeBadge.textContent='MODIFICA';modeBadge.className='mode-badge edit';btnSubmit.textContent='Salva modifiche';existingPrevId.value=prevSelect.value||'';reinviaBox.style.display=(prevSelect.value?'block':'none');}}
+  prevModeRadios.forEach(function(r){r.addEventListener('change',function(){prevSelectWrap.style.display=(r.value==='edit_prev')?'block':'none';updateMode();if(r.value==='edit_prev'&&prevSelect.value)fillProducts(prevSelect.value);else if(r.value!=='edit_prev')clearProducts();});});
+  prevSelect.addEventListener('change',function(){existingPrevId.value=prevSelect.value;updateMode();if(prevSelect.value)fillProducts(prevSelect.value);else clearProducts();});
+  function loadVendors(){fetch(VENDOR_EP).then(function(r){return r.json();}).then(function(d){var vv=Array.isArray(d.vendors)?d.vendors:[];vendorSel.innerHTML='<option value="">Seleziona agente...</option>';vv.forEach(function(v){var o=document.createElement('option');o.value=v.name;o.textContent=v.name;vendorSel.appendChild(o);});}).catch(function(){});}
+  function buildLeadOption(l,aF,cF,zF,pF){var o=document.createElement('option');o.value=l.id;o.setAttribute('data-last',l.last_name||'');o.setAttribute('data-first',l.first_name||'');o.setAttribute('data-email',(l.email||'').trim());o.setAttribute('data-phone',(l.phone||'').trim());o.setAttribute('data-phone2',(l.phone_2||'').trim());o.setAttribute('data-address',(l[aF]||'').trim());o.setAttribute('data-city',(l[cF]||'').trim());o.setAttribute('data-zip',(l[zF]||'').trim());o.setAttribute('data-province',(l[pF]||'').trim());var lbl=l.full_name;if(l.phone)lbl+=' \u2014 '+l.phone;if(l[cF])lbl+=' \u2014 '+l[cF];o.textContent=lbl;return o;}
+  function loadLeads(){fetch(LEAD_LIST_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.leads)?d.leads:(Array.isArray(d)?d:[]);existingLead.innerHTML='<option value="">&#10133; Nuovo lead</option>';items.forEach(function(l){if(!l.full_name||l.full_name.trim().length<2)return;existingLead.appendChild(buildLeadOption(l,'address','city','zip','province'));});}).catch(function(){});}
+  function loadClientList(){fetch(CLIENT_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.clients)?d.clients:(Array.isArray(d)?d:[]);existingLead.innerHTML='<option value="">&#10133; Nuovo preventivo</option>';items.forEach(function(c){if(!c.full_name||c.full_name.trim().length<2)return;existingLead.appendChild(buildLeadOption(c,'res_address','res_city','res_zip','res_province'));});}).catch(function(){});}
+  function loadPreventivi(lid){prevData=[];prevSelect.innerHTML='<option value="">Caricamento...</option>';fetch(LEAD_PREV_EP+'?lead_id='+encodeURIComponent(lid)).then(function(r){return r.json();}).then(function(d){var pp=Array.isArray(d.preventivi)?d.preventivi:(Array.isArray(d)?d:[]);prevData=pp;prevSelect.innerHTML='<option value="">— Seleziona preventivo —</option>';if(!pp.length){prevSelect.innerHTML='<option value="">Nessun preventivo trovato</option>';return;}pp.forEach(function(p){var o=document.createElement('option');o.value=p.id;var dt=p.created_at?new Date(p.created_at).toLocaleDateString('it-IT'):'';o.textContent=dt+(p.product_type?' \u2014 '+p.product_type:'')+(p.fv_totale_eur?' \u2014 \u20ac'+p.fv_totale_eur:'');prevSelect.appendChild(o);});}).catch(function(){prevSelect.innerHTML='<option value="">Errore caricamento</option>';});}
+  function loadModuli(){fetch(MODULI_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.moduli)?d.moduli:(Array.isArray(d)?d:[]);if(!items.length)return;var sel=document.getElementById('fv_pannello');var cur=sel.value;sel.innerHTML='<option value="">— Seleziona —</option>';items.forEach(function(m){var o=document.createElement('option');o.value=m.code||m.id||m.default_code;o.textContent=m.name||m.display_name;sel.appendChild(o);});if(cur)sel.value=cur;}).catch(function(){});}
+  function clearAnag(){['last_name','first_name','email','phone','phone_2','address','city','zip','province'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});}
+  function clearProducts(){form.querySelectorAll('#tabProdotti input[type="checkbox"]').forEach(function(cb){cb.checked=false;var ev=new Event('change');cb.dispatchEvent(ev);});form.querySelectorAll('#tabProdotti input[type="number"],#tabProdotti textarea,#tabProdotti input[type="text"]').forEach(function(el){el.value='';});form.querySelectorAll('#tabProdotti select').forEach(function(el){el.selectedIndex=0;});setRadio('fv_fornitura','monofase');setRadio('fv_bat_tipo','nessuna');setField('fv_pannello','LONGI_410');document.getElementById('hintKwp').style.display='none';lastSavedId.value='';updateInverterOptions();document.getElementById('imp_no').checked=true;toggleImpEsistente(false);setField('tariffa_energia_eur','0.30');setField('tariffa_rid_eur','0.14');setField('tariffa_cer_eur','0.06');setField('quota_energia_condivisa','50');setField('incremento_costo_pct','3.0');setField('degrado_moduli_pct','0.5');}
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MODIFICA 3 — fillProducts carica catalogo poi seleziona inverter
+     ═══════════════════════════════════════════════════════════════════ */
+  function fillProducts(pid){var p=prevData.find(function(x){return x.id===pid;});if(!p)return;clearProducts();setField('map_lat',p.map_lat);setField('map_lon',p.map_lon);setField('map_screenshot_url',p.map_screenshot_url);if(p.map_lat&&p.map_lon){window.mostraVincoli(p.map_lat,p.map_lon);var _pb=document.getElementById('pvgisMapResult');if(_pb&&p.pvgis_e_y_kwh){_pb.style.display='block';document.getElementById('mr_kwh').textContent=Math.round(p.pvgis_e_y_kwh).toLocaleString('it-IT');document.getElementById('mr_payback').textContent=p.pvgis_payback_anni?p.pvgis_payback_anni+' anni':'—';document.getElementById('mr_roi').textContent=p.pvgis_roi_pct?Math.round(p.pvgis_roi_pct)+'%':'—';document.getElementById('mr_status').textContent='Dati salvati con il preventivo';}if(p.map_screenshot_url){var _sp=document.getElementById('screenshotPreview');var _si=document.getElementById('screenshotImg');if(_sp&&_si){_si.src=p.map_screenshot_url;_sp.style.display='block';}}}if(_mapInited&&_map&&p.map_lat&&p.map_lon){_map.setView([parseFloat(p.map_lat),parseFloat(p.map_lon)],19);}setField('fv_consumi_kwh',p.fv_consumi_kwh);setField('fv_kwp',p.fv_kwp);setField('fv_pannello',p.fv_pannello||'LONGI_410');setRadio('fv_fornitura',p.fv_fornitura||'monofase');setCheckbox('fv_inv_ibrido',p.fv_inv_ibrido);setCheckbox('fv_inv_tradizionale',p.fv_inv_tradizionale);
+    setField('fv_inv_brand', p.fv_inv_brand || 'WECO');
+    window.caricaCatalogoInverter().then(function(){
+      updateInverterOptions();
+      // Aspetta che il dropdown sia popolato, poi seleziona
+      setTimeout(function(){
+        var sel = document.getElementById('fv_inv_potenza');
+        if (!sel) return;
+        // Priorità 1: nuovo campo fv_inv_codice_preventivo
+        if (p.fv_inv_codice_preventivo) {
+          sel.value = p.fv_inv_codice_preventivo;
+        }
+        // Priorità 2: fallback al vecchio campo fv_inv_potenza (numerico)
+        else if (p.fv_inv_potenza) {
+          var curKw = parseFloat(p.fv_inv_potenza);
+          for (var i = 0; i < sel.options.length; i++) {
+            if (parseFloat(sel.options[i].getAttribute('data-kw')) === curKw) {
+              sel.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }, 350);
+    });
+    setRadio('fv_bat_tipo',p.fv_bat_tipo||'nessuna');setField('fv_kwh',p.fv_kwh);setCheckbox('fv_ottimizzatori',p.fv_ottimizzatori);setCheckbox('fv_staz_auto',p.fv_staz_auto);setCheckbox('fv_altro_enabled',p.fv_altro_enabled);setField('fv_altro_desc',p.fv_altro_desc);if(p.fv_altro_enabled)document.getElementById('fv_altro_area').style.display='block';setField('fv_totale_eur',p.fv_totale_eur);setField('note_fv',p.note_fv);setCheckbox('heat_pigma50_enabled',p.heat_pigma50_enabled);setField('heat_pigma50_taglia',p.heat_pigma50_taglia);setCheckbox('heat_pigma80_enabled',p.heat_pigma80_enabled);setField('heat_pigma80_taglia',p.heat_pigma80_taglia);setCheckbox('heat_valvole_enabled',p.heat_valvole_enabled);setField('heat_valvole_num',p.heat_valvole_num);setCheckbox('clima_alys25',p.clima_alys25);setCheckbox('clima_alys35',p.clima_alys35);setCheckbox('clima_alys50',p.clima_alys50);setCheckbox('clima_prios70',p.clima_prios70);setCheckbox('clima_dual50',p.clima_dual50);setCheckbox('heat_kit_wifi',p.heat_kit_wifi);setCheckbox('heat_altro_enabled',p.heat_altro_enabled);setField('heat_altro_desc',p.heat_altro_desc);if(p.heat_altro_enabled)document.getElementById('heat_altro_area').style.display='block';setField('heat_totale_eur',p.heat_totale_eur);setField('note_termico',p.note_termico);setField('note_generali',p.note_generali);setRadio('pagamento_tipo',p.pagamento_tipo||'standard');setField('manut_eur',p.manut_eur||0);setField('tariffa_energia_eur',p.tariffa_energia_eur||0.30);setField('tariffa_rid_eur',p.tariffa_rid_eur||0.14);setField('tariffa_cer_eur',p.tariffa_cer_eur||0.06);setField('quota_energia_condivisa',p.quota_energia_condivisa||50);setField('incremento_costo_pct',p.incremento_costo_pct||3.0);setField('degrado_moduli_pct',p.degrado_moduli_pct||0.5);setField('autoconsumo_pct',p.autoconsumo_pct||40);
+    (function(){var kwpVal=parseFloat(p.fv_kwp)||0;var kwhAnno=parseFloat(p.pvgis_e_y_kwh)||0;var resaEl=document.getElementById('display_resa_kwh_kwp');var pvgisKwhEl=document.getElementById('display_pvgis_kwh');if(kwhAnno>0&&resaEl){if(pvgisKwhEl)pvgisKwhEl.textContent=Math.round(kwhAnno).toLocaleString('it-IT')+' kWh/anno totali';if(kwpVal>0){resaEl.textContent=Math.round(kwhAnno/kwpVal).toLocaleString('it-IT');}else{resaEl.textContent=Math.round(kwhAnno).toLocaleString('it-IT');if(pvgisKwhEl)pvgisKwhEl.textContent+=' (kWp non inserito)';}}})();
+    if(p.vendor)vendorSel.value=p.vendor;setRadio('product_type',p.product_type||'fotovoltaico');setRadio('tipo_agevolazione',p.tipo_agevolazione||'nessuna');if(p.imp_esistente==='si'){document.getElementById('imp_si').checked=true;toggleImpEsistente(true);setField('imp_kwp',p.imp_kwp);setField('imp_anno',p.imp_anno);setField('imp_conto_energia',p.imp_conto_energia||'nessuno');setRadio('imp_ha_accumulo',p.imp_ha_accumulo||'no');if(p.imp_ha_accumulo==='si')document.getElementById('impAccumuloBox').style.display='flex';setField('imp_accumulo_kwh',p.imp_accumulo_kwh);if(p.imp_percorso)selectPercorso(p.imp_percorso);setRadio('imp_accumulo_tipo',p.imp_accumulo_tipo||'retrofit');setField('imp_note',p.imp_note);}if(p.id){lastSavedId.value=p.id;document.getElementById('generaBox').style.display='block';if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(p);}}
+  /* ═══════════════════════════════════════════════════════════════════
+     FINE MODIFICA 3
+     ═══════════════════════════════════════════════════════════════════ */
+
+  existingLead.addEventListener('change',function(){var lid=existingLead.value;var opt=existingLead.selectedOptions[0];if(!lid){existingLeadId.value='';existingPrevId.value='';prevBox.style.display='none';clearAnag();clearProducts();updateMode();return;}existingLeadId.value=lid;lastNameInp.value=opt.getAttribute('data-last')||'';firstNameInp.value=opt.getAttribute('data-first')||'';emailInp.value=opt.getAttribute('data-email')||'';phoneInp.value=opt.getAttribute('data-phone')||'';phone2Inp.value=opt.getAttribute('data-phone2')||'';document.getElementById('address').value=opt.getAttribute('data-address')||'';document.getElementById('city').value=opt.getAttribute('data-city')||'';document.getElementById('zip').value=opt.getAttribute('data-zip')||'';document.getElementById('province').value=opt.getAttribute('data-province')||'';prevBox.style.display='block';var r=document.querySelector('input[name="prev_mode"][value="new_prev"]');if(r)r.checked=true;prevSelectWrap.style.display='none';clearProducts();loadPreventivi(lid);updateMode();});
+  resetBtn.addEventListener('click',function(){existingLead.value='';existingLeadId.value='';existingPrevId.value='';prevBox.style.display='none';clearAnag();vendorSel.value='';clearProducts();statusEl.textContent='';statusEl.className='';reinviaBox.style.display='none';reinviaStatus.textContent='';updateMode();setNow();});
+  form.addEventListener('submit',async function(){statusEl.className='';var nome=((lastNameInp.value||'')+' '+(firstNameInp.value||'')).trim();var cm=modeInput.value;if(cm==='edit_prev'&&!existingPrevId.value){statusEl.className='error';statusEl.textContent='Seleziona un preventivo da modificare.';return;}if(cm==='new_prev'&&!await chiedi('Nuovo preventivo','Stai creando un nuovo preventivo per <b>'+fEsc(nome)+'</b>. Procedo?','Crea il preventivo')){statusEl.className='error';statusEl.textContent='Annullato.';return;}statusEl.className='loading';statusEl.textContent='Salvataggio in corso...';var r=function(n){var el=form.querySelector('[name="'+n+'"]:checked');return el?el.value:null;};var v=function(id){var el=form.querySelector('[name="'+id+'"]');return el?el.value.trim():'';};var c=function(id){var el=form.querySelector('[name="'+id+'"]');return el?el.checked:false;};var payload={mode:modeInput.value,full_name:nome,existing_lead_id:existingLeadId.value||null,existing_prev_id:existingPrevId.value||null,last_name:lastNameInp.value.trim(),first_name:firstNameInp.value.trim(),phone:phoneInp.value.trim(),phone_2:phone2Inp.value.trim(),email:emailInp.value.trim(),vendor:vendorSel.value,address:document.getElementById('address').value.trim(),city:document.getElementById('city').value.trim(),zip:document.getElementById('zip').value.trim(),province:document.getElementById('province').value.trim(),tipo_agevolazione:r('tipo_agevolazione')||'nessuna',product_type:r('product_type')||'fotovoltaico',fv_consumi_kwh:v('fv_consumi_kwh')||null,fv_kwp:v('fv_kwp')||null,fv_pannello:v('fv_pannello')||'LONGI_410',fv_fornitura:r('fv_fornitura')||'monofase',fv_inv_ibrido:c('fv_inv_ibrido'),fv_inv_tradizionale:c('fv_inv_tradizionale'),fv_inv_brand:v('fv_inv_brand')||'WECO',
+    /* ═══════════════════════════════════════════════════════════════
+       MODIFICA 2 — split codice_preventivo / potenza kW
+       Storici: data-codice="" → fv_inv_codice_preventivo=null, fv_inv_potenza=kw
+       Nuovi (catalogo): data-codice="WECO-XTR3-LV-10K" → fv_inv_codice_preventivo=codice, fv_inv_potenza=kw
+       ═══════════════════════════════════════════════════════════════ */
+    fv_inv_codice_preventivo: (function(){
+      var sel = document.getElementById('fv_inv_potenza');
+      var opt = sel ? sel.options[sel.selectedIndex] : null;
+      if (!opt) return null;
+      var codice = opt.getAttribute('data-codice');
+      return (codice && codice.length) ? codice : null;
+    })(),  // null per storici, codice_preventivo per i nuovi da catalogo
+    fv_inv_potenza: (function(){
+      var sel = document.getElementById('fv_inv_potenza');
+      var opt = sel ? sel.options[sel.selectedIndex] : null;
+      return opt ? (opt.getAttribute('data-kw') || null) : null;
+    })(),  // sempre il numero kW (es. "10") per retro-compatibilità
+    /* ═══════════════════════════════════════════════════════════════
+       FINE MODIFICA 2
+       ═══════════════════════════════════════════════════════════════ */
+    fv_bat_tipo:r('fv_bat_tipo')||'nessuna',fv_kwh:v('fv_kwh')||null,fv_ottimizzatori:c('fv_ottimizzatori'),fv_staz_auto:c('fv_staz_auto'),fv_altro_enabled:c('fv_altro_enabled'),fv_altro_desc:v('fv_altro_desc'),fv_totale_eur:v('fv_totale_eur')||null,note_fv:v('note_fv'),heat_pigma50_enabled:c('heat_pigma50_enabled'),heat_pigma50_taglia:v('heat_pigma50_taglia'),heat_pigma80_enabled:c('heat_pigma80_enabled'),heat_pigma80_taglia:v('heat_pigma80_taglia'),heat_valvole_enabled:c('heat_valvole_enabled'),heat_valvole_num:v('heat_valvole_num')||null,clima_alys25:c('clima_alys25'),clima_alys35:c('clima_alys35'),clima_alys50:c('clima_alys50'),clima_prios70:c('clima_prios70'),clima_dual50:c('clima_dual50'),heat_kit_wifi:c('heat_kit_wifi'),heat_altro_enabled:c('heat_altro_enabled'),heat_altro_desc:v('heat_altro_desc'),heat_totale_eur:v('heat_totale_eur')||null,note_termico:v('note_termico'),note_generali:v('note_generali'),map_lat:document.getElementById('map_lat').value||null,map_lon:document.getElementById('map_lon').value||null,map_screenshot_url:document.getElementById('map_screenshot_url').value||null,imp_esistente:r('imp_esistente')||'no',imp_kwp:v('imp_kwp')||null,imp_anno:v('imp_anno')||null,imp_conto_energia:v('imp_conto_energia')||'nessuno',imp_ha_accumulo:r('imp_ha_accumulo')||'no',imp_accumulo_kwh:v('imp_accumulo_kwh')||null,imp_percorso:r('imp_percorso')||null,imp_accumulo_tipo:r('imp_accumulo_tipo')||null,imp_note:v('imp_note'),pagamento_tipo:r('pagamento_tipo')||'standard',manut_eur:parseFloat(v('manut_eur'))||0,note_manut:v('note_manut'),tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.14,tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.08,tariffa_cer_eur:parseFloat(v('tariffa_cer_eur'))||0.06,quota_energia_condivisa:parseFloat(v('quota_energia_condivisa'))||50,incremento_costo_pct:parseFloat(v('incremento_costo_pct'))||3.0,degrado_moduli_pct:parseFloat(v('degrado_moduli_pct'))||0.5,autoconsumo_pct:parseFloat(v('autoconsumo_pct'))||40};fetch(SUBMIT_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){if(j&&(j.success||j.id)){statusEl.className='success';statusEl.textContent='\u2705 Preventivo salvato con successo!';if(j.id){lastSavedId.value=j.id;existingPrevId.value=j.id;document.getElementById('generaBox').style.display='block';document.getElementById('generaStatus').textContent='';setTimeout(function(){document.getElementById('generaBox').scrollIntoView({behavior:'smooth',block:'center'});},300);}if(j.lead_id){existingLeadId.value=j.lead_id;modeInput.value='existing';updateMode();}if(fonteInput.value==='leads')loadLeads();}else{statusEl.className='error';statusEl.textContent='\u274C Errore: '+(j&&j.message?j.message:'risposta inattesa dal server');}}).catch(function(e){statusEl.className='error';statusEl.textContent='\u274C Errore di rete: '+e.message;});});
+  btnReinvia.addEventListener('click',async function(){var pid=existingPrevId.value||prevSelect.value||'';if(!pid){reinviaStatus.style.color='var(--error)';reinviaStatus.textContent='Seleziona prima un preventivo.';return;}if(!await chiedi('Reinvia il preventivo','Rimando il preventivo al cliente?','Reinvia'))return;reinviaStatus.style.color='var(--text-muted)';reinviaStatus.textContent='Invio...';fetch(REINVIA_EP+'?preventivo_id='+encodeURIComponent(pid)).then(function(r){reinviaStatus.style.color=r.ok?'var(--success)':'var(--error)';reinviaStatus.textContent=r.ok?'\u2713 Reinviato!':'Errore '+r.status;}).catch(function(){reinviaStatus.style.color='var(--error)';reinviaStatus.textContent='Errore di rete.';});});
+  loadVendors();loadLeads();loadModuli();updateMode();
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+var _map=null;var _layerOSM=null;var _layerSat=null;var _mapInited=false;
+function initMap(){
+  if(_mapInited){_map&&_map.invalidateSize();return;}
+  _mapInited=true;
+  _layerOSM=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:21});
+  _layerSat=L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijo'+'ibmV4dC1zcmwiLCJhIjoiY21ueDdrNWJzMDA0bTJxcW5wcXJ5am93ZiJ9.quhJBd1Num9CaBUXZX-40w',{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1});
+    var _la=parseFloat((document.getElementById('map_lat')||{}).value);
+  var _lo=parseFloat((document.getElementById('map_lon')||{}).value);
+  var _haCroce=!isNaN(_la)&&!isNaN(_lo);
+  _map=L.map('map',{center:_haCroce?[_la,_lo]:[42.5,12.5],zoom:_haCroce?19:5,layers:[_layerSat],zoomControl:true});
+  if(!_haCroce)setTimeout(function(){centramappa();},300);
+}
+window.toggleMapLayer=function(satellite){
+  if(!_map)return;
+  if(satellite){_map.removeLayer(_layerOSM);_map.addLayer(_layerSat);}
+  else{_map.removeLayer(_layerSat);_map.addLayer(_layerOSM);}
+};
+window.centramappa=function(){
+  var address=document.getElementById('address')?document.getElementById('address').value.trim():'';
+  var city=document.getElementById('city')?document.getElementById('city').value.trim():'';
+  var zip=document.getElementById('zip')?document.getElementById('zip').value.trim():'';
+  var province=document.getElementById('province')?document.getElementById('province').value.trim():'';
+  if(!city&&!address){avvisaBreve('Inserisci prima l\'indirizzo nel tab "Dati Contatto".');return;}
+  var params=new URLSearchParams({format:'json',limit:'1',countrycodes:'it',addressdetails:'0'});
+  if(address)params.set('street',address);if(city)params.set('city',city);if(zip)params.set('postalcode',zip);if(province)params.set('state',province);params.set('country','Italia');
+  var coordBar=document.getElementById('mapCoordText');coordBar.textContent='Geocoding in corso...';
+  fetch('https://nominatim.openstreetmap.org/search?'+params.toString(),{headers:{'User-Agent':'NextSRL-Preventivi/1.0 (sante.bortoletto@next-srl.eu)'}})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(!data||!data.length){coordBar.textContent='Indirizzo non trovato — muovi la mappa manualmente';return;}
+    var lat=parseFloat(data[0].lat);var lon=parseFloat(data[0].lon);
+    if(!_map)return;_map.setView([lat,lon],19);coordBar.textContent='Centrato su: '+data[0].display_name.substring(0,60)+'...';
+  }).catch(function(){coordBar.textContent='Errore geocoding — muovi la mappa manualmente';});
+};
+window.salvaPosizioneMap=function(){
+  if(!_map){avvisaBreve('Apri prima il tab Mappa.');return;}
+  var center=_map.getCenter();var lat=center.lat;var lon=center.lng;
+document.getElementById('map_lat').value=lat;document.getElementById('map_lon').value=lon;
+window.mostraVincoli(lat, lon);
+var coordBar=document.getElementById('mapCoordText');coordBar.textContent='⏳ Salvataggio mappa in corso...';
+  document.getElementById('screenshotPreview').style.display='none';document.getElementById('map_screenshot_url').value='';
+  var kwp=parseFloat(document.getElementById('fv_kwp').value)||0;
+  var fvEur=parseFloat(document.querySelector('[name="fv_totale_eur"]')?document.querySelector('[name="fv_totale_eur"]').value:0)||0;
+  var pid=(document.getElementById('last_saved_id')||{value:''}).value||(document.getElementById('existing_prev_id')||{value:''}).value||null;
+  fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/salva-mappa-satellite',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({preventivo_id:pid,lat:lat,lon:lon})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.map_screenshot_url){
+      document.getElementById('map_screenshot_url').value=d.map_screenshot_url;
+      var preview=document.getElementById('screenshotPreview');var previewImg=document.getElementById('screenshotImg');
+      if(preview&&previewImg){previewImg.src=d.map_screenshot_url;preview.style.display='block';}
+      coordBar.textContent='✅ Mappa salvata — Lat: '+lat.toFixed(5)+', Lon: '+lon.toFixed(5)+(kwp>0?' · Calcolo PVGIS in corso...':'');(function(){var pid=(document.getElementById('last_saved_id')||{value:''}).value||(document.getElementById('existing_prev_id')||{value:''}).value||'';if(!pid)return;var existing=document.getElementById('btnConfiguraImpianto');if(existing){existing.href='https://n8n.srv1030489.hstgr.cloud/webhook/configura-impianto?preventivo_id='+pid;return;}var btn=document.createElement('a');btn.id='btnConfiguraImpianto';btn.href='https://n8n.srv1030489.hstgr.cloud/webhook/configura-impianto?preventivo_id='+pid;btn.target='_blank';btn.style.cssText='display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;background:var(--teal);color:white;font-size:13px;font-weight:600;text-decoration:none;margin-top:12px';btn.innerHTML='⚡ Configura Impianto';document.getElementById('mapContainer').parentNode.appendChild(btn);})();
+    } else {coordBar.textContent='✅ Coordinate salvate — Lat: '+lat.toFixed(5)+', Lon: '+lon.toFixed(5);}
+  }).catch(function(){coordBar.textContent='✅ Lat: '+lat.toFixed(6)+'   Lon: '+lon.toFixed(6);});
+  if(kwp>0){
+    var mrStatus=document.getElementById('mr_status');mrStatus.textContent='⏳ Calcolo PVGIS in corso...';document.getElementById('pvgisMapResult').style.display='block';
+    fetch('https://n8n.srv1030489.hstgr.cloud/webhook/pvgis-calcola',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({preventivo_id:pid,map_lat:lat,map_lon:lon,kwp:kwp,prezzo_ipianto_fv:fvEur,autoconsumo_pct:40,indirizzo:(document.getElementById('address').value+', '+document.getElementById('city').value).trim(),cliente_nome:((document.getElementById('last_name').value||'')+' '+(document.getElementById('first_name').value||'')).trim()})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.producibilita&&d.producibilita.annua_kWh){
+        document.getElementById('mr_kwh').textContent=Math.round(d.producibilita.annua_kWh).toLocaleString('it-IT');
+        document.getElementById('mr_payback').textContent=(d.finanziario&&d.finanziario.payback_anni)?d.finanziario.payback_anni+' anni':'—';
+        document.getElementById('mr_roi').textContent=(d.finanziario&&d.finanziario.ROI_pct)?'+'+Math.round(d.finanziario.ROI_pct)+'%':'—';
+        mrStatus.textContent='Calcolato — Lat: '+lat.toFixed(5)+', Lon: '+lon.toFixed(5);
+        var kwpVal=parseFloat(document.getElementById('fv_kwp').value)||0;
+        var kwhAnno=Math.round(d.producibilita.annua_kWh);
+        var resaEl=document.getElementById('display_resa_kwh_kwp');
+        var resaHidden=document.getElementById('resa_kwh_kwp_input');
+        var pvgisHidden=document.getElementById('pvgis_e_y_kwh_input');
+        var pvgisKwhEl=document.getElementById('display_pvgis_kwh');
+        if(pvgisHidden)pvgisHidden.value=kwhAnno;
+        if(pvgisKwhEl)pvgisKwhEl.textContent=kwhAnno.toLocaleString('it-IT')+' kWh/anno totali';
+        if(kwpVal>0&&resaEl){var resa=Math.round(kwhAnno/kwpVal);resaEl.textContent=resa.toLocaleString('it-IT');if(resaHidden)resaHidden.value=resa;}
+        else if(resaEl){resaEl.textContent='— (inserire kWp)';}
+      } else{mrStatus.textContent='PVGIS: '+(d.errore||'risposta non valida');}
+    }).catch(function(e){document.getElementById('mr_status').textContent='Errore PVGIS: '+e.message;});
+ } else{document.getElementById('pvgisMapResult').style.display='none';}
+};
+
+// --- display dei vincoli (edge verifica-display) -----------------------------
+var VINCOLI_URL = 'https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/verifica-display';
+var _vincoliUltimo = '';
+
+function _vincoliBox(){
+  var box = document.getElementById('vincoliBox');
+  if(box) return box;
+  var tab = document.getElementById('tabMappa');
+  if(!tab) return null;
+  var eti = document.createElement('label');
+  eti.textContent = 'Vincoli e prescrizioni';
+  box = document.createElement('div');
+  box.id = 'vincoliBox';
+    tab.appendChild(eti); tab.appendChild(box);
+  var azioni = document.createElement('div');
+  azioni.style.cssText = 'display:flex;gap:10px;margin-top:10px;flex-wrap:wrap';
+  azioni.innerHTML = '<button type="button" class="btn btn-secondary" onclick="generaVincoli(\'cliente\')" style="font-size:13px">📄 Analisi vincoli — cliente</button><button type="button" class="btn btn-secondary" onclick="generaVincoli(\'azienda\')" style="font-size:13px">🔒 Scheda verifica — interna</button>';
+  tab.appendChild(azioni);
+  return box;
+}
+
+window.generaVincoli = function(tipo){
+  var pid=(document.getElementById('last_saved_id')||{value:''}).value||(document.getElementById('existing_prev_id')||{value:''}).value||'';
+  if(!pid){avvisaBreve('Salva prima il preventivo: il documento si genera da quello.');return;}
+  var w=window.open('','_blank');
+  if(w)w.document.write('<p style="font:15px system-ui;padding:30px">Sto raccogliendo le fonti e componendo il documento&hellip;</p>');
+  fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/analisi-vincoli?preventivo='+encodeURIComponent(pid)+'&formato=html&tipo='+tipo)
+   .then(function(r){return r.json();})
+   .then(function(j){
+     if(!j.ok){if(w)w.close();avvisaBreve('Non si puo generare: '+(j.errore||'errore')+(j.cosa_fare?'\n\n'+j.cosa_fare:''));return;}
+     if(w){w.document.open();w.document.write(j.html);w.document.close();}
+   })
+   .catch(function(e){if(w)w.close();avvisaBreve('Errore di rete: '+e.message);});
+};
+window.mostraVincoli = function(lat, lon){
+  var box = _vincoliBox();
+  if(!box) return;
+  if(!lat || !lon){ box.innerHTML = ''; _vincoliUltimo = ''; return; }
+
+  // la stessa coppia di coordinate non si richiede due volte
+  var chiave = Number(lat).toFixed(6) + ',' + Number(lon).toFixed(6);
+  if(chiave === _vincoliUltimo) return;
+  _vincoliUltimo = chiave;
+
+  box.innerHTML = '<div style="color:#6b5f99;font-size:13px;border:1px dashed #e8e5f0;'
+    + 'border-radius:10px;padding:13px 15px">Verifica in corso&hellip;</div>';
+
+  var q = '?formato=html&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+  try {
+    var prov = (document.getElementById('province')||{}).value;
+    if(prov) q += '&provincia=' + encodeURIComponent(prov);
+    // se il preventivo e gia salvato passiamo anche il suo id: cosi la verifica
+    // resta agganciata al cliente e lo studio la ritrova gia fatta
+    var pid = (document.getElementById('last_saved_id')||{value:''}).value
+           || (document.getElementById('existing_prev_id')||{value:''}).value;
+    if(pid) q += '&preventivo=' + encodeURIComponent(pid);
+  } catch(e){}
+
+  fetch(VINCOLI_URL + q)
+    .then(function(r){ return r.text(); })
+    .then(function(html){ box.innerHTML = html; })
+    .catch(function(){
+      _vincoliUltimo = '';                       // cosi un nuovo tentativo e possibile
+      box.innerHTML = '<div style="border:1px solid #e2e8f0;background:#f1f5f9;color:#475569;'
+        + 'border-radius:10px;padding:13px 15px;font-size:13px">VERIFICA NON RIUSCITA: il servizio '
+        + 'non ha risposto. Riprova fra poco. "Non verificato" non vuol dire "nessun vincolo".</div>';
+    });
+};
+
+// all apertura: se la croce c e gia (contatto arrivato da una campagna) il riquadro
+// e acceso subito, senza che nessuno debba toccare la mappa
+document.addEventListener('DOMContentLoaded', function(){
+  var la = (document.getElementById('map_lat')||{}).value;
+  var lo = (document.getElementById('map_lon')||{}).value;
+  if(la && lo) window.mostraVincoli(la, lo);
+});
+</script>
+<script id="impagina-js">
+/* PORTALE NEXT-110: dispone gli elementi della pagina di prima come nel mockup. Sposta i nodi senza toccarne
+   id, nomi e gestori: salvataggio, generazione e invio restano quelli di prima. */
+(function(){
+ function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [...(c||document).querySelectorAll(s)];}
+ function el(t,cls,html){var e=document.createElement(t);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+ function card(ico,tit,sub){var c=el('section','pc');var h=el('div','ph','<span class="pi">'+ico+'</span><div><b>'+tit+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div><span class="px"></span>');var b=el('div','pb');c.appendChild(h);c.appendChild(b);return {c:c,b:b,x:h.querySelector('.px')};}
+ function sposta(dest){[].slice.call(arguments,1).forEach(function(n){if(n)dest.appendChild(n);});}
+ function riga(etichetta,controllo){var r=el('div','fr');r.appendChild(el('span','',etichetta));if(controllo)r.appendChild(controllo);return r;}
+ function daFieldset(fs){if(!fs)return null;var lg=fs.querySelector('legend'),op=fs.querySelector('.options');if(op&&op.textContent.trim().length<70)op.classList.add('seg');var r=riga(lg?lg.textContent.trim():'',op);fs.style.display='none';fs.parentNode.insertBefore(r,fs);return r;}
+ function via(){
+  var cont=$('body>.container')||document.body, card0=$('body>.container>.card');
+  /* testata */
+  var h1=$('h1'), pill=$('.pill'); var ph=el('div','ph2'); var tt=el('div');
+  var h=el('h1','',''); h.textContent='Modulo preventivi'; var badge=h1?h1.querySelector('.mode-badge'):null; if(badge){h.appendChild(document.createTextNode(' '));h.appendChild(badge);}
+  tt.appendChild(h); tt.appendChild(el('p','','Crea un preventivo per un nuovo lead o per un cliente esistente.')); ph.appendChild(tt); if(pill)ph.appendChild(pill);
+  var tabs=$('.tabs'); tabs.parentNode.insertBefore(ph,tabs);
+  /* 1 · dati contatto */
+  var T=$('#tabContatto'); var g=el('div','g2'),L=el('div','col'),Rr=el('div','col');
+  var c1=card('👤','Contatto','Lead nuovo o cliente già in archivio'); var lc=$('#labelCliente'); if(lc){lc.classList.add('sw');lc.childNodes.forEach(function(n){if(n.nodeType===3)n.textContent=' Cliente esistente';});c1.x.appendChild(lc);}
+  var secs=$$('.section-label',T);
+  sposta(c1.b,$('#labelDropdown'),$('#existing_lead'),$('#hintDropdown'),$('#prevBox'),$('#reinviaBox'),secs[0]);
+  var rows=$$(':scope>.row',T); sposta(c1.b,rows[0],rows[1]); var lEm=$('label[for="email"]',T); sposta(c1.b,lEm,$('#email'));
+  var c2=card('📍','Indirizzo impianto','Dove si installa'); if(secs[1])secs[1].remove(); sposta(c2.b,$('label[for="address"]',T),$('#address'),rows[2]);
+  var c3=card('⚙️','Impostazione','Chi segue e che tipo di lavoro'); var vs=$('#vendor'); var lv=$('label[for="vendor"]',T); if(lv)lv.remove();
+  c3.b.appendChild(riga('Agente *',vs)); $$(':scope>fieldset',T).forEach(function(fs){var r=daFieldset(fs);if(r)c3.b.appendChild(r);});
+  sposta(L,c1.c,c2.c); sposta(Rr,c3.c); sposta(g,L,Rr); T.insertBefore(g,T.firstChild);
+  /* 2 · prodotti */
+  var P=$('#tabProdotti'); if(P){var g2=el('div','g2'),L2=el('div','col'),R2=el('div','col');
+   sposta(L2,$('#acc-fv'),$('#acc-manut')); var c4=card('€','Pagamento e note','');
+   var pf=$$(':scope>fieldset',P)[0]; var lng=$('label',P)&&[...P.children].find(function(n){return n.tagName==='LABEL';}); var tng=$(':scope>textarea[name="note_generali"]',P);
+   if(pf){var r=daFieldset(pf);c4.b.appendChild(r);} sposta(c4.b,lng,tng); sposta(R2,$('#acc-heat'),c4.c); sposta(g2,L2,R2); P.appendChild(g2);}
+  $$('.bat-list').forEach(function(b){b.classList.add('seg');b.style.flexDirection='row';});
+  $$('#acc-fv-body fieldset').forEach(function(fs){var r=daFieldset(fs);});
+  /* 3 · mappa */
+  var M=$('#tabMappa'); if(M){var kids=[...M.children]; var intro=kids[0]; if(intro)intro.classList.add('intro');
+   var g3=el('div','g2m'),L3=el('div','col'),R3=el('div','col'); var c5=card('📍','Mappa tetto','Vista satellite'); var bar=kids.find(function(n){return n.querySelector&&n.querySelector('.btn-primary');});
+   sposta(c5.b,$('#mapContainer'),$('#screenshotPreview')); if(bar){var f=el('div','pf');f.appendChild(bar);bar.style.cssText+='display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%';c5.c.appendChild(f);}
+   var c6=card('⚙️','Posizione',''); sposta(c6.b,$('#mapCoordBar')); var c7=card('📊','Analisi PVGIS','Dalla posizione della mappa'); sposta(c7.b,$('#pvgisMapResult'));
+   sposta(L3,c5.c); sposta(R3,c6.c,c7.c); sposta(g3,L3,R3); M.appendChild(g3);}
+  /* 4 · impianto esistente */
+  var I=$('#tabImpianto'); if(I){var k=[...I.children]; if(k[0])k[0].classList.add('intro'); var c8=card('☀️','Impianto FV esistente',''); var fs=$(':scope>fieldset',I); if(fs){var r=daFieldset(fs);c8.b.appendChild(r);} I.insertBefore(c8.c,$('#impEsistenteBox'));
+   $$('#impEsistenteBox>.product-section').forEach(function(ps){ps.classList.add('pc');ps.style.cssText+='padding:6px 18px 16px;margin:16px 0 0';});}
+  /* 5 · genera */
+  var G=$('#tabGenera'); if(G){var k5=[...G.children]; var intro5=k5.find(function(n){return /Salva prima/.test(n.textContent)&&!n.id;}); if(intro5)intro5.classList.add('intro');
+   var g5=el('div','g2'),L5=el('div','col'),R5=el('div','col'); sposta(L5,$('#generaBox')); sposta(R5,$('#pdfSalvatiBox'),$('#downloadBox')); sposta(g5,L5,R5);
+   G.insertBefore(g5,intro5?intro5.nextSibling:G.firstChild); [$('#pdfSalvatiBox'),$('#downloadBox')].forEach(function(b){if(b){b.classList.add('pc');b.style.cssText+='padding:14px 18px;margin:0';}});}
+  /* barra in fondo */
+  var act=$('.actions'); if(act){act.classList.add('barra-fondo'); var st=$('#status'); var sp=el('span','sp'); act.insertBefore(sp,$('#btnSubmit')); if(st)act.insertBefore(st,sp);
+   var av=el('button','btn avanti',''); av.type='button'; act.appendChild(av);
+   function nomi(){var t=$$('.tab-btn'),i=t.findIndex(function(b){return b.classList.contains('active');});t.forEach(function(b,j){b.classList.toggle('fatto',j<i);});
+    if(i<t.length-1){av.style.display='';av.textContent='Avanti · '+t[i+1].textContent.replace(/^[^A-Za-zÀ-ú]+/,'').trim();av.onclick=function(){t[i+1].click();window.scrollTo({top:0,behavior:'smooth'});};}else av.style.display='none';}
+   nomi(); new MutationObserver(nomi).observe($('.tabs'),{subtree:true,attributes:true,attributeFilter:['class']});}
+  setTimeout(function(){try{if(window._map&&window._map.invalidateSize)window._map.invalidateSize();}catch(e){}},400);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',via);else via();
+})();
+</script>
+</body>
