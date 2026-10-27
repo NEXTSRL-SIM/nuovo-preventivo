@@ -247,9 +247,19 @@ body>.container>.card{background:transparent!important;border:0!important;paddin
 .scelte .opt:has(input:checked) .ck{background:var(--accent);border-color:var(--accent)}
 .scelte .opt:has(input:checked) .ck::after{content:'✓'}
 #prevSelectWrap{margin-top:12px!important}
-#reinviaBox{margin:12px 0 0!important}
-.btn-reinvia{border-radius:999px!important;background:var(--surface)!important;border:1px solid var(--border)!important;color:var(--text-dim)!important;font-weight:700!important}
-.btn-reinvia:hover{border-color:var(--accent)!important;color:var(--accent)!important}
+.prev-riga{display:flex;gap:12px;align-items:flex-end;margin-top:12px;flex-wrap:wrap}
+.prev-riga>#prevSelectWrap{flex:1 1 260px;margin:0!important}
+.prev-riga>#reinviaBox{margin:0 0 0 auto!important;text-align:right}
+.btn-reinvia{display:inline-flex!important;align-items:center;gap:8px;border-radius:10px!important;background:var(--accent)!important;border:1px solid var(--accent)!important;color:#fff!important;font-weight:700!important;font-size:13px!important;padding:10px 16px!important;box-shadow:0 2px 8px rgba(8,145,178,.28);cursor:pointer}
+.btn-reinvia:hover{filter:brightness(1.08);box-shadow:0 3px 12px rgba(8,145,178,.4)}
+.btn-reinvia svg{width:16px;height:16px}
+#reinviaStatus:empty{display:none}
+.pc.vinc{margin-top:16px}
+#vincoliBox:empty::before{content:'Le verifiche compaiono quando salvi la posizione del tetto.';display:block;font-size:12.5px;color:var(--text-muted);padding:4px 0}
+#vincoliBox>div{border-radius:12px!important;padding:14px 16px!important;font-size:13px!important}
+#vincoliBox>div button{border-radius:8px!important;width:30px!important;height:30px!important}
+.pc.vinc>.pf .btn{display:inline-flex;align-items:center;gap:8px;font-size:13px}
+.pc.vinc>.pf .btn svg{width:16px;height:16px}
 @media (max-width:700px){.scelte{grid-template-columns:1fr}}
 @media (max-width:900px){.g2,.g2m{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
 </style>
@@ -1273,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', function(){
   fire:'<path d="M12 22c4 0 7-3 7-7 0-5-5-8-5-13-3 2-5 5-5 8-1-1-2-2-2-4-2 2-2 5-2 9 0 4 3 7 7 7z"/>',
   euro:'<path d="M18 7a7 7 0 1 0 0 10M4 10h10M4 14h10"/>',chart:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
   doc:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15h6"/>',
-  ok:'<path d="M4 4h12l4 4v12H4z"/><path d="M8 13l2.5 2.5L16 10"/>',home:'<path d="M3 11 12 4l9 7v9H3z"/><path d="M9 20v-6h6v6"/>'};
+  ok:'<path d="M4 4h12l4 4v12H4z"/><path d="M8 13l2.5 2.5L16 10"/>',home:'<path d="M3 11 12 4l9 7v9H3z"/><path d="M9 20v-6h6v6"/>',shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="M8.5 12l2.5 2.5L16 10"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',send:'<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>'};
  function ico(k){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>';}
  function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [...(c||document).querySelectorAll(s)];}
  function el(t,cls,html){var e=document.createElement(t);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
@@ -1309,6 +1319,8 @@ document.addEventListener('DOMContentLoaded', function(){
    var D={new_prev:['doc','Nuovo preventivo','Un\'offerta nuova per questo contatto'],edit_prev:['gear','Modifica esistente','Riapri un preventivo già fatto e correggilo']};
    $$('label.opt',po).forEach(function(l){var r=l.querySelector('input');var d=D[r&&r.value];if(!d)return;var sp=l.querySelector('span');if(sp)sp.remove();
     l.insertAdjacentHTML('beforeend','<span class="si">'+ico(d[0])+'</span><span><b>'+d[1]+'</b><small>'+d[2]+'</small></span><span class="ck"></span>');});}}
+  /* Reinvia: accanto alla scelta del preventivo, a destra, ben visibile */
+  var rb=$('#reinviaBox'),sw=$('#prevSelectWrap'); if(rb&&sw){var rr=el('div','prev-riga');sw.parentNode.insertBefore(rr,sw);rr.appendChild(sw);rr.appendChild(rb);var bt=$('#btnReinvia');if(bt)bt.innerHTML=ico('send')+'<span>Reinvia preventivo</span>';}
   /* etichette corte come nel mockup */
   $$('label.opt span').forEach(function(s){var t=s.textContent.trim();var m={'Detrazione fiscale 50%':'Detrazione 50%','Nessuna agevolazione':'Nessuna'};if(m[t])s.textContent=m[t];});
 
@@ -1346,7 +1358,13 @@ document.addEventListener('DOMContentLoaded', function(){
    sposta(c5.b,$('#mapContainer'),$('#screenshotPreview')); if(bar){var f=el('div','pf');f.appendChild(bar);bar.style.cssText+=';display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;margin:0';var bs=bar.querySelector('.btn-secondary'),bp=bar.querySelector('.btn-primary');if(bs&&bp){bar.insertBefore(bs,bar.firstChild);bp.style.marginLeft='auto';}var sat=$('#mapSatellite');if(sat){sat.classList.add('sw-in');}c5.c.appendChild(f);}
    var c6=card('gear','bl','Posizione',''); sposta(c6.b,$('#mapCoordBar')); var c7=card('chart','gr','Analisi PVGIS','Dalla posizione della mappa'); var pv=$('#pvgisMapResult');
    c7.b.appendChild(el('p','intro','L\'analisi parte da sola quando salvi la posizione del tetto.'));c7.b.lastChild.style.margin='12px 0 0';sposta(c7.b,pv);if(pv){pv.style.background='transparent';pv.style.border='0';pv.style.padding='0';}
-   sposta(L3,c5.c); sposta(R3,c6.c,c7.c); sposta(g3,L3,R3); M.appendChild(g3);}
+   sposta(L3,c5.c); sposta(R3,c6.c,c7.c); sposta(g3,L3,R3); M.appendChild(g3);
+   /* vincoli: scheda del portale con i due documenti in fondo */
+   var cv=card('shield','rd','Vincoli e prescrizioni','Paesaggio, piano urbanistico e pratica, dalla posizione del tetto'); cv.c.classList.add('vinc');
+   var vb=$('#vincoliBox'); if(vb){var vp=vb.previousElementSibling,vn=vb.nextElementSibling; if(vp&&vp.tagName==='LABEL')vp.remove(); if(vn&&vn.querySelector&&vn.querySelector('[onclick*="generaVincoli"]'))vn.remove();} else {vb=el('div','');vb.id='vincoliBox';}
+   cv.b.appendChild(vb);
+   var vf=el('div','pf'); vf.innerHTML='<span class="intro" style="margin:0;font-size:12px">Documenti dal preventivo salvato</span><button type="button" class="btn btn-secondary" style="margin-left:auto" onclick="generaVincoli(\'cliente\')">'+ico('doc')+'<span>Analisi vincoli · cliente</span></button><button type="button" class="btn btn-primary" onclick="generaVincoli(\'azienda\')">'+ico('lock')+'<span>Scheda verifica · interna</span></button>';
+   cv.c.appendChild(vf); M.appendChild(cv.c);}
   /* 4 · impianto esistente */
   var Im=$('#tabImpianto'); if(Im){var k=[...Im.children]; if(k[0])k[0].classList.add('intro'); var c8=card('home','am','Impianto fotovoltaico esistente',''); var fs=$(':scope>fieldset',Im); if(fs){var r=daFieldset(fs);c8.b.appendChild(r);} Im.insertBefore(c8.c,$('#impEsistenteBox'));
    $$('#impEsistenteBox>.product-section').forEach(function(ps){ps.classList.add('pc');ps.style.cssText+=';padding:6px 18px 16px;margin:16px 0 0';});}
