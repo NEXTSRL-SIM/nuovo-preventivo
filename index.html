@@ -1553,7 +1553,13 @@ document.addEventListener('DOMContentLoaded', function(){
    [vel,lay,ele].forEach(function(a){a.classList.toggle('spento',!ok);if(ok)a.removeAttribute('aria-disabled');else a.setAttribute('aria-disabled','true');});
    if(ok){lay.href=N8+'configura-impianto?preventivo_id='+encodeURIComponent(pid);ele.href=N8+'progettazione-elettrica?preventivo_id='+encodeURIComponent(pid);}else{lay.removeAttribute('href');ele.removeAttribute('href');}
    nota.textContent=ok?'':(!pid?'Si accendono quando il preventivo è salvato e ha la posizione del tetto.':'Manca la posizione del tetto: centra la mappa e premi «Salva posizione tetto».');nota.style.display=ok?'none':'';}
-  agg();setInterval(agg,700);
+  /* Posizione e PVGIS: con un preventivo caricato che ha già la posizione, lo dico invece di «Nessuna posizione salvata» */
+  var DEF='Nessuna posizione salvata — muovi la mappa e premi Salva',mio='';
+  function posiz(){var t=$('#mapCoordText');if(t){var la=parseFloat(($('#map_lat')||{}).value),lo=parseFloat(($('#map_lon')||{}).value);
+    if(isFinite(la)&&isFinite(lo)){var txt='Posizione salvata — Lat: '+la.toFixed(5)+', Lon: '+lo.toFixed(5);if(t.textContent===DEF||t.textContent===mio){t.textContent=txt;mio=txt;}}
+    else if(mio&&t.textContent===mio){t.textContent=DEF;mio='';}}
+   var pv=$('#pvgisMapResult'),intro=pv&&pv.parentNode.querySelector('p.intro');if(intro)intro.style.display=(pv.style.display==='block')?'none':'';}
+  agg();posiz();setInterval(function(){agg();posiz();},700);
   /* «Vista satellite»: interruttore come gli altri del portale */
   var ms=$('#mapSatellite');if(ms&&!ms.dataset.sw){ms.dataset.sw='1';var box=ms.parentNode,lb=$('label[for="mapSatellite"]',box);var l=document.createElement('label');l.className='swl';ms.classList.add('sw-in');ms.removeAttribute('style');l.appendChild(ms);l.appendChild(document.createTextNode('Vista satellite'));if(lb)lb.remove();box.removeAttribute('style');box.appendChild(l);}
   /* screenshot salvato: ingrandito sul tetto (la croce è al centro); un clic lo apre intero */
