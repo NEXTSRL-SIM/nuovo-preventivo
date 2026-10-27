@@ -324,6 +324,8 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-az{display:flex;flex-direction:column;gap:8px;margin-top:14px}.lv-az2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-az .btn{width:100%;justify-content:center}
 .lv-rev{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:7px 9px;margin-bottom:6px;font-size:12px}.lv-rev.on{border-color:var(--accent);background:var(--acw)}
 .lv-rev b{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}.lv-rev span{flex:1;color:var(--text-dim)}.lv-rev a{color:var(--accent);font-weight:700}
+.lv-nord{position:absolute;top:10px;right:12px;z-index:500;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.lv-dir{pointer-events:none}.lv-frecc{position:absolute;left:0;top:0;width:46px;height:16px}.lv-dirlab{position:absolute;left:0;top:14px;transform:translateX(-50%);white-space:nowrap;background:rgba(15,23,42,.82);color:#fff;font:700 11px Manrope,sans-serif;border-radius:6px;padding:2px 6px}
 .lv-vtx{background:#FFD400;border:1.5px solid #0F172A;border-radius:50%;cursor:move}
 .lv-num{background:#fff;border:1.5px solid #0F172A;border-radius:50%;font:800 12px Manrope,sans-serif;color:#0F172A;display:flex!important;align-items:center;justify-content:center}
 .lv-tavw{position:fixed;inset:0;z-index:9100;background:rgba(15,23,42,.55);display:none;padding:14px}.lv-tavw.on{display:block}
@@ -1630,7 +1632,8 @@ document.addEventListener('DOMContentLoaded', function(){
  function cop(){return JSON.parse(JSON.stringify(ST));}
  function memo(){STORIA.push(JSON.stringify(ST));if(STORIA.length>60)STORIA.shift();modificato(true);}
  var MOD=false;function modificato(x){MOD=x;var c=$('#lvChip');if(c)c.textContent=(APERTA>=0?'Rev. '+String(REV[APERTA].n).padStart(2,'0'):'Rev. —')+(x?' · modifiche non salvate':APERTA>=0?' · salvata':'');}
- function calcola(){var PP=ST.F.map(function(f){return f.pts.map(aM);}),RR=$('#lvRadd').checked?cuci(PP,10):PP;ESITO=ST.F.map(function(f,fi){var P=PP[fi],R=RR[fi],n=R.length,ig=0,lm=-1,i;
+ function calcola(){var PP=ST.F.map(function(f){return f.pts.map(aM);}),RR=$('#lvRadd').checked?cuci(PP,10):PP,GX=0,GY=0,NG=0;RR.forEach(function(R){R.forEach(function(p){GX+=p[0];GY+=p[1];NG++;});});GX/=NG||1;GY/=NG||1;
+  var sulBordo=function(a,b,fi){return RR.some(function(R2,j){return j!==fi&&R2.some(function(p,k){var q=R2[(k+1)%R2.length];return dseg(a,p,q)<.15&&dseg(b,p,q)<.15||dseg(p,a,b)<.15&&dseg(q,a,b)<.15;});});};ESITO=ST.F.map(function(f,fi){var P=PP[fi],R=RR[fi],n=R.length,ig=0,lm=-1,i;
    for(i=0;i<n;i++){var l=lato(R,i);if(l>lm){lm=l;ig=i;}}
    var a=R[ig],b=R[(ig+1)%n],th=Math.atan2(b[1]-a[1],b[0]-a[0]),k=1/Math.cos(f.tilt*Math.PI/180),c=Math.cos(-th),s=Math.sin(-th);
    var av=function(p){return [p[0]*c-p[1]*s,(p[0]*s+p[1]*c)*k];},ind=function(p){var x=p[0],y=p[1]/k,ci=Math.cos(th),si=Math.sin(th);return [x*ci-y*si,x*si+y*ci];};
@@ -1641,8 +1644,12 @@ document.addEventListener('DOMContentLoaded', function(){
    var wh=f.rot==='vert'?[MOD_C,MOD_L]:f.rot==='orizz'?[MOD_L,MOD_C]:(mods.length?[mods[0].cell[2],mods[0].cell[3]]:[MOD_C,MOD_L]);
    ST.A.forEach(function(ad,ai){if(ad.fi!==fi)return;var cc=av(aM(ad.c)),w=wh[0],h=wh[1],x=cc[0]-w/2,y=cc[1]-h/2;mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
    var on=mods.filter(function(m){return ST.S.indexOf(m.key)<0;});
-   var nx=b[1]-a[1],ny=-(b[0]-a[0]),ll=Math.hypot(nx,ny);nx/=ll;ny/=ll;var D={sud:[0,-1],'sud-est':[.7,-.7],'sud-ovest':[-.7,-.7],est:[1,0],ovest:[-1,0],nord:[0,1]}[f.espo]||[0,-1];if(nx*D[0]+ny*D[1]<0){nx=-nx;ny=-ny;}
-   return {R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));}))};});}
+   /* verso della falda: normale alla gronda (il lato esterno più lungo), verso l'esterno del tetto; con una falda sola, o se scelto a mano, verso l'esposizione indicata */
+   var gi=-1,gl=-1;for(i=0;i<n;i++){if(sulBordo(R[i],R[(i+1)%n],fi))continue;var l2=lato(R,i);if(l2>gl){gl=l2;gi=i;}}if(gi<0)gi=ig;
+   var ga=R[gi],gb=R[(gi+1)%n],nx=gb[1]-ga[1],ny=-(gb[0]-ga[0]),ll=Math.hypot(nx,ny);nx/=ll;ny/=ll;
+   var D={sud:[0,-1],'sud-est':[.7,-.7],'sud-ovest':[-.7,-.7],est:[1,0],ovest:[-1,0],'nord-est':[.7,.7],'nord-ovest':[-.7,.7],nord:[0,1]}[f.espo];
+   if(D){if(nx*D[0]+ny*D[1]<0){nx=-nx;ny=-ny;}}else if(RR.length>1){var cx2=(ga[0]+gb[0])/2-GX,cy2=(ga[1]+gb[1])/2-GY;if(nx*cx2+ny*cy2<0){nx=-nx;ny=-ny;}}else if(ny>0){nx=-nx;ny=-ny;}
+   return {R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,dir:[nx,ny],az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));}))};});}
  /* ---------- disegno sulla mappa ---------- */
  function disegna(){if(!MAP)return;calcola();LG.clearLayers();var sel=TOOL==='spegni';
   ESITO.forEach(function(e,fi){L.polygon(ST.F[fi].pts,{color:'#fff',weight:1.2,dashArray:'5 4',fill:false,interactive:false,opacity:.8}).addTo(LG);
@@ -1651,6 +1658,9 @@ document.addEventListener('DOMContentLoaded', function(){
     if(att)p.on('click',function(){memo();if(agg){ST.A.splice(m.agg,1);}else{var i=ST.S.indexOf(m.key);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);}disegna();});});
    var g=e.R.reduce(function(s,p){return [s[0]+p[0]/e.R.length,s[1]+p[1]/e.R.length];},[0,0]);
    L.marker(aLL(g),{interactive:false,icon:L.divIcon({className:'lv-num',html:String(fi+1),iconSize:[22,22]})}).addTo(LG);
+   /* verso della falda: freccia dalla falda verso dove scende, con esposizione e azimut */
+   var ang=Math.atan2(-e.dir[1],e.dir[0])*180/Math.PI,pf=aLL([g[0]+e.dir[0]*1.9,g[1]+e.dir[1]*1.9]);
+   L.marker(pf,{interactive:false,icon:L.divIcon({className:'lv-dir',iconSize:[0,0],html:'<div class="lv-frecc" style="transform:translate(-50%,-50%) rotate('+ang.toFixed(1)+'deg)"><svg width="46" height="16" viewBox="0 0 46 16"><path d="M2 8h34" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M30 2l12 6-12 6z" fill="#fff"/><path d="M2 8h34" stroke="#0F172A" stroke-width="1.4" stroke-linecap="round"/><path d="M31 4l8 4-8 4z" fill="#0F172A"/></svg></div><div class="lv-dirlab">'+nomeEspo(e.az)+' · '+(e.az>0?'+':'')+e.az+'°</div>'})}).addTo(LG);
    ST.F[fi].pts.forEach(function(ll,i){var mk=L.marker(ll,{draggable:true,icon:L.divIcon({className:'lv-vtx',iconSize:[14,14]})}).addTo(LG);
     mk.on('dragstart',function(){memo();});mk.on('drag',function(ev){var p=ev.target.getLatLng();ST.F[fi].pts[i]=[p.lat,p.lng];});mk.on('dragend',disegna);});});
   ST.O.forEach(function(o,oi){var p=L.polygon(o.q,{color:'#DC2626',weight:2,dashArray:o.t==='camino'?null:'6 3',fillColor:o.t==='camino'?'#fff':'#DC2626',fillOpacity:o.t==='camino'?.9:.25,interactive:TOOL==='camino'||TOOL==='ostacolo',bubblingMouseEvents:false}).addTo(LG);
@@ -1661,12 +1671,13 @@ document.addEventListener('DOMContentLoaded', function(){
   riepilogo();aiuto();}
  function aiuto(){$('#lvAiuto').textContent={falda:CORR.length?(CORR.length<3?'Continua a cliccare gli angoli della falda.':'Clicca il primo angolo (quello giallo grande) per chiudere la falda.'):'Clicca gli angoli della falda uno dopo l\'altro. Trascina un angolo giallo per correggerlo; la mappa si sposta trascinando.',
   camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',spegni:'Clicca un modulo per toglierlo o rimetterlo.',aggiungi:'Clicca dove vuoi un modulo in più: si mette nel verso della falda, come gli altri. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
+ function nomeEspo(az){var a=Math.abs(az),w=az>0;return a<=22.5?'sud':a<=67.5?(w?'sud-ovest':'sud-est'):a<=112.5?(w?'ovest':'est'):a<=157.5?(w?'nord-ovest':'nord-est'):'nord';}
  function nMod(){return ESITO.reduce(function(s,e){return s+e.on.length;},0);}
  function riepilogo(){var nm=nMod();$('#lvM').textContent=nm;$('#lvP').innerHTML=(nm*WP/1000).toFixed(2).replace('.',',')+' <small>kWp</small>';
   $('#lvC').textContent=ST.O.filter(function(o){return o.t==='camino';}).length;$('#lvO').textContent=ST.O.filter(function(o){return o.t!=='camino';}).length;
   var Lf=$('#lvFalde');if(!ST.F.length){Lf.innerHTML='<div class="lv-vuoto">Nessuna falda: clicca gli angoli sulla mappa.</div>';}else{Lf.innerHTML='';
    ST.F.forEach(function(f,fi){var e=ESITO[fi],d=document.createElement('div');d.className='lv-falda';
-    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+['sud','sud-est','sud-ovest','est','ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
+    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
      +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
   $('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
@@ -1710,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', function(){
   for(i=0;i<6;i++)o+='<text x="'+(sx+i*seg*sc)+'" y="'+(sy-1.3)+'" font-size="2.4" text-anchor="middle" '+F+'>'+i*seg+'</text>';o+='<text x="'+(sx+5*seg*sc+3)+'" y="'+(sy+1.4)+'" font-size="2.4" '+F+'>m · scala 1:'+S+'</text>';
   var cols=[["Falda",13],["Esposizione",20],["Azimut",15],["Inclin.",13],["Superficie",19],["Moduli",14],["kWp",13]],tx0=18,ty0=FR[1]+FR[3]-14-E.length*5,xx=tx0;o+='<g '+F+' font-size="2.2">';
   cols.forEach(function(cw){o+='<rect x="'+xx+'" y="'+ty0+'" width="'+cw[1]+'" height="5" fill="#075E73"/><text x="'+(xx+1.5)+'" y="'+(ty0+3.5)+'" fill="#fff" font-weight="bold">'+cw[0]+'</text>';xx+=cw[1];});
-  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),ST.F[EI[k]].espo,(e.az>0?'+':'')+e.az+'°',ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' m²',String(e.on.length),f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
+  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),nomeEspo(e.az),(e.az>0?'+':'')+e.az+'°',ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' m²',String(e.on.length),f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
   o+='<text x="'+tx0+'" y="'+(ty0+5+E.length*5+3.4)+'" fill="#6b7280" font-size="1.8">Azimut: 0° = sud, positivo verso ovest</text></g>';
   /* cartiglio */
   var X0=217,Wc=W-12-X0,Y0=12,Hc=186,c='<rect x="'+X0+'" y="'+Y0+'" width="'+Wc+'" height="'+Hc+'" fill="none" stroke="#111" stroke-width=".6"/>';
@@ -1740,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', function(){
   +'<div class="lv-grid"><section class="lv-sx"><div class="lv-bar">'
   +'<button type="button" class="lv-tool on" data-t="falda">Falda</button><button type="button" class="lv-tool" data-t="camino">Camino</button><button type="button" class="lv-tool" data-t="ostacolo">Ostacolo</button><button type="button" class="lv-tool" data-t="aggiungi">Aggiungi modulo</button><button type="button" class="lv-tool" data-t="spegni">Togli modulo</button>'
   +'<span style="flex:1"></span><label class="swl"><input type="checkbox" class="sw-in" id="lvRadd" checked>Raddrizza falde</label><button type="button" class="lv-tool" id="lvAnnulla">Annulla</button><button type="button" class="lv-tool" id="lvSvuota">Ricomincia</button></div>'
-  +'<div class="lv-mapw"><div id="lvMap"></div><div class="lv-aiuto" id="lvAiuto"></div></div></section>'
+  +'<div class="lv-mapw"><div id="lvMap"></div><div class="lv-nord" title="La mappa ha sempre il nord in alto"><svg width="44" height="54" viewBox="0 0 44 54"><circle cx="22" cy="32" r="19" fill="rgba(255,255,255,.92)" stroke="#0F172A" stroke-width="1.4"/><path d="M22 15 28 40 22 35 16 40z" fill="#0F172A"/><text x="22" y="11" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="12" fill="#fff" stroke="#0F172A" stroke-width="3" paint-order="stroke">N</text></svg></div><div class="lv-aiuto" id="lvAiuto"></div></div></section>'
   +'<aside class="lv-dx"><div class="lv-k"><div class="lv-kb big"><i>Moduli</i><b id="lvM">0</b></div><div class="lv-kb"><i>Potenza</i><b id="lvP">0</b></div><div class="lv-kb"><i>Camini</i><b id="lvC">0</b></div><div class="lv-kb"><i>Ostacoli</i><b id="lvO">0</b></div></div>'
   +'<div class="lv-sl">Modulo</div><select id="lvMod" style="width:100%"><option>LONGi Hi-MO 6 · 410 Wp · 1722 × 1134 mm</option></select><p class="lv-nota">Gli altri moduli compaiono quando il catalogo avrà le loro misure.</p>'
   +'<div class="lv-sl">Falde</div><div id="lvFalde"></div>'
@@ -1776,7 +1787,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!MAP){MAP=L.map('lvMap',{center:[la,lo],zoom:21,maxZoom:22,zoomControl:true,doubleClickZoom:false});
    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+TOK,{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1}).addTo(MAP);LG=L.layerGroup().addTo(MAP);window.__lvMap=MAP;
    MAP.on('click',function(ev){var ll=[ev.latlng.lat,ev.latlng.lng];
-    if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push({pts:CORR,espo:'sud',tilt:22});CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
+    if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push({pts:CORR,espo:'auto',tilt:22});CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
     if(TOOL==='aggiungi'){var m2=aM(ll),fi2=-1;ESITO.forEach(function(e,i){if(dentro(m2,e.R))fi2=i;});if(fi2<0)return;memo();ST.A.push({fi:fi2,c:ll});disegna();return;}
     if(TOOL==='camino'){memo();var h=.275,m=aM(ll);ST.O.push({t:'camino',q:[[m[0]-h,m[1]-h],[m[0]+h,m[1]-h],[m[0]+h,m[1]+h],[m[0]-h,m[1]+h]].map(aLL)});disegna();}});
    MAP.on('mousedown',function(ev){if(TOOL!=='ostacolo')return;trasc={a:[ev.latlng.lat,ev.latlng.lng],b:[ev.latlng.lat,ev.latlng.lng]};});
