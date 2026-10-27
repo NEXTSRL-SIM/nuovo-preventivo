@@ -1833,4 +1833,28 @@ document.addEventListener('DOMContentLoaded', function(){
  window.apriLayoutVeloce=apri;
 })();
 </script>
+<script>
+/* PORTALE NEXT-110 (Sante 27/10 19:26): «Preventivo a cliente esistente» = sempre e solo un NUOVO preventivo.
+   Scelto il cliente: anagrafica compilata dal cliente e bloccata; l'indirizzo dell'impianto si compila;
+   niente «Modifica esistente» (i preventivi gia fatti si riaprono dal lead, a interruttore spento). */
+(function(){
+  var sel=document.getElementById('existing_lead'),chk=document.getElementById('prev_a_cliente');if(!sel||!chk)return;
+  var ANAG=['last_name','first_name','email','phone','phone_2'],IMP=['address','city','zip','province'];
+  function g(id){return document.getElementById(id);}
+  function blocca(on){ANAG.forEach(function(id){var el=g(id);if(!el)return;var lk=on&&!!String(el.value||'').trim();el.readOnly=lk;el.classList.toggle('da-cliente',lk);el.title=lk?'Dato del cliente in archivio: per cambiarlo usa la scheda del cliente':'';});
+    var n=g('notaCliente');if(on&&!n){n=document.createElement('p');n.id='notaCliente';n.className='muted';n.style.cssText='margin:6px 0 0;font-size:12px';n.textContent='Dati anagrafici presi dal cliente in archivio (quelli mancanti si possono completare). Compila l\'indirizzo dove va fatto l\'impianto.';var a=g('address');var sl=a&&a.closest('.section-label')?null:null;var lc=g('last_name');var row=lc&&lc.closest('.row');if(row&&row.parentNode)row.parentNode.insertBefore(n,row);}
+    if(!on&&n)n.remove();}
+  function soloNuovo(){var pb=g('prevBox');if(pb)pb.style.display='none';var r=document.querySelector('input[name="prev_mode"][value="new_prev"]');if(r){r.checked=true;r.dispatchEvent(new Event('change'));}var rb=g('reinviaBox');if(rb)rb.style.display='none';}
+  sel.addEventListener('change',function(){
+    if(!chk.checked){blocca(false);return;}
+    if(!sel.value){blocca(false);return;}
+    var o=sel.selectedOptions[0];
+    if(!g('last_name').value&&!g('first_name').value){var nome=(o.textContent||'').split(' — ')[0].trim().split(/\s+/);g('last_name').value=nome.shift()||'';g('first_name').value=nome.join(' ');}
+    IMP.forEach(function(id){var el=g(id);if(el)el.value='';});
+    soloNuovo();blocca(true);
+  });
+  chk.addEventListener('change',function(){blocca(false);});
+  var st=document.createElement('style');st.textContent='input.da-cliente{background:var(--sf2,#F8FAFC)!important;color:var(--ink2,#3F4A5A)!important;cursor:not-allowed}';document.head.appendChild(st);
+})();
+</script>
 </body>
