@@ -2258,7 +2258,15 @@ document.addEventListener('DOMContentLoaded', function(){
   blk.innerHTML='<h4>Bollette</h4><div class="az-bl" id="azBoll"></div>'
    +'<h4>Profilo fiscale</h4><div class="az-g2"><div><label for="az_forma">Forma giuridica</label><select id="az_forma"><option value="">—</option><option value="srl">S.r.l.</option><option value="srls">S.r.l.s.</option><option value="spa">S.p.A.</option><option value="sapa">S.a.p.a.</option><option value="coop">Società cooperativa</option><option value="snc">S.n.c.</option><option value="sas">S.a.s.</option><option value="ss">Società semplice</option><option value="di">Ditta individuale</option><option value="prof">Professionista / studio associato</option></select><div class="az-src" id="az_forma_src"></div></div>'
    +'<div><label>IVA detraibile</label><span class="az-seg" id="az_iva"><button type="button" class="on" data-v="si">Sì</button><button type="button" data-v="no">No</button></span><div class="az-src"></div></div></div>';
-  $('.pb',cLr).appendChild(blk);
+  /* PORTALE NEXT-110 (Sante 28/10): bollette e profilo fiscale in un riquadro loro, sotto, a tutta larghezza; il legale rappresentante resta da solo */
+  var cBo=document.createElement('section');cBo.className='pc az-larga';cBo.id='cardBollette';cBo.hidden=cLr.hidden;
+  cBo.innerHTML='<div class="ph"><span class="pi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><div><b>Bollette, documenti e profilo fiscale</b><small>Consumi per il calcolo dell\'offerta e trattamento fiscale dell\'azienda</small></div><span class="px"></span></div><div class="pb"></div>';
+  var hs=blk.querySelectorAll('h4'),sx=document.createElement('div'),dx=document.createElement('div');sx.className='az-bo-sx';dx.className='az-bo-dx';
+  if(hs.length===2){var n=blk.firstChild,dest=sx;while(n){var nx=n.nextSibling;if(n===hs[1])dest=dx;dest.appendChild(n);n=nx;}blk.appendChild(sx);blk.appendChild(dx);blk.classList.add('az-bo-2');}
+  $('.pb',cBo).appendChild(blk);
+  cLr.parentNode.insertBefore(cBo,cLr.nextSibling);
+  new MutationObserver(function(){cBo.hidden=cLr.hidden;}).observe(cLr,{attributes:true,attributeFilter:['hidden']});
+  var stBo=document.createElement('style');stBo.textContent='#cardBollette{grid-column:1/-1;order:5}.az-bo-2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:start}.az-bo-2>div>h4:first-child{margin-top:0}@media (max-width:900px){.az-bo-2{grid-template-columns:1fr}}';document.head.appendChild(stBo);
   function bollette(){var box=$('#azBoll'),lid=($('#existing_lead_id')||{}).value||($('#existing_lead')||{}).value||'';
    function riga(tipo,b){if(!b)return '<div class="r"><span class="d no"></span>'+tipo+' · non arrivata<small><button type="button" class="btn btn-secondary" disabled title="La richiesta su WhatsApp arriva con il prossimo passo" style="font-size:12px;padding:4px 10px">Chiedi al cliente</button></small></div>';
     var det=b.tipo==='elettrica'?(b.kwh_anno?it(b.kwh_anno)+' kWh':'')+(b.kwh_f1&&b.kwh_anno?' · F1 '+Math.round(100*b.kwh_f1/b.kwh_anno)+'%':''):(b.quantita_anno?it(b.quantita_anno)+' Sm³':'');
