@@ -331,6 +331,7 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-falda{border:1px solid var(--border);border-radius:12px;padding:9px 11px;margin-bottom:8px;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 10px;align-items:center}
 .lv-n{grid-row:span 3;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--text);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
 .lv-r1{display:flex;gap:6px;align-items:center;font-size:12.5px;min-width:0}.lv-r1 b{margin-left:auto}.lv-r1 select,.lv-r1 input{width:auto!important;height:30px!important;padding:3px 6px!important;margin:0!important}.lv-r1 input{width:58px!important}
+.lv-r4{margin-top:4px;flex-wrap:wrap}.lv-r4 button{min-width:30px}.lv-r4 .lv-pos{margin-left:8px;font-style:normal;font-size:11px;color:var(--text-muted)}.lv-guida span{position:absolute;transform:translate(6px,-50%);white-space:nowrap;background:#22C55E;color:#fff;font:700 10.5px Manrope,sans-serif;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .lv-r3{grid-column:2;display:flex;align-items:center;gap:0;font-size:11.5px;color:var(--text-muted)}.lv-r3 span{margin-right:8px}.lv-r3 button{border:1px solid var(--border);background:var(--sf2);color:var(--text-muted);font:600 11.5px Manrope,sans-serif;padding:4px 7px;cursor:pointer;margin-left:-1px}.lv-r3 button:first-of-type{border-radius:7px 0 0 7px}.lv-r3 button:last-child{border-radius:0 7px 7px 0}.lv-r3 button.on{background:var(--acw);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
 .lv-r2{grid-column:2;font-size:11.5px;color:var(--text-muted)}.lv-r2 a{color:#dc2626}
 .lv-az{display:flex;flex-direction:column;gap:8px;margin-top:14px}.lv-az2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-az .btn{width:100%;justify-content:center}
@@ -1631,13 +1632,30 @@ document.addEventListener('DOMContentLoaded', function(){
  function area(P){return Math.abs(P.reduce(function(s,p,i){var q=P[(i+1)%P.length];return s+p[0]*q[1]-q[0]*p[1];},0))/2;}
  function dentro(pt,poly){var c=false;for(var i=0,j=poly.length-1;i<poly.length;j=i++){var xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];if(((yi>pt[1])!==(yj>pt[1]))&&(pt[0]<(xj-xi)*(pt[1]-yi)/(yj-yi)+xi))c=!c;}return c;}
  function dseg(p,a,b){var dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l)):0;return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);}
- function posa(poly,ost,rot){var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys),best={m:[],s:-1};
-  (rot==='vert'?[[MOD_C,MOD_L]]:rot==='orizz'?[[MOD_L,MOD_C]]:[[MOD_C,MOD_L],[MOD_L,MOD_C]]).forEach(function(wh){var w=wh[0],h=wh[1];[0,.2,.4,.6,.8].forEach(function(fx){[0,.2,.4,.6,.8].forEach(function(fy){var m=[],sp=0;
-   for(var y=y0+MARG+fy*h;y+h<=y1-MARG+1e-6;y+=h+GAP){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);sp++;}run=[];};
-    for(var x=x0+MARG+fx*w;x+w<=x1-MARG+1e-6;x+=w+GAP){var ang=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x+w/2,y],[x+w/2,y+h],[x,y+h/2],[x+w,y+h/2]];
-     var ok=ang.every(function(p){return dentro(p,poly)&&poly.every(function(a,i){return dseg(p,a,poly[(i+1)%poly.length])>=MARG;});});
-     if(ok&&ost.some(function(o){return x<o[2]&&x+w>o[0]&&y<o[3]&&y+h>o[1];}))ok=false;if(ok)run.push([x,y,w,h]);else chiudi();}chiudi();}
-   var s=m.length-.25*sp;if(s>best.s)best={m:m,s:s};});});});return best.m;}
+ /* valido: un modulo nel riferimento della falda sta dentro, a MARG dai lati e fuori dagli ostacoli (stessa verifica di sempre) */
+ function valido(poly,ost,x,y,w,h){var ang=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x+w/2,y],[x+w/2,y+h],[x,y+h/2],[x+w,y+h/2]];
+  if(!ang.every(function(p){return dentro(p,poly)&&poly.every(function(a,i){return dseg(p,a,poly[(i+1)%poly.length])>=MARG;});}))return false;
+  return !ost.some(function(o){return x<o[2]&&x+w>o[0]&&y<o[3]&&y+h>o[1];});}
+ /* di quanto un gruppo di moduli può scorrere (dx,dy unitari) restando tutto valido e senza toccare gli altri moduli: passo 1 cm, fino a 6 m */
+ function corsa(poly,ost,grp,altri,ux,uy){var va=function(t){return grp.every(function(c){var x=c[0]+ux*t,y=c[1]+uy*t;if(!valido(poly,ost,x,y,c[2],c[3]))return false;
+    return !altri.some(function(o){return x<o[0]+o[2]+GAP-1e-6&&x+c[2]>o[0]-GAP+1e-6&&y<o[1]+o[3]+GAP-1e-6&&y+c[3]>o[1]-GAP+1e-6;});});};
+  /* prima a passi di 5 cm, poi si rifinisce al centimetro */
+  var d=0,t;for(t=.05;t<=6;t+=.05){if(!va(t))break;d=t;}for(t=d+.01;t<d+.05;t+=.01){if(!va(t))break;d=t;}return Math.round(d*100)/100;}
+ /* PORTALE NEXT-110 (Sante 28/10): la griglia migliore si centra da sola. Ogni tratto continuo di una fila va al centro dello spazio libero
+    della sua riga, poi tutto il blocco al centro in profondità. Ogni cella porta con sé la posizione prima della centratura (c[4],c[5]):
+    da quella si calcola la chiave dei moduli spenti, così le revisioni già salvate non cambiano significato. */
+ function posa(poly,ost,rot){var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys),best={m:[],r:[],s:-1};
+  (rot==='vert'?[[MOD_C,MOD_L]]:rot==='orizz'?[[MOD_L,MOD_C]]:[[MOD_C,MOD_L],[MOD_L,MOD_C]]).forEach(function(wh){var w=wh[0],h=wh[1];[0,.2,.4,.6,.8].forEach(function(fx){[0,.2,.4,.6,.8].forEach(function(fy){var m=[],rr=[],sp=0;
+   for(var y=y0+MARG+fy*h;y+h<=y1-MARG+1e-6;y+=h+GAP){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);rr.push(run);sp++;}run=[];};
+    for(var x=x0+MARG+fx*w;x+w<=x1-MARG+1e-6;x+=w+GAP){if(valido(poly,ost,x,y,w,h))run.push([x,y,w,h]);else chiudi();}chiudi();}
+   var s=m.length-.25*sp;if(s>best.s)best={m:m,r:rr,s:s};});});});
+  var celle=[];best.r.forEach(function(run){run.forEach(function(c){celle.push([c[0],c[1],c[2],c[3],c[0],c[1]]);});});
+  /* centratura dei tratti, fila per fila */
+  var i0=0;best.r.forEach(function(run){var g=celle.slice(i0,i0+run.length);i0+=run.length;var altri=celle.filter(function(c){return g.indexOf(c)<0&&Math.abs(c[1]-g[0][1])<.01;});
+   var sx=corsa(poly,ost,g,altri,-1,0),dx=corsa(poly,ost,g,altri,1,0),sh=Math.round((dx-sx)/2*100)/100;if(Math.abs(sh)>=.01)g.forEach(function(c){c[0]+=sh;});});
+  /* centratura del blocco in profondità */
+  if(celle.length){var su=corsa(poly,ost,celle,[],0,1),giu=corsa(poly,ost,celle,[],0,-1),sv=Math.round((su-giu)/2*100)/100;if(Math.abs(sv)>=.01)celle.forEach(function(c){c[1]+=sv;});}
+  return celle;}
  /* ---------- stato ---------- */
  var ST={F:[],O:[],S:[],A:[]},CORR=[],TOOL='falda',STORIA=[],ESITO=[],REV=[],APERTA=-1,MAP=null,LG=null,trasc=null,PID='';
  function cop(){return JSON.parse(JSON.stringify(ST));}
@@ -1651,7 +1669,12 @@ document.addEventListener('DOMContentLoaded', function(){
    var PR=R.map(av),box=[],obs=[];
    ST.O.forEach(function(o){var q=o.q.map(aM),g=q.reduce(function(s2,p){return [s2[0]+p[0]/q.length,s2[1]+p[1]/q.length];},[0,0]);if(!q.some(function(p){return dentro(p,R);})&&!dentro(g,R))return;
     var qa=q.map(av),xs=qa.map(function(p){return p[0];}),ys=qa.map(function(p){return p[1];}),fa=o.t==='camino'?.25:.4;box.push([Math.min.apply(0,xs)-fa,Math.min.apply(0,ys)-fa,Math.max.apply(0,xs)+fa,Math.max.apply(0,ys)+fa]);obs.push(o);});
-   var mods=posa(PR,box,f.rot||'auto').map(function(r){var x=r[0],y=r[1],w=r[2],h=r[3];var q=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),g=q.reduce(function(s2,p){return [s2[0]+p[0]/4,s2[1]+p[1]/4];},[0,0]);return {q:q,cell:r,key:fi+':'+Math.round(g[0]*4)+':'+Math.round(g[1]*4)};});
+   /* spostamento a mano del blocco (f.dx lungo la gronda, f.dy in profondità, metri): sempre dentro i limiti in cui tutti i moduli restano validi */
+   var celle=posa(PR,box,f.rot||'auto'),SP={dx:0,dy:0,dxlo:0,dxhi:0,dylo:0,dyhi:0};
+   if(celle.length){SP.dylo=-corsa(PR,box,celle,[],0,-1);SP.dyhi=corsa(PR,box,celle,[],0,1);SP.dy=Math.max(SP.dylo,Math.min(SP.dyhi,+f.dy||0));
+    var cs=celle.map(function(c){return [c[0],c[1]+SP.dy,c[2],c[3]];});SP.dxlo=-corsa(PR,box,cs,[],-1,0);SP.dxhi=corsa(PR,box,cs,[],1,0);SP.dx=Math.max(SP.dxlo,Math.min(SP.dxhi,+f.dx||0));}
+   var mods=celle.map(function(r){var x=r[0]+SP.dx,y=r[1]+SP.dy,w=r[2],h=r[3];var q=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),g0=[[r[4],r[5]],[r[4]+w,r[5]],[r[4]+w,r[5]+h],[r[4],r[5]+h]].map(ind).reduce(function(s2,p){return [s2[0]+p[0]/4,s2[1]+p[1]/4];},[0,0]);return {q:q,cell:[x,y,w,h],key:fi+':'+Math.round(g0[0]*4)+':'+Math.round(g0[1]*4)};});
+   SP.th=th;SP.k=k;if(mods.length){SP.bx=[Math.min.apply(0,mods.map(function(m){return m.cell[0];})),Math.max.apply(0,mods.map(function(m){return m.cell[0]+m.cell[2];})),Math.min.apply(0,mods.map(function(m){return m.cell[1];})),Math.max.apply(0,mods.map(function(m){return m.cell[1]+m.cell[3];}))];}
    var wh=f.rot==='vert'?[MOD_C,MOD_L]:f.rot==='orizz'?[MOD_L,MOD_C]:(mods.length?[mods[0].cell[2],mods[0].cell[3]]:[MOD_C,MOD_L]);
    ST.A.forEach(function(ad,ai){if(ad.fi!==fi)return;var cc=av(aM(ad.c)),w=wh[0],h=wh[1],x=cc[0]-w/2,y=cc[1]-h/2;mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
    var on=mods.filter(function(m){return ST.S.indexOf(m.key)<0;});
@@ -1660,7 +1683,31 @@ document.addEventListener('DOMContentLoaded', function(){
    var ga=R[gi],gb=R[(gi+1)%n],nx=gb[1]-ga[1],ny=-(gb[0]-ga[0]),ll=Math.hypot(nx,ny);nx/=ll;ny/=ll;
    var D={sud:[0,-1],'sud-est':[.7,-.7],'sud-ovest':[-.7,-.7],est:[1,0],ovest:[-1,0],'nord-est':[.7,.7],'nord-ovest':[-.7,.7],nord:[0,1]}[f.espo];
    if(D){if(nx*D[0]+ny*D[1]<0){nx=-nx;ny=-ny;}}else if(RR.length>1){var cx2=(ga[0]+gb[0])/2-GX,cy2=(ga[1]+gb[1])/2-GY;if(nx*cx2+ny*cy2<0){nx=-nx;ny=-ny;}}else if(ny>0){nx=-nx;ny=-ny;}
-   return {R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,dir:[nx,ny],az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));}))};});}
+   return {R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,sp:SP,dir:[nx,ny],az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));}))};});}
+ /* ---------- spostamento del blocco con aggancio (Sante 28/10) ---------- */
+ var SEL=-1;
+ function cm(x){return (x>0?'+':x<0?'−':'')+Math.round(Math.abs(x)*100)+' cm';}
+ function stato1(v,lo,hi){if(hi-lo<.015)return 'fisso';if(Math.abs(v)<.005)return 'centrato';if(Math.abs(v-hi)<.005)return 'battuta+';if(Math.abs(v-lo)<.005)return 'battuta-';return '';}
+ function posTesto(sp){if(!sp)return '';var a=stato1(sp.dx,sp.dxlo,sp.dxhi),b=stato1(sp.dy,sp.dylo,sp.dyhi);
+  if(a==='centrato'&&(b==='centrato'||b==='fisso')||a==='fisso'&&b==='centrato'||a==='fisso'&&b==='fisso')return 'centrati';
+  return 'lungo la gronda '+(a==='centrato'||a==='fisso'?'al centro':a?'in battuta':cm(sp.dx))+' · in profondità '+(b==='centrato'||b==='fisso'?'al centro':b?'in battuta':cm(sp.dy));}
+ function muovi(fi,dir,passo){var e=ESITO[fi];if(!e||!e.sp)return;var sp=e.sp,f=ST.F[fi];memo();SEL=fi;
+  if(dir==='c'){f.dx=0;f.dy=0;disegna();return;}
+  /* le frecce seguono lo schermo: → verso est, ↑ verso nord, qualunque sia la direzione della gronda */
+  var cx=Math.cos(sp.th),cy=Math.sin(sp.th),ax,seg;
+  if(dir==='l'||dir==='r'){ax='x';seg=(Math.abs(cx)>=.3?(cx>0?1:-1):(cy>0?1:-1))*(dir==='r'?1:-1);}else{ax='y';seg=(Math.abs(cx)>=.3?(cx>0?1:-1):(cy<0?1:-1))*(dir==='u'?1:-1);}
+  var v=(ax==='x'?sp.dx:sp.dy)+seg*passo,lo=ax==='x'?sp.dxlo:sp.dylo,hi=ax==='x'?sp.dxhi:sp.dyhi;v=Math.max(lo,Math.min(hi,v));
+  /* aggancio: entro 5 cm dal centro o da un finecorsa si ferma esattamente lì */
+  if(Math.abs(v)<.05)v=0;else if(Math.abs(v-hi)<.05)v=hi;else if(Math.abs(v-lo)<.05)v=lo;
+  if(ax==='x')f.dx=Math.round(v*1000)/1000;else f.dy=Math.round(v*1000)/1000;disegna();}
+ function guide(){var e=ESITO[SEL];if(!e||!e.sp||!e.sp.bx)return;var sp=e.sp,b=sp.bx,lin=[],ll=function(p){return aLL(e.ind(p));};
+  var sx=stato1(sp.dx,sp.dxlo,sp.dxhi),sy=stato1(sp.dy,sp.dylo,sp.dyhi);
+  if(sx==='centrato')lin.push([[(b[0]+b[1])/2,b[2]-.6],[(b[0]+b[1])/2,b[3]+.6],'centrato']);
+  if(sx==='battuta+')lin.push([[b[1],b[2]-.6],[b[1],b[3]+.6],'in battuta']);if(sx==='battuta-')lin.push([[b[0],b[2]-.6],[b[0],b[3]+.6],'in battuta']);
+  if(sy==='centrato')lin.push([[b[0]-.6,(b[2]+b[3])/2],[b[1]+.6,(b[2]+b[3])/2],'centrato']);
+  if(sy==='battuta+')lin.push([[b[0]-.6,b[3]],[b[1]+.6,b[3]],'in battuta']);if(sy==='battuta-')lin.push([[b[0]-.6,b[2]],[b[1]+.6,b[2]],'in battuta']);
+  lin.forEach(function(l){L.polyline([ll(l[0]),ll(l[1])],{color:'#22C55E',weight:2.6,dashArray:'7 4',interactive:false}).addTo(LG);
+   L.marker(ll(l[1]),{interactive:false,icon:L.divIcon({className:'lv-guida',iconSize:[0,0],html:'<span>'+l[2]+'</span>'})}).addTo(LG);});}
  /* ---------- disegno sulla mappa ---------- */
  function disegna(){if(!MAP)return;calcola();LG.clearLayers();var sel=TOOL==='spegni';
   ESITO.forEach(function(e,fi){L.polygon(ST.F[fi].pts,{color:'#fff',weight:1.2,dashArray:'5 4',fill:false,interactive:false,opacity:.8}).addTo(LG);
@@ -1679,7 +1726,7 @@ document.addEventListener('DOMContentLoaded', function(){
    p.on('click',function(){memo();ST.O.splice(oi,1);disegna();});});
   if(CORR.length){L.polyline(CORR,{color:'#FFD400',weight:2.4,interactive:false}).addTo(LG);CORR.forEach(function(ll,i){L.circleMarker(ll,{radius:i?4:7,color:'#0F172A',weight:1.2,fillColor:i?'#fff':'#FFD400',fillOpacity:1,interactive:false}).addTo(LG);});}
   if(trasc){L.rectangle([trasc.a,trasc.b],{color:'#DC2626',weight:2,dashArray:'6 3',fillOpacity:.25,interactive:false}).addTo(LG);}
-  riepilogo();aiuto();}
+  guide();riepilogo();aiuto();}
  function aiuto(){$('#lvAiuto').textContent={falda:CORR.length?(CORR.length<3?'Continua a cliccare gli angoli della falda.':'Clicca il primo angolo (quello giallo grande) per chiudere la falda.'):'Clicca gli angoli della falda uno dopo l\'altro. Trascina un angolo giallo per correggerlo; la mappa si sposta trascinando.',
   camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',spegni:'Clicca un modulo per toglierlo o rimetterlo.',aggiungi:'Clicca dove vuoi un modulo in più: si mette nel verso della falda, come gli altri. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
  function nomeEspo(az){var a=Math.abs(az),w=az>0;return a<=22.5?'sud':a<=67.5?(w?'sud-ovest':'sud-est'):a<=112.5?(w?'ovest':'est'):a<=157.5?(w?'nord-ovest':'nord-est'):'nord';}
@@ -1690,6 +1737,7 @@ document.addEventListener('DOMContentLoaded', function(){
    ST.F.forEach(function(f,fi){var e=ESITO[fi],d=document.createElement('div');d.className='lv-falda';
     d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
+     +(e.mods.length?'<div class="lv-r3 lv-r4"><span>Sposta</span>'+[['l','←','sinistra'],['r','→','destra'],['u','↑','su'],['d','↓','giù']].map(function(o){return '<button type="button" data-f="'+fi+'" data-mv="'+o[0]+'" title="Sposta i moduli verso '+o[2]+' di 5 cm (con Maiusc 25 cm)">'+o[1]+'</button>';}).join('')+'<button type="button" data-f="'+fi+'" data-mv="c" title="Rimette i moduli al centro">Centra</button><i class="lv-pos">'+posTesto(e.sp)+'</i></div>':'')
      +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
   $('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
  /* ---------- revisioni ---------- */
@@ -1795,7 +1843,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#lvAnnulla').addEventListener('click',function(){var s=STORIA.pop();if(!s)return;ST=JSON.parse(s);if(!ST.A)ST.A=[];CORR=[];disegna();});
   $('#lvSvuota').addEventListener('click',async function(){if(!await chiedi('Ricomincia','Tolgo tutte le falde, i camini e gli ostacoli disegnati?','Ricomincia',true))return;memo();ST={F:[],O:[],S:[],A:[]};CORR=[];disegna();});
   $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else f.espo=t.value;disegna();});
-  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){return {fi:a.fi>df?a.fi-1:a.fi,c:a.c};});disegna();});
+  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){return {fi:a.fi>df?a.fi-1:a.fi,c:a.c};});disegna();});
   $('#lvChiudi').addEventListener('click',async function(){if(MOD&&nMod()&&!await chiedi('Chiudi il layout veloce','Ci sono modifiche non salvate. Chiudo lo stesso?','Chiudi senza salvare',true))return;OV.classList.remove('on');document.body.style.overflow='';});
   async function tasto(b,nuova){var t=b.textContent;b.disabled=true;b.textContent='Salvo…';try{await salvaRev(nuova);}catch(e){await avvisa('errore','Revisione non salvata',esc(e.message||e));}finally{b.textContent=t;riepilogo();}}
   $('#lvSalva').addEventListener('click',function(){tasto(this,false);});
@@ -1900,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', function(){
    - Sotto il legale rappresentante: bollette del lead e profilo fiscale (forma giuridica letta dalla ragione sociale, IVA detraibile).
    - Agevolazione fiscale: per le aziende «Detrazione 50%» si nasconde e compare «Iperammortamento».
    - Scheda Prodotti: riquadro «Offerta azienda» con la verifica del 105% (DM 7/5/2026), i parametri e il dettaglio economico.
-   Come il resto dei dati azienda, per ora si vede ma non si salva («in arrivo»): il salvataggio passa da n8n. */
+   Salvataggio (28/10): dopo il salvataggio normale di n8n la maschera manda i dati azienda a azienda-preventivo (azione salva). */
 (function(){
  var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
  function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [].slice.call((c||document).querySelectorAll(s));}
@@ -1951,7 +1999,7 @@ document.addEventListener('DOMContentLoaded', function(){
   bollette();var sl=$('#existing_lead');if(sl)sl.addEventListener('change',function(){setTimeout(bollette,300);});
   /* lead azienda già salvato: si accende «Azienda» e si riempiono i dati dalla tabella aziende */
   function caricaAzienda(){var lid=($('#existing_lead')||{}).value||($('#existing_lead_id')||{}).value||'';if(!/^[0-9a-f-]{36}$/i.test(lid))return;
-   chiama('cosa=azienda&lead='+lid).then(function(j){if(!j.ok||j.tipo!=='azienda')return;
+   var pv=($('#prevSelect')||{}).value||($('#existing_prev_id')||{}).value||'';chiama('cosa=azienda&lead='+lid+(/^[0-9a-f-]{36}$/i.test(pv)?'&prev='+pv:'')).then(function(j){if(!j.ok||j.tipo!=='azienda')return;var P=j.preventivo||null;
     var b=$('#sgTipo button[data-v="azienda"]');if(b&&!b.classList.contains('on'))b.click();
     var a=j.azienda||{};function put(id,v){var e=$('#'+id);if(e&&v!=null&&v!==''){e.value=v;}}
     put('az_piva',a.partita_iva);put('az_cf',a.codice_fiscale);if(a.codice_fiscale)$('#az_cf').dataset.mano='1';
@@ -1960,6 +2008,11 @@ document.addEventListener('DOMContentLoaded', function(){
     if(a.forma_giuridica){forma.value=a.forma_giuridica;formaMano=true;$('#az_forma_src').textContent='dalla scheda dell\'azienda';}
     $$('#az_iva button').forEach(function(x){x.classList.toggle('on',x.dataset.v===(a.iva_detraibile===false?'no':'si'));});
     ultima=String(a.partita_iva||'');var p=$('#az_piva');if(p)p.dispatchEvent(new Event('input',{bubbles:true}));
+    if(P){if(P.riduzione_prudenziale_pct!=null)$('#oaz_rid').value=P.riduzione_prudenziale_pct;
+     if(P.aliquota_fiscale_pct!=null){$('#oaz_aliq').value=P.aliquota_fiscale_pct;aliqMano=true;$('#oaz_aliq_src').textContent='salvata con il preventivo';}
+     if(P.tipo_agevolazione==='iperammortamento'&&iper){iper.checked=true;}
+     var det=$('#oaz_det');det.checked=!!P.mostra_dettaglio_economico;$('#oaz_righe').innerHTML='';(P.dettaglio_voci_json||[]).forEach(function(v){voce(v.voce,v.importo!=null?String(v.importo):'');});$('#oaz_voci').hidden=!det.checked;somma();
+     if(P.gas_smc){var g=$('#oaz_smc');g.value=P.gas_smc;g.dataset.mano='1';}}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,400);});
   var psel=$('#prevSelect');if(psel)psel.addEventListener('change',function(){setTimeout(caricaAzienda,500);});
@@ -1982,7 +2035,7 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ---------- scheda Prodotti: Offerta azienda ---------- */
   var T=$('#tabProdotti'),pag=$$('.pc',T).find(function(c){return /Pagamento e note/.test(c.textContent);});
   var c=document.createElement('section');c.className='pc oaz';c.id='cardOfferta';c.hidden=true;
-  c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip" title="Si salverà con il prossimo passo">in arrivo</span></span></div><div class="pb">'
+  c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip oaz-chip" title="Si salva con il preventivo">si salva con il preventivo</span></span></div><div class="pb">'
    +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="any" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
    +'<h4>Parametri dell\'offerta</h4><div class="pg">'
    +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="any" value="5"><div class="az-src">sulla produzione stimata</div></div>'
@@ -2021,7 +2074,7 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<tr class="tot"><td>Fabbisogno</td><td>'+it(fab)+' kWh</td></tr><tr><td>Limite 105%</td><td>'+it(lim)+' kWh</td></tr>';
    var gas='';
    if(!resa){box.className='v105 nd';out.innerHTML=gas+h+'</table>Manca la producibilità del sito: salva la posizione in Mappa tetto per avere i dati PVGIS.';return;}
-   var kmax=lim/netta,prod=kwp*netta;
+   var kmax=lim/netta,prod=kwp*netta;window.__azCalcolo={fabbisogno_kwh:Math.round(fab),fabbisogno_termico_kwhe:Math.round(term),limite_105_kwh:Math.round(lim),kwp_massimo_105:Math.round(kmax*100)/100,produzione_netta_kwh:Math.round(prod)};
    h+='<tr><td>Producibilità del sito'+(stima?' — stima PVGIS sud 30°, da affinare in Mappa tetto':'')+(rid?' (ridotta del '+it(rid*100)+'%)':'')+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
    var catTxt='';if(mod){if(!mod.categoria_enea)catTxt='<div class="msg">⚠ Categoria ENEA del modulo '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp non registrata nel catalogo: verificala sul registro prima di offrire l\'iperammortamento.</div>';else if(mod.categoria_enea==='A')catTxt='<div class="msg">⚠ '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp è in categoria A del registro ENEA: non dà diritto all\'iperammortamento.</div>';}
    if(!kwp){box.className='v105 nd';out.innerHTML=gas+h+catTxt+'Scrivi la potenza per la verifica.';return;}
@@ -2041,6 +2094,28 @@ document.addEventListener('DOMContentLoaded', function(){
    var lab=el.id&&$('label[for="'+el.id+'"]'),nome=(lab&&lab.textContent.replace('*','').trim())||el.name||el.id||'un campo';
    var st=$('#status');if(st){st.className='error';st.textContent='❌ Non salvato: controlla «'+nome+'» — '+el.validationMessage;}
    setTimeout(function(){try{el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}catch(x){}},150);},true);
+  /* ---------- salvataggio dei dati azienda dopo il salvataggio normale ---------- */
+  function raccogli(){var sv=function(id){var e=$('#'+id);return e?e.value.trim():'';};
+   var voci=$$('#oaz_righe .r').map(function(r){var i=$$('input',r);return {voce:i[0].value.trim(),importo:i[1].value.trim()?n(i[1].value):null};}).filter(function(v){return v.voce||v.importo!=null;});
+   var g=$('#oaz_smc');
+   return {azienda:{ragione_sociale:sv('last_name'),partita_iva:sv('az_piva').replace(/\s/g,'').replace(/^IT/i,''),codice_fiscale:sv('az_cf'),forma_giuridica:forma.value||null,
+     iva_detraibile:!!$('#az_iva button.on')&&$('#az_iva button.on').dataset.v!=='no',sede_via:sv('az_via'),sede_comune:sv('az_comune'),sede_cap:sv('az_cap'),sede_provincia:sv('az_prov').toUpperCase(),
+     codice_sdi:sv('az_sdi').toUpperCase(),pec:sv('az_pec'),email_amministrazione:sv('az_mailamm'),referente:sv('az_referente'),referente_ruolo:sv('az_ruolo'),
+     legale:{cognome:sv('az_lrcog'),nome:sv('az_lrnom'),cf:sv('az_lrcf').toUpperCase()}},
+    preventivo:{con_iperammortamento:!!(iper&&iper.checked),riduzione_prudenziale_pct:n($('#oaz_rid').value),aliquota_fiscale_pct:$('#oaz_aliq').value===''?null:n($('#oaz_aliq').value),
+     mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null}};}
+  var F0=window.fetch;
+  window.fetch=function(u,o){var p=F0.apply(this,arguments);
+   if(typeof u==='string'&&u.indexOf('/webhook/preventivo-submit')>=0&&az()){p.then(function(r){return r.clone().json();}).then(function(j){
+     if(!j||!(j.success||j.id))return;var pid=j.id||($('#existing_prev_id')||{}).value,lid=j.lead_id||($('#existing_lead_id')||{}).value;
+     var d=raccogli();d.t=pass();d.azione='salva';d.lead_id=lid;d.prev_id=pid;
+     return F0(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(function(r){return r.json();}).then(function(k){
+      var st=$('#status');if(!st)return;
+      if(k&&k.ok){st.textContent=st.textContent.replace(/\s*·.*$/,'')+' · dati azienda salvati';$$('.az-chip').forEach(function(x){x.textContent='salvato';});}
+      else{st.className='error';st.textContent='⚠ Preventivo salvato, ma i dati azienda no: '+((k&&k.errore)||'errore');}});
+    }).catch(function(e){var st=$('#status');if(st){st.className='error';st.textContent='⚠ Preventivo salvato, ma i dati azienda no: '+e.message;}});}
+   return p;};
+  $$('.az-chip').forEach(function(x){if(/in arrivo/.test(x.textContent)){x.textContent='si salva con il preventivo';x.title='Si salva con il preventivo';}});
   window.__aziendaRicalcola=ricalcola;
   $$('.tab-btn').forEach(function(b){b.addEventListener('click',function(){setTimeout(ricalcola,100);});});
   var ps=$('#prevSelect');if(ps)ps.addEventListener('change',function(){setTimeout(ricalcola,800);});
