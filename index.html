@@ -1950,7 +1950,7 @@ document.addEventListener('DOMContentLoaded', function(){
    chiama('cosa=bollette&lead='+lid).then(function(j){BOLL=j.bollette||[];mostra();}).catch(mostra);}
   bollette();var sl=$('#existing_lead');if(sl)sl.addEventListener('change',function(){setTimeout(bollette,300);});
   /* lead azienda già salvato: si accende «Azienda» e si riempiono i dati dalla tabella aziende */
-  function caricaAzienda(){var lid=($('#existing_lead')||{}).value||'';if(!/^[0-9a-f-]{36}$/i.test(lid))return;
+  function caricaAzienda(){var lid=($('#existing_lead')||{}).value||($('#existing_lead_id')||{}).value||'';if(!/^[0-9a-f-]{36}$/i.test(lid))return;
    chiama('cosa=azienda&lead='+lid).then(function(j){if(!j.ok||j.tipo!=='azienda')return;
     var b=$('#sgTipo button[data-v="azienda"]');if(b&&!b.classList.contains('on'))b.click();
     var a=j.azienda||{};function put(id,v){var e=$('#'+id);if(e&&v!=null&&v!==''){e.value=v;}}
@@ -1962,6 +1962,8 @@ document.addEventListener('DOMContentLoaded', function(){
     ultima=String(a.partita_iva||'');var p=$('#az_piva');if(p)p.dispatchEvent(new Event('input',{bubbles:true}));
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,400);});
+  var psel=$('#prevSelect');if(psel)psel.addEventListener('change',function(){setTimeout(caricaAzienda,500);});
+  $$('input[name="prev_mode"]').forEach(function(r){r.addEventListener('change',function(){setTimeout(caricaAzienda,500);});});
   var forma=$('#az_forma'),formaMano=false;
   function leggiForma(){if(formaMano)return;var s=($('#last_name').value||'').toUpperCase().replace(/\./g,'').replace(/\s+/g,' ');var v='';
    if(/\bSRLS\b|\bS R L S\b/.test(s))v='srls';else if(/\bSRL\b|\bS R L\b/.test(s))v='srl';else if(/\bSAPA\b/.test(s))v='sapa';else if(/\bSPA\b|\bS P A\b/.test(s))v='spa';else if(/\bSNC\b|\bS N C\b/.test(s))v='snc';else if(/\bSAS\b|\bS A S\b/.test(s))v='sas';else if(/\bSS\b|SOCIETA SEMPLICE/.test(s))v='ss';else if(/COOP/.test(s))v='coop';
