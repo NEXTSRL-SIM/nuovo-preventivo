@@ -331,7 +331,7 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-falda{border:1px solid var(--border);border-radius:12px;padding:9px 11px;margin-bottom:8px;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 10px;align-items:center}
 .lv-n{grid-row:span 3;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--text);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
 .lv-r1{display:flex;gap:6px;align-items:center;font-size:12.5px;min-width:0}.lv-r1 b{margin-left:auto}.lv-r1 select,.lv-r1 input{width:auto!important;height:30px!important;padding:3px 6px!important;margin:0!important}.lv-r1 input{width:58px!important}
-.lv-r4{margin-top:4px;flex-wrap:wrap}.lv-r4 button{min-width:30px}.lv-r4 .lv-pos{margin-left:8px;font-style:normal;font-size:11px;color:var(--text-muted)}.lv-guida span{position:absolute;transform:translate(6px,-50%);white-space:nowrap;background:#22C55E;color:#fff;font:700 10.5px Manrope,sans-serif;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.lv-r4{margin-top:4px;flex-wrap:wrap}.lv-r4 span{min-width:62px}.lv-r4 button{min-width:30px}.lv-pos{grid-column:2;font-size:11px;color:var(--text-muted);margin:4px 0 2px;line-height:1.35}.lv-nessuno{grid-column:2;font-size:11.5px;margin:6px 0 2px}.lv-incl{display:inline-flex;align-items:center;gap:3px}.lv-incl em{font-style:normal;font-weight:700;font-size:12px;color:var(--text)}.lv-guida span{position:absolute;transform:translate(6px,-50%);white-space:nowrap;background:#22C55E;color:#fff;font:700 10.5px Manrope,sans-serif;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .lv-r3{grid-column:2;display:flex;align-items:center;gap:0;font-size:11.5px;color:var(--text-muted)}.lv-r3 span{margin-right:8px}.lv-r3 button{border:1px solid var(--border);background:var(--sf2);color:var(--text-muted);font:600 11.5px Manrope,sans-serif;padding:4px 7px;cursor:pointer;margin-left:-1px}.lv-r3 button:first-of-type{border-radius:7px 0 0 7px}.lv-r3 button:last-child{border-radius:0 7px 7px 0}.lv-r3 button.on{background:var(--acw);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
 .lv-r2{grid-column:2;font-size:11.5px;color:var(--text-muted)}.lv-r2 a{color:#dc2626}
 .lv-az{display:flex;flex-direction:column;gap:8px;margin-top:14px}.lv-az2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-az .btn{width:100%;justify-content:center}
@@ -1636,26 +1636,33 @@ document.addEventListener('DOMContentLoaded', function(){
  function valido(poly,ost,x,y,w,h){var ang=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x+w/2,y],[x+w/2,y+h],[x,y+h/2],[x+w,y+h/2]];
   if(!ang.every(function(p){return dentro(p,poly)&&poly.every(function(a,i){return dseg(p,a,poly[(i+1)%poly.length])>=MARG;});}))return false;
   return !ost.some(function(o){return x<o[2]&&x+w>o[0]&&y<o[3]&&y+h>o[1];});}
- /* di quanto un gruppo di moduli può scorrere (dx,dy unitari) restando tutto valido e senza toccare gli altri moduli: passo 1 cm, fino a 6 m */
- function corsa(poly,ost,grp,altri,ux,uy){var va=function(t){return grp.every(function(c){var x=c[0]+ux*t,y=c[1]+uy*t;if(!valido(poly,ost,x,y,c[2],c[3]))return false;
-    return !altri.some(function(o){return x<o[0]+o[2]+GAP-1e-6&&x+c[2]>o[0]-GAP+1e-6&&y<o[1]+o[3]+GAP-1e-6&&y+c[3]>o[1]-GAP+1e-6;});});};
-  /* prima a passi di 5 cm, poi si rifinisce al centimetro */
+ /* di quanto un gruppo di moduli può scorrere (ux,uy unitari) restando tutto valido: prima a passi di 5 cm, poi al centimetro, fino a 6 m */
+ function corsa(poly,ost,grp,ux,uy){var va=function(t){return grp.every(function(c){return valido(poly,ost,c[0]+ux*t,c[1]+uy*t,c[2],c[3]);});};
   var d=0,t;for(t=.05;t<=6;t+=.05){if(!va(t))break;d=t;}for(t=d+.01;t<d+.05;t+=.01){if(!va(t))break;d=t;}return Math.round(d*100)/100;}
- /* PORTALE NEXT-110 (Sante 28/10): la griglia migliore si centra da sola. Ogni tratto continuo di una fila va al centro dello spazio libero
-    della sua riga, poi tutto il blocco al centro in profondità. Ogni cella porta con sé la posizione prima della centratura (c[4],c[5]):
-    da quella si calcola la chiave dei moduli spenti, così le revisioni già salvate non cambiano significato. */
- function posa(poly,ost,rot){var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys),best={m:[],r:[],s:-1};
-  (rot==='vert'?[[MOD_C,MOD_L]]:rot==='orizz'?[[MOD_L,MOD_C]]:[[MOD_C,MOD_L],[MOD_L,MOD_C]]).forEach(function(wh){var w=wh[0],h=wh[1];[0,.2,.4,.6,.8].forEach(function(fx){[0,.2,.4,.6,.8].forEach(function(fy){var m=[],rr=[],sp=0;
-   for(var y=y0+MARG+fy*h;y+h<=y1-MARG+1e-6;y+=h+GAP){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);rr.push(run);sp++;}run=[];};
-    for(var x=x0+MARG+fx*w;x+w<=x1-MARG+1e-6;x+=w+GAP){if(valido(poly,ost,x,y,w,h))run.push([x,y,w,h]);else chiudi();}chiudi();}
-   var s=m.length-.25*sp;if(s>best.s)best={m:m,r:rr,s:s};});});});
-  var celle=[];best.r.forEach(function(run){run.forEach(function(c){celle.push([c[0],c[1],c[2],c[3],c[0],c[1]]);});});
-  /* centratura dei tratti, fila per fila */
-  var i0=0;best.r.forEach(function(run){var g=celle.slice(i0,i0+run.length);i0+=run.length;var altri=celle.filter(function(c){return g.indexOf(c)<0&&Math.abs(c[1]-g[0][1])<.01;});
-   var sx=corsa(poly,ost,g,altri,-1,0),dx=corsa(poly,ost,g,altri,1,0),sh=Math.round((dx-sx)/2*100)/100;if(Math.abs(sh)>=.01)g.forEach(function(c){c[0]+=sh;});});
-  /* centratura del blocco in profondità */
-  if(celle.length){var su=corsa(poly,ost,celle,[],0,1),giu=corsa(poly,ost,celle,[],0,-1),sv=Math.round((su-giu)/2*100)/100;if(Math.abs(sv)>=.01)celle.forEach(function(c){c[1]+=sv;});}
-  return celle;}
+ /* PORTALE NEXT-110 (Sante 28/10, seconda tornata). La posa è una griglia: moduli w×h con 2 cm di gioco, la prima colonna a x0+MARG+px,
+    la prima fila a y0+MARG+py (px,py = origine della griglia, dentro un passo modulo+gioco). Si tengono i tratti di almeno 2 moduli.
+    Automatica: si provano le origini a passi di 1/5 di modulo, poi si rifinisce a 5 cm intorno alla migliore; vince il massimo dei moduli,
+    a parità quella più centrata nella falda. Le frecce spostano l'origine e la posa si rifà: se entrano più moduli compaiono. */
+ function griglia(poly,ost,w,h,px,py){var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys);
+  var PX=w+GAP,PY=h+GAP;px=((px%PX)+PX)%PX;py=((py%PY)+PY)%PY;var m=[],sp=0;
+  for(var y=y0+MARG+py;y+h<=y1-MARG+1e-6;y+=PY){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);sp++;}run=[];};
+   for(var x=x0+MARG+px;x+w<=x1-MARG+1e-6;x+=PX){if(valido(poly,ost,x,y,w,h))run.push([x,y,w,h]);else chiudi();}chiudi();}
+  return {m:m,s:m.length-.25*sp,w:w,h:h,px:px,py:py};}
+ function sbilancio(poly,ost,g){if(!g.m.length)return 0;var l=corsa(poly,ost,g.m,-1,0),r=corsa(poly,ost,g.m,1,0),d=corsa(poly,ost,g.m,0,-1),u=corsa(poly,ost,g.m,0,1);g.lim={l:l,r:r,d:d,u:u};return Math.abs(l-r)+Math.abs(d-u);}
+ var CACHE={},NCACHE=0;
+ function posaAuto(poly,ost,rot){var key=JSON.stringify([poly.map(function(p){return [+p[0].toFixed(3),+p[1].toFixed(3)];}),ost,rot]);if(CACHE[key])return CACHE[key];
+  var cand=[];(rot==='vert'?[[MOD_C,MOD_L]]:rot==='orizz'?[[MOD_L,MOD_C]]:[[MOD_C,MOD_L],[MOD_L,MOD_C]]).forEach(function(wh){var w=wh[0],h=wh[1],PX=w+GAP,PY=h+GAP,best=null;
+   [0,.2,.4,.6,.8].forEach(function(fx){[0,.2,.4,.6,.8].forEach(function(fy){var g=griglia(poly,ost,w,h,fx*PX,fy*PY);if(!best||g.s>best.s)best=g;});});
+   var b0=best;for(var dx=-.1;dx<=.1001;dx+=.05)for(var dy=-.1;dy<=.1001;dy+=.05){if(!dx&&!dy)continue;var g=griglia(poly,ost,w,h,b0.px+dx,b0.py+dy);if(g.s>=best.s-1e-9)cand.push(g);if(g.s>best.s)best=g;}
+   cand.push(b0);});
+  var smax=Math.max.apply(0,cand.map(function(g){return g.s;})),pari=cand.filter(function(g){return g.s>=smax-1e-9;});
+  /* a parità di moduli: la più centrata, misurata sul rettangolo della falda (veloce); la corsa vera si misura solo sulla scelta */
+  var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),X0=Math.min.apply(0,xs),X1=Math.max.apply(0,xs),Y0=Math.min.apply(0,ys),Y1=Math.max.apply(0,ys);
+  pari.forEach(function(g){if(!g.m.length){g.sb=0;return;}var a=Math.min.apply(0,g.m.map(function(c){return c[0];})),b=Math.max.apply(0,g.m.map(function(c){return c[0]+c[2];})),c=Math.min.apply(0,g.m.map(function(c){return c[1];})),d=Math.max.apply(0,g.m.map(function(c){return c[1]+c[3];}));g.sb=Math.abs((a-X0)-(X1-b))+Math.abs((c-Y0)-(Y1-d));});
+  pari.sort(function(a,b){return a.sb-b.sb;});var r=pari[0];
+  /* centratura fine del blocco scelto: lo si porta a metà della sua corsa (stessa griglia, origine spostata) */
+  if(r.m.length){if(!r.lim)sbilancio(poly,ost,r);var sx=(r.lim.r-r.lim.l)/2,sy=(r.lim.u-r.lim.d)/2;if(Math.abs(sx)>=.01||Math.abs(sy)>=.01){var g2=griglia(poly,ost,r.w,r.h,r.px+sx,r.py+sy);if(g2.m.length>=r.m.length)r=g2;}}
+  if(++NCACHE>300){CACHE={};NCACHE=0;}CACHE[key]=r;return r;}
  /* ---------- stato ---------- */
  var ST={F:[],O:[],S:[],A:[]},CORR=[],TOOL='falda',STORIA=[],ESITO=[],REV=[],APERTA=-1,MAP=null,LG=null,trasc=null,PID='';
  function cop(){return JSON.parse(JSON.stringify(ST));}
@@ -1669,39 +1676,46 @@ document.addEventListener('DOMContentLoaded', function(){
    var PR=R.map(av),box=[],obs=[];
    ST.O.forEach(function(o){var q=o.q.map(aM),g=q.reduce(function(s2,p){return [s2[0]+p[0]/q.length,s2[1]+p[1]/q.length];},[0,0]);if(!q.some(function(p){return dentro(p,R);})&&!dentro(g,R))return;
     var qa=q.map(av),xs=qa.map(function(p){return p[0];}),ys=qa.map(function(p){return p[1];}),fa=o.t==='camino'?.25:.4;box.push([Math.min.apply(0,xs)-fa,Math.min.apply(0,ys)-fa,Math.max.apply(0,xs)+fa,Math.max.apply(0,ys)+fa]);obs.push(o);});
-   /* spostamento a mano del blocco (f.dx lungo la gronda, f.dy in profondità, metri): sempre dentro i limiti in cui tutti i moduli restano validi */
-   var celle=posa(PR,box,f.rot||'auto'),SP={dx:0,dy:0,dxlo:0,dxhi:0,dylo:0,dyhi:0};
-   if(celle.length){SP.dylo=-corsa(PR,box,celle,[],0,-1);SP.dyhi=corsa(PR,box,celle,[],0,1);SP.dy=Math.max(SP.dylo,Math.min(SP.dyhi,+f.dy||0));
-    var cs=celle.map(function(c){return [c[0],c[1]+SP.dy,c[2],c[3]];});SP.dxlo=-corsa(PR,box,cs,[],-1,0);SP.dxhi=corsa(PR,box,cs,[],1,0);SP.dx=Math.max(SP.dxlo,Math.min(SP.dxhi,+f.dx||0));}
-   var mods=celle.map(function(r){var x=r[0]+SP.dx,y=r[1]+SP.dy,w=r[2],h=r[3];var q=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),g0=[[r[4],r[5]],[r[4]+w,r[5]],[r[4]+w,r[5]+h],[r[4],r[5]+h]].map(ind).reduce(function(s2,p){return [s2[0]+p[0]/4,s2[1]+p[1]/4];},[0,0]);return {q:q,cell:[x,y,w,h],key:fi+':'+Math.round(g0[0]*4)+':'+Math.round(g0[1]*4)};});
-   SP.th=th;SP.k=k;if(mods.length){SP.bx=[Math.min.apply(0,mods.map(function(m){return m.cell[0];})),Math.max.apply(0,mods.map(function(m){return m.cell[0]+m.cell[2];})),Math.min.apply(0,mods.map(function(m){return m.cell[1];})),Math.max.apply(0,mods.map(function(m){return m.cell[1]+m.cell[3];}))];}
+   /* posa: automatica, oppure con l'origine spostata a mano (f.org); falda esclusa (f.nessuno) = nessun modulo */
+   var esclusa=!!f.nessuno,auto=esclusa?{m:[],w:MOD_C,h:MOD_L,px:0,py:0}:posaAuto(PR,box,f.rot||'auto'),g=auto;
+   if(!esclusa&&f.org&&Math.abs(f.org.w-auto.w)<1e-6&&Math.abs(f.org.h-auto.h)<1e-6){g=griglia(PR,box,f.org.w,f.org.h,f.org.px,f.org.py);}
+   if(g.m.length&&!g.lim)sbilancio(PR,box,g);
+   /* chiave del modulo = falda + posizione reale sulla mappa al centimetro: un modulo spento resta spento finché c'è un modulo in quel punto (entro 30 cm) */
+   var mods=g.m.map(function(r){var x=r[0],y=r[1],w=r[2],h=r[3];var q=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),c0=q.reduce(function(s2,p){return [s2[0]+p[0]/4,s2[1]+p[1]/4];},[0,0]);return {q:q,cell:[x,y,w,h],c:c0,key:'p:'+fi+':'+Math.round(c0[0]*100)+':'+Math.round(c0[1]*100)};});
+   var SP={auto:auto.m.length,man:g!==auto,lim:g.lim||{l:0,r:0,d:0,u:0},th:th,k:k,org:{w:g.w,h:g.h,px:g.px,py:g.py},esclusa:esclusa,prova:function(px,py){var G=griglia(PR,box,g.w,g.h,px,py);if(G.m.length)sbilancio(PR,box,G);return G;}};
+   if(mods.length){SP.bx=[Math.min.apply(0,mods.map(function(m){return m.cell[0];})),Math.max.apply(0,mods.map(function(m){return m.cell[0]+m.cell[2];})),Math.min.apply(0,mods.map(function(m){return m.cell[1];})),Math.max.apply(0,mods.map(function(m){return m.cell[1]+m.cell[3];}))];}
    var wh=f.rot==='vert'?[MOD_C,MOD_L]:f.rot==='orizz'?[MOD_L,MOD_C]:(mods.length?[mods[0].cell[2],mods[0].cell[3]]:[MOD_C,MOD_L]);
-   ST.A.forEach(function(ad,ai){if(ad.fi!==fi)return;var cc=av(aM(ad.c)),w=wh[0],h=wh[1],x=cc[0]-w/2,y=cc[1]-h/2;mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
-   var on=mods.filter(function(m){return ST.S.indexOf(m.key)<0;});
+   ST.A.forEach(function(ad,ai){if(ad.fi!==fi||esclusa)return;var cc=av(aM(ad.c)),w=wh[0],h=wh[1],x=cc[0]-w/2,y=cc[1]-h/2;mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
+   var on=mods.filter(function(m){return spento(m)<0;});
    /* verso della falda: normale alla gronda (il lato esterno più lungo), verso l'esterno del tetto; con una falda sola, o se scelto a mano, verso l'esposizione indicata */
    var gi=-1,gl=-1;for(i=0;i<n;i++){if(sulBordo(R[i],R[(i+1)%n],fi))continue;var l2=lato(R,i);if(l2>gl){gl=l2;gi=i;}}if(gi<0)gi=ig;
    var ga=R[gi],gb=R[(gi+1)%n],nx=gb[1]-ga[1],ny=-(gb[0]-ga[0]),ll=Math.hypot(nx,ny);nx/=ll;ny/=ll;
    var D={sud:[0,-1],'sud-est':[.7,-.7],'sud-ovest':[-.7,-.7],est:[1,0],ovest:[-1,0],'nord-est':[.7,.7],'nord-ovest':[-.7,.7],nord:[0,1]}[f.espo];
    if(D){if(nx*D[0]+ny*D[1]<0){nx=-nx;ny=-ny;}}else if(RR.length>1){var cx2=(ga[0]+gb[0])/2-GX,cy2=(ga[1]+gb[1])/2-GY;if(nx*cx2+ny*cy2<0){nx=-nx;ny=-ny;}}else if(ny>0){nx=-nx;ny=-ny;}
    return {R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,sp:SP,dir:[nx,ny],az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));}))};});}
- /* ---------- spostamento del blocco con aggancio (Sante 28/10) ---------- */
+ /* ---------- spostamento della griglia con aggancio (Sante 28/10) ---------- */
  var SEL=-1;
- function cm(x){return (x>0?'+':x<0?'−':'')+Math.round(Math.abs(x)*100)+' cm';}
- function stato1(v,lo,hi){if(hi-lo<.015)return 'fisso';if(Math.abs(v)<.005)return 'centrato';if(Math.abs(v-hi)<.005)return 'battuta+';if(Math.abs(v-lo)<.005)return 'battuta-';return '';}
- function posTesto(sp){if(!sp)return '';var a=stato1(sp.dx,sp.dxlo,sp.dxhi),b=stato1(sp.dy,sp.dylo,sp.dyhi);
-  if(a==='centrato'&&(b==='centrato'||b==='fisso')||a==='fisso'&&b==='centrato'||a==='fisso'&&b==='fisso')return 'centrati';
-  return 'lungo la gronda '+(a==='centrato'||a==='fisso'?'al centro':a?'in battuta':cm(sp.dx))+' · in profondità '+(b==='centrato'||b==='fisso'?'al centro':b?'in battuta':cm(sp.dy));}
- function muovi(fi,dir,passo){var e=ESITO[fi];if(!e||!e.sp)return;var sp=e.sp,f=ST.F[fi];memo();SEL=fi;
-  if(dir==='c'){f.dx=0;f.dy=0;disegna();return;}
-  /* le frecce seguono lo schermo: → verso est, ↑ verso nord, qualunque sia la direzione della gronda */
-  var cx=Math.cos(sp.th),cy=Math.sin(sp.th),ax,seg;
-  if(dir==='l'||dir==='r'){ax='x';seg=(Math.abs(cx)>=.3?(cx>0?1:-1):(cy>0?1:-1))*(dir==='r'?1:-1);}else{ax='y';seg=(Math.abs(cx)>=.3?(cx>0?1:-1):(cy<0?1:-1))*(dir==='u'?1:-1);}
-  var v=(ax==='x'?sp.dx:sp.dy)+seg*passo,lo=ax==='x'?sp.dxlo:sp.dylo,hi=ax==='x'?sp.dxhi:sp.dyhi;v=Math.max(lo,Math.min(hi,v));
-  /* aggancio: entro 5 cm dal centro o da un finecorsa si ferma esattamente lì */
-  if(Math.abs(v)<.05)v=0;else if(Math.abs(v-hi)<.05)v=hi;else if(Math.abs(v-lo)<.05)v=lo;
-  if(ax==='x')f.dx=Math.round(v*1000)/1000;else f.dy=Math.round(v*1000)/1000;disegna();}
- function guide(){var e=ESITO[SEL];if(!e||!e.sp||!e.sp.bx)return;var sp=e.sp,b=sp.bx,lin=[],ll=function(p){return aLL(e.ind(p));};
-  var sx=stato1(sp.dx,sp.dxlo,sp.dxhi),sy=stato1(sp.dy,sp.dylo,sp.dyhi);
+ /* un modulo è spento se in ST.S c'è un punto della stessa falda entro 30 cm dal suo centro (chiavi «p:falda:xcm:ycm»); i moduli aggiunti hanno chiave propria */
+ function spento(m){if(m.agg!==undefined||!m.c)return ST.S.indexOf(m.key);var fi=m.key.split(':')[1];
+  for(var i=0;i<ST.S.length;i++){var p=String(ST.S[i]).split(':');if(p[0]==='p'&&p[1]===fi&&Math.hypot(+p[2]/100-m.c[0],+p[3]/100-m.c[1])<.3)return i;}return -1;}
+ function statoAsse(a,b){if(a+b<.015)return 'fisso';if(Math.abs(a-b)<.015)return 'centrato';if(a<.005)return 'battuta-';if(b<.005)return 'battuta+';return '';}
+ function posTesto(e){var sp=e.sp;if(!sp)return '';if(sp.esclusa)return 'falda non utilizzata';var n=e.on.length,d=e.mods.length-sp.auto;
+  var sx=statoAsse(sp.lim.l,sp.lim.r),sy=statoAsse(sp.lim.d,sp.lim.u),t=function(x){return x==='centrato'||x==='fisso'?'al centro':x?'in battuta':'spostati';};
+  return n+' moduli'+(d?' ('+(d>0?'+':'−')+Math.abs(d)+' rispetto alla posa automatica)':'')+' · lungo la gronda '+t(sx)+' · in profondità '+t(sy)+(sp.man?'':' · posa automatica');}
+ /* le frecce seguono lo schermo: → verso est, ↑ verso nord, qualunque sia la direzione della gronda */
+ function versi(sp){var cx=Math.cos(sp.th),cy=Math.sin(sp.th);var vx=Math.abs(cx)>=.3?(cx>0?1:-1):(cy>0?1:-1),vy=Math.abs(cx)>=.3?(cx>0?1:-1):(cy<0?1:-1);return {r:[vx,0],l:[-vx,0],u:[0,vy],d:[0,-vy]};}
+ function muovi(fi,dir,passo,battuta){var e=ESITO[fi];if(!e||!e.sp||e.sp.esclusa)return;var sp=e.sp,f=ST.F[fi];memo();SEL=fi;
+  if(dir==='c'){delete f.org;disegna();return;}
+  var v=versi(sp)[dir],o=sp.org,px=o.px,py=o.py,G;
+  if(battuta){/* a filo del margine: si porta l'ultima fila/colonna dal lato scelto fino al finecorsa, e si ripete se compaiono moduli nuovi */
+   for(var k2=0;k2<4;k2++){G=sp.prova(px,py);if(!G.m.length)break;var L=G.lim,c=v[0]>0?L.r:v[0]<0?L.l:v[1]>0?L.u:L.d;if(c<.005)break;px+=v[0]*c;py+=v[1]*c;}}
+  else{px+=v[0]*passo;py+=v[1]*passo;G=sp.prova(px,py);
+   /* aggancio: entro 5 cm dal centro o dal margine si ferma esattamente lì */
+   if(G.m.length){var L2=G.lim;if(v[0]){var mx=(L2.r-L2.l)/2;if(Math.abs(mx)<.05)px+=mx;else if(L2.l<.05)px-=L2.l;else if(L2.r<.05)px+=L2.r;}
+    else{var my=(L2.u-L2.d)/2;if(Math.abs(my)<.05)py+=my;else if(L2.d<.05)py-=L2.d;else if(L2.u<.05)py+=L2.u;}}}
+  f.org={w:o.w,h:o.h,px:Math.round(px*1000)/1000,py:Math.round(py*1000)/1000};disegna();}
+ function guide(){var e=ESITO[SEL];if(!e||!e.sp||!e.sp.bx||!e.sp.man)return;var sp=e.sp,b=sp.bx,lin=[],ll=function(p){return aLL(e.ind(p));};
+  var sx=statoAsse(sp.lim.l,sp.lim.r),sy=statoAsse(sp.lim.d,sp.lim.u);
   if(sx==='centrato')lin.push([[(b[0]+b[1])/2,b[2]-.6],[(b[0]+b[1])/2,b[3]+.6],'centrato']);
   if(sx==='battuta+')lin.push([[b[1],b[2]-.6],[b[1],b[3]+.6],'in battuta']);if(sx==='battuta-')lin.push([[b[0],b[2]-.6],[b[0],b[3]+.6],'in battuta']);
   if(sy==='centrato')lin.push([[b[0]-.6,(b[2]+b[3])/2],[b[1]+.6,(b[2]+b[3])/2],'centrato']);
@@ -1712,8 +1726,8 @@ document.addEventListener('DOMContentLoaded', function(){
  function disegna(){if(!MAP)return;calcola();LG.clearLayers();var sel=TOOL==='spegni';
   ESITO.forEach(function(e,fi){L.polygon(ST.F[fi].pts,{color:'#fff',weight:1.2,dashArray:'5 4',fill:false,interactive:false,opacity:.8}).addTo(LG);
    L.polygon(e.R.map(aLL),{color:'#FFD400',weight:2.4,fillColor:'#FFD400',fillOpacity:.08,interactive:false}).addTo(LG);
-   e.mods.forEach(function(m){var off=ST.S.indexOf(m.key)>=0,agg=m.agg!==undefined,att=sel||(TOOL==='aggiungi'&&agg);var p=L.polygon(m.q.map(aLL),{color:off?'#fff':(agg?'#fff':'#075E73'),weight:off?1:(agg?1.6:.8),dashArray:off?'3 3':null,fillColor:off?'#fff':'#0AA6C9',fillOpacity:off?.06:.9,interactive:att,bubblingMouseEvents:false}).addTo(LG);
-    if(att)p.on('click',function(){memo();if(agg){ST.A.splice(m.agg,1);}else{var i=ST.S.indexOf(m.key);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);}disegna();});});
+   e.mods.forEach(function(m){var off=spento(m)>=0,agg=m.agg!==undefined,att=sel||(TOOL==='aggiungi'&&agg);var p=L.polygon(m.q.map(aLL),{color:off?'#fff':(agg?'#fff':'#075E73'),weight:off?1:(agg?1.6:.8),dashArray:off?'3 3':null,fillColor:off?'#fff':'#0AA6C9',fillOpacity:off?.06:.9,interactive:att,bubblingMouseEvents:false}).addTo(LG);
+    if(att)p.on('click',function(){memo();if(agg){ST.A.splice(m.agg,1);}else{var i=spento(m);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);}disegna();});});
    var g=e.R.reduce(function(s,p){return [s[0]+p[0]/e.R.length,s[1]+p[1]/e.R.length];},[0,0]);
    L.marker(aLL(g),{interactive:false,icon:L.divIcon({className:'lv-num',html:String(fi+1),iconSize:[22,22]})}).addTo(LG);
    /* verso della falda: freccia dalla falda verso dove scende, con esposizione e azimut */
@@ -1735,9 +1749,12 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#lvC').textContent=ST.O.filter(function(o){return o.t==='camino';}).length;$('#lvO').textContent=ST.O.filter(function(o){return o.t!=='camino';}).length;
   var Lf=$('#lvFalde');if(!ST.F.length){Lf.innerHTML='<div class="lv-vuoto">Nessuna falda: clicca gli angoli sulla mappa.</div>';}else{Lf.innerHTML='';
    ST.F.forEach(function(f,fi){var e=ESITO[fi],d=document.createElement('div');d.className='lv-falda';
-    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
+    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><span class="lv-incl" title="Inclinazione della falda in gradi"><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione in gradi"><em>° incl.</em></span><b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
-     +(e.mods.length?'<div class="lv-r3 lv-r4"><span>Sposta</span>'+[['l','←','sinistra'],['r','→','destra'],['u','↑','su'],['d','↓','giù']].map(function(o){return '<button type="button" data-f="'+fi+'" data-mv="'+o[0]+'" title="Sposta i moduli verso '+o[2]+' di 5 cm (con Maiusc 25 cm)">'+o[1]+'</button>';}).join('')+'<button type="button" data-f="'+fi+'" data-mv="c" title="Rimette i moduli al centro">Centra</button><i class="lv-pos">'+posTesto(e.sp)+'</i></div>':'')
+     +'<label class="swl lv-nessuno"><input type="checkbox" class="sw-in" data-f="'+fi+'" data-k="nessuno"'+(f.nessuno?' checked':'')+'>Nessun modulo su questa falda</label>'
+     +(e.mods.length||(e.sp&&e.sp.man)?'<div class="lv-r3 lv-r4"><span>Sposta</span>'+[['l','←','sinistra'],['r','→','destra'],['u','↑','su'],['d','↓','giù']].map(function(o){return '<button type="button" data-f="'+fi+'" data-mv="'+o[0]+'" title="Sposta la griglia verso '+o[2]+' di 5 cm (con Maiusc 25 cm): se entrano più moduli compaiono">'+o[1]+'</button>';}).join('')+'<button type="button" data-f="'+fi+'" data-mv="c" title="Torna alla posa automatica: il massimo dei moduli, centrata">Centra</button></div>'
+     +'<div class="lv-r3 lv-r4"><span>In battuta</span>'+[['l','←','a sinistra'],['r','→','a destra'],['u','↑','in alto'],['d','↓','in basso']].map(function(o){return '<button type="button" data-f="'+fi+'" data-bt="'+o[0]+'" title="Porta i moduli a filo del margine '+o[2]+'">'+o[1]+'</button>';}).join('')+'</div>':'')
+     +'<div class="lv-pos">'+posTesto(e)+'</div>'
      +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
   $('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
  /* ---------- revisioni ---------- */
@@ -1798,9 +1815,9 @@ document.addEventListener('DOMContentLoaded', function(){
   var lx=20,ly=20;o+='<g '+F+' font-size="2.6"><line x1="'+lx+'" y1="'+ly+'" x2="'+(lx+7)+'" y2="'+ly+'" stroke="#111" stroke-width=".7"/><text x="'+(lx+9)+'" y="'+(ly+.9)+'">Falda (contorno raddrizzato)</text><line x1="'+lx+'" y1="'+(ly+5)+'" x2="'+(lx+7)+'" y2="'+(ly+5)+'" stroke="#9aa3ad" stroke-width=".3" stroke-dasharray="1.2,1"/><text x="'+(lx+9)+'" y="'+(ly+5.9)+'">Contorno tracciato a mano</text><rect x="'+lx+'" y="'+(ly+8.5)+'" width="7" height="3" fill="#0AA6C9" stroke="#075E73" stroke-width=".25"/><text x="'+(lx+9)+'" y="'+(ly+10.9)+'">Modulo fotovoltaico '+MOD_L*1000+' × '+MOD_C*1000+' mm</text><rect x="'+(lx+2)+'" y="'+(ly+13.5)+'" width="3" height="3" fill="#fff" stroke="#111" stroke-width=".4"/><path d="M'+(lx+2)+' '+(ly+13.5)+'l3 3M'+(lx+5)+' '+(ly+13.5)+'l-3 3" stroke="#111" stroke-width=".3"/><text x="'+(lx+9)+'" y="'+(ly+15.9)+'">Camino</text><rect x="'+lx+'" y="'+(ly+18.5)+'" width="7" height="3" fill="url(#lvtr)" stroke="#111" stroke-width=".4"/><text x="'+(lx+9)+'" y="'+(ly+20.9)+'">Ostacolo (lucernario, antenna, abbaino…)</text></g>';
   var seg=S<=100?1:(S<=250?2:5),sx=FR[0]+FR[2]-8-5*seg*sc-26,sy=FR[1]+FR[3]-6,i;for(i=0;i<5;i++)o+='<rect x="'+(sx+i*seg*sc)+'" y="'+sy+'" width="'+seg*sc+'" height="1.6" fill="'+(i%2?'#fff':'#111')+'" stroke="#111" stroke-width=".25"/>';
   for(i=0;i<6;i++)o+='<text x="'+(sx+i*seg*sc)+'" y="'+(sy-1.3)+'" font-size="2.4" text-anchor="middle" '+F+'>'+i*seg+'</text>';o+='<text x="'+(sx+5*seg*sc+3)+'" y="'+(sy+1.4)+'" font-size="2.4" '+F+'>m · scala 1:'+S+'</text>';
-  var cols=[["Falda",13],["Esposizione",20],["Azimut",15],["Inclin.",13],["Superficie",19],["Moduli",14],["kWp",13]],tx0=18,ty0=FR[1]+FR[3]-14-E.length*5,xx=tx0;o+='<g '+F+' font-size="2.2">';
+  var cols=[["Falda",11],["Esposizione",19],["Azimut",14],["Inclin.",12],["Superficie",17],["Moduli",20],["kWp",14]],tx0=18,ty0=FR[1]+FR[3]-14-E.length*5,xx=tx0;o+='<g '+F+' font-size="2.2">';
   cols.forEach(function(cw){o+='<rect x="'+xx+'" y="'+ty0+'" width="'+cw[1]+'" height="5" fill="#075E73"/><text x="'+(xx+1.5)+'" y="'+(ty0+3.5)+'" fill="#fff" font-weight="bold">'+cw[0]+'</text>';xx+=cw[1];});
-  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),nomeEspo(e.az),(e.az>0?'+':'')+e.az+'°',ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' mq',String(e.on.length),f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
+  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),nomeEspo(e.az),(e.az>0?'+':'')+e.az+'°',ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' mq',e.sp&&e.sp.esclusa?'non utilizzata':String(e.on.length),e.sp&&e.sp.esclusa?'—':f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
   o+='<text x="'+tx0+'" y="'+(ty0+5+E.length*5+3.4)+'" fill="#6b7280" font-size="1.8">Azimut: 0° = sud, positivo verso ovest</text></g>';
   /* cartiglio */
   var X0=217,Wc=W-12-X0,Y0=12,Hc=186,c='<rect x="'+X0+'" y="'+Y0+'" width="'+Wc+'" height="'+Hc+'" fill="none" stroke="#111" stroke-width=".6"/>';
@@ -1842,8 +1859,8 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#lvRadd').addEventListener('change',function(){modificato(true);disegna();});
   $('#lvAnnulla').addEventListener('click',function(){var s=STORIA.pop();if(!s)return;ST=JSON.parse(s);if(!ST.A)ST.A=[];CORR=[];disegna();});
   $('#lvSvuota').addEventListener('click',async function(){if(!await chiedi('Ricomincia','Tolgo tutte le falde, i camini e gli ostacoli disegnati?','Ricomincia',true))return;memo();ST={F:[],O:[],S:[],A:[]};CORR=[];disegna();});
-  $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else f.espo=t.value;disegna();});
-  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){return {fi:a.fi>df?a.fi-1:a.fi,c:a.c};});disegna();});
+  $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else if(t.dataset.k==='nessuno'){if(t.checked)f.nessuno=true;else delete f.nessuno;}else f.espo=t.value;disegna();});
+  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.bt!==undefined){muovi(+t.dataset.f,t.dataset.bt,0,true);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){return {fi:a.fi>df?a.fi-1:a.fi,c:a.c};});disegna();});
   $('#lvChiudi').addEventListener('click',async function(){if(MOD&&nMod()&&!await chiedi('Chiudi il layout veloce','Ci sono modifiche non salvate. Chiudo lo stesso?','Chiudi senza salvare',true))return;OV.classList.remove('on');document.body.style.overflow='';});
   async function tasto(b,nuova){var t=b.textContent;b.disabled=true;b.textContent='Salvo…';try{await salvaRev(nuova);}catch(e){await avvisa('errore','Revisione non salvata',esc(e.message||e));}finally{b.textContent=t;riepilogo();}}
   $('#lvSalva').addEventListener('click',function(){tasto(this,false);});
