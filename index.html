@@ -2326,6 +2326,34 @@ document.addEventListener('DOMContentLoaded', function(){
    b.disabled=true;b.textContent='Salvo…';
    fetch(DFN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'conferma',doc_id:id,campi:campi})}).then(function(r){return r.json();}).then(function(j){if(!j||!j.ok){b.disabled=false;b.textContent='Conferma';avvisaAz('Bolletta non confermata: '+((j&&j.errore)||'errore'));return;}caricaDocs();bollette();}).catch(function(){b.disabled=false;b.textContent='Conferma';});});
   caricaDocs();var slD=$('#existing_lead');if(slD)slD.addEventListener('change',function(){setTimeout(caricaDocs,350);});
+  /* ---------- PORTALE NEXT-110 (Sante 28/10): con «Azienda» il Preventivo ridotto è l'offerta aziende (edge offerta-azienda) ---------- */
+  var OFFAZ='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/offerta-azienda';
+  var GEN0=window.generaPreventivo;
+  window.generaPreventivo=function(tipo){
+   if(!(az()&&tipo==='ridotto'))return GEN0.apply(this,arguments);
+   var pid=pidAtt(),gs=$('#generaStatus');
+   if(!pid){gs.style.color='var(--error)';gs.textContent='Salva prima il preventivo (tab Dati Contatto).';return;}
+   gs.style.color='var(--text-muted)';gs.textContent='⏳ Offerta azienda in preparazione: dati, vincoli, calcoli e PDF… circa mezzo minuto.';
+   fetch(OFFAZ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),prev_id:pid})}).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.ok){gs.style.color='var(--error)';gs.textContent='Offerta non generata: '+((j&&j.errore)||'errore');return;}
+    var u=j.url.split('?')[0]+'?v='+Date.now();window._pdfUrls=window._pdfUrls||{};window._pdfUrls.ridotto=u;
+    gs.style.color='var(--success)';
+    gs.innerHTML='✅ Offerta azienda pronta ('+j.pagine+' pagine, '+(j.iperammortamento?'con iperammortamento':'ammortamento ordinario')+') — <a href="'+u+'" target="_blank" style="color:var(--teal);font-weight:600">📄 Apri PDF</a>'
+     +((j.avvisi&&j.avvisi.length)?'<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#FEF3C7;color:#B45309;font-size:12.5px;line-height:1.45">'+j.avvisi.map(function(a){return '⚠ '+String(a).replace(/</g,'&lt;');}).join('<br>')+'</div>':'');
+    var db=$('#downloadBox');if(db)db.style.display='block';
+    var dati={};Object.keys(window._pdfUrls).forEach(function(k){if(window._pdfUrls[k])dati['pdf_'+k+'_url']=window._pdfUrls[k];});
+    if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(dati);
+   }).catch(function(e){gs.style.color='var(--error)';gs.textContent='Offerta non generata: '+e.message;});
+  };
+  /* ---------- con «Azienda» l'elenco dei lead mostra solo le aziende ---------- */
+  var AZL=null,RXAZ=/\b(s\.?\s?r\.?\s?l\.?s?|s\.?\s?p\.?\s?a\.?|s\.?\s?n\.?\s?c\.?|s\.?\s?a\.?\s?s\.?|s\.?\s?s\.?|soc\.?|società|coop|cooperativa|ditta|studio|srls)\b/i;
+  function filtraLead(){var s=$('#existing_lead');if(!s)return;var on=az();
+   [].slice.call(s.options).forEach(function(o){if(!o.value){o.hidden=false;return;}
+    var si=!on||o.selected||(AZL&&AZL[o.value])||RXAZ.test(o.textContent||'');o.hidden=!si;});}
+  fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo?t='+encodeURIComponent(pass())+'&cosa=lead_aziende',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){AZL={};j.ids.forEach(function(i){AZL[i]=1;});filtraLead();}}).catch(function(){});
+  var slL=$('#existing_lead');if(slL)new MutationObserver(function(){filtraLead();}).observe(slL,{childList:true});
+  document.addEventListener('click',function(e){if(e.target.closest('button[data-v="azienda"],button[data-v="privato"]'))setTimeout(filtraLead,0);},true);
+  setTimeout(filtraLead,800);
 
   var stBo=document.createElement('style');stBo.textContent='#cardBollette{grid-column:1/-1;order:5}.az-bo-2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:start}.az-bo-2>div>h4:first-child{margin-top:0}@media (max-width:900px){.az-bo-2{grid-template-columns:1fr}}';document.head.appendChild(stBo);
   function bollette(){var box=$('#azBoll'),lid=($('#existing_lead_id')||{}).value||($('#existing_lead')||{}).value||'';
