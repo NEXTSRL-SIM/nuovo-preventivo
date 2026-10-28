@@ -2122,6 +2122,9 @@ document.addEventListener('DOMContentLoaded', function(){
    var pv=($('#prevSelect')||{}).value||($('#existing_prev_id')||{}).value||'';chiama('cosa=azienda&lead='+lid+(/^[0-9a-f-]{36}$/i.test(pv)?'&prev='+pv:'')).then(function(j){if(!j.ok)return;if(j.tipo!=='azienda'){var bp=$('#sgTipo button[data-v="privato"]');if(bp&&!bp.classList.contains('on'))bp.click();return;}var P=j.preventivo||null;
     var b=$('#sgTipo button[data-v="azienda"]');if(b&&!b.classList.contains('on'))b.click();
     var a=j.azienda||{};function put(id,v){var e=$('#'+id);if(e&&v!=null&&v!==''){e.value=v;}}
+    var ln=$('#last_name');if(ln&&!ln.value.trim()&&a.ragione_sociale){ln.value=a.ragione_sociale;}
+    if(a.partita_iva){vbar.hidden=false;vbar.className='az-vbar ok';vbar.innerHTML='<span>✓ <b>Azienda già in archivio</b>: dati presi dalla scheda salvata'+(a.ragione_sociale?' · '+a.ragione_sociale:'')+'.</span>';}
+    if(a.legale_cognome)put('az_lrcog',a.legale_cognome);if(a.legale_nome)put('az_lrnom',a.legale_nome);if(a.legale_cf)put('az_lrcf',a.legale_cf);
     put('az_piva',a.partita_iva);put('az_cf',a.codice_fiscale);if(a.codice_fiscale)$('#az_cf').dataset.mano='1';
     put('az_via',a.sede_via);put('az_comune',a.sede_comune);put('az_cap',a.sede_cap);put('az_prov',a.sede_provincia);
     put('az_sdi',a.codice_sdi);put('az_pec',a.pec);put('az_mailamm',a.email_amministrazione);put('az_referente',a.referente);put('az_ruolo',a.referente_ruolo||j.referente_ruolo);
