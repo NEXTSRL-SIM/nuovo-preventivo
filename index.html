@@ -1857,4 +1857,171 @@ document.addEventListener('DOMContentLoaded', function(){
   var st=document.createElement('style');st.textContent='input.da-cliente{background:var(--sf2,#F8FAFC)!important;color:var(--ink2,#3F4A5A)!important;cursor:not-allowed}';document.head.appendChild(st);
 })();
 </script>
+<style id="azienda2-css">
+/* PORTALE NEXT-110: azienda — VIES, bollette, profilo fiscale, offerta azienda (Sante 28/10) */
+.az-vies{display:inline-flex;align-items:center;font-size:10px;color:var(--teal,#0f766e);background:var(--teal-bg,#ecfdf5);border:1px solid var(--teal-border,#a7f3d0);border-radius:999px;padding:0 7px;margin-left:6px;font-weight:700;vertical-align:middle;letter-spacing:.02em}
+.az-vbar{display:flex;gap:8px;align-items:flex-start;border-radius:10px;padding:8px 10px;font-size:12px;margin:4px 0 10px;line-height:1.4}
+.az-vbar.ok{background:var(--teal-bg,#f0fdfa);border:1px solid var(--teal-border,#99f6e4);color:var(--teal,#115e59)}
+.az-vbar.ko{background:#fffbeb;border:1px solid #fcd34d;color:#78350f}
+.az-vbar button{margin-left:auto;font-size:11.5px;padding:3px 9px;white-space:nowrap}
+.az-blk{margin-top:14px;border-top:1px dashed var(--border);padding-top:10px}
+.az-blk h4{margin:0 0 8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal,#0f766e);font-weight:800}
+.az-bl{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.az-bl .r{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;padding:7px 10px;font-size:12.5px}
+.az-bl .d{width:9px;height:9px;border-radius:50%;flex:none}.az-bl .ok{background:#10b981}.az-bl .no{background:#f59e0b}
+.az-bl .r small{margin-left:auto;color:var(--text-muted);font-size:11.5px;text-align:right}
+.az-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.az-seg{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.az-seg button{border:0;background:transparent;padding:7px 12px;font-size:12.5px;cursor:pointer;color:var(--text-dim)}
+.az-seg button.on{background:var(--accent,#0e7490);color:#fff}
+.az-src{font-size:10.5px;color:var(--teal,#0f766e);margin-top:3px;min-height:13px}
+.oaz h4{margin:12px 0 8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-weight:800}
+.v105{border-radius:10px;padding:10px 12px;font-size:12.5px}
+.v105.ko{border:1px solid #fcd34d;background:#fffbeb;color:#78350f}.v105.ok{border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46}.v105.nd{border:1px solid var(--border);color:var(--text-muted)}
+.v105 table{width:100%;border-collapse:collapse;margin:2px 0 6px;color:var(--text-dim)}
+.v105 td{padding:3px 0}.v105 td:last-child{text-align:right;font-family:'JetBrains Mono',monospace}
+.v105 .tot td{border-top:1px solid rgba(0,0,0,.08);font-weight:700}
+.v105 .msg{font-weight:600;margin:6px 0 8px}
+.v105 .gas{display:flex;align-items:center;gap:8px;margin:2px 0 8px;color:var(--text-dim)}
+.v105 .gas input{max-width:110px}
+.scel{display:flex;flex-direction:column;gap:6px}
+.scel label{display:flex;gap:8px;align-items:flex-start;background:var(--card,#fff);border:1px solid var(--border);border-radius:9px;padding:8px 10px;color:var(--text);cursor:pointer;margin:0}
+.scel label small{display:block;color:var(--text-muted);font-size:11.5px;font-weight:400}
+.oaz .pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.oaz .pg input,.dv input{width:100%;box-sizing:border-box}
+.dv .r{display:grid;grid-template-columns:1fr 110px 28px;gap:8px;margin-bottom:6px;align-items:center}
+.dv .x{border:0;background:transparent;cursor:pointer;color:var(--text-muted);font-size:16px}
+.dv .som{font-size:12px;border-radius:8px;padding:6px 10px}
+.dv .som.ok{color:#047857;background:#ecfdf5;border:1px solid #a7f3d0}.dv .som.ko{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca}
+</style>
+<script id="azienda2-js">
+/* PORTALE NEXT-110: seconda parte della maschera azienda (disegno approvato da Sante il 28/10, immagini mock-az e mock-prod).
+   - Partita IVA valida -> registro VIES (funzione azienda-preventivo) -> ragione sociale e sede legale nei campi vuoti.
+   - Sotto il legale rappresentante: bollette del lead e profilo fiscale (forma giuridica letta dalla ragione sociale, IVA detraibile).
+   - Agevolazione fiscale: per le aziende «Detrazione 50%» si nasconde e compare «Iperammortamento».
+   - Scheda Prodotti: riquadro «Offerta azienda» con la verifica del 105% (DM 7/5/2026), i parametri e il dettaglio economico.
+   Come il resto dei dati azienda, per ora si vede ma non si salva («in arrivo»): il salvataggio passa da n8n. */
+(function(){
+ var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
+ function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [].slice.call((c||document).querySelectorAll(s));}
+ function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
+ function chiama(q){return fetch(FN+'?t='+encodeURIComponent(pass())+'&'+q,{cache:'no-store'}).then(function(r){return r.json();});}
+ function n(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
+ function it(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+ function az(){return window.__tipoContatto&&window.__tipoContatto()==='azienda';}
+ var MOD={},GAS=4.4706,BOLL=[];
+ function via(){
+  var cAz=$('#cardAzienda'),cLr=$('#cardLegale');if(!cAz||!cLr||!window.__tipoContatto)return setTimeout(via,150);
+  /* ---------- moduli dal catalogo: categoria ENEA, e quelli che mancano nella tendina ---------- */
+  chiama('cosa=moduli').then(function(j){(j.moduli||[]).forEach(function(m){if(!m.codice_preventivo)return;MOD[m.codice_preventivo]=m;
+    var s=$('#fv_pannello');if(s&&!$$('option',s).some(function(o){return o.value===m.codice_preventivo;})){var o=document.createElement('option');o.value=m.codice_preventivo;o.textContent=m.brand+' '+Math.round(m.potenza_wp)+' Wp — '+String(m.modello).replace(/\s*\d+\s*Wp$/i,'');s.appendChild(o);}});ricalcola();}).catch(function(){});
+  chiama('cosa=fattori').then(function(j){(j.fattori||[]).forEach(function(f){if(f.vettore==='gas_naturale_smc')GAS=Number(f.kwhe_per_unita)||GAS;});}).catch(function(){});
+  /* ---------- VIES dalla partita IVA ---------- */
+  var piva=$('#az_piva'),vbar=document.createElement('div');vbar.className='az-vbar';vbar.hidden=true;piva.closest('.row').after(vbar);
+  var ultima='',timer=null;
+  function tag(id,on){var l=$('label[for="'+id+'"]');if(!l)return;var t=$('.az-vies',l);if(on&&!t){l.insertAdjacentHTML('beforeend','<span class="az-vies">VIES</span>');}if(!on&&t)t.remove();}
+  function metti(id,v){var e=$('#'+id);if(!e||!v)return;if(e.value.trim())return;e.value=v;tag(id,true);e.dispatchEvent(new Event('input',{bubbles:true}));}
+  function cercaVies(){var p=piva.value.replace(/\s/g,'').replace(/^IT/i,'');if(!/^\d{11}$/.test(p)||!piva.classList.contains('az-ok')||p===ultima)return;ultima=p;
+   vbar.hidden=false;vbar.className='az-vbar ok';vbar.textContent='Cerco la partita IVA nel registro VIES…';
+   chiama('cosa=vies&piva='+p).then(function(j){
+    if(!j.ok){vbar.className='az-vbar ko';vbar.textContent='Registro VIES non raggiungibile adesso: compila a mano.';return;}
+    if(!j.valida){vbar.className='az-vbar ko';vbar.textContent='Questa partita IVA non è nel registro VIES: è normale per chi lavora solo in Italia. Compila a mano.';return;}
+    var sedeMan=$('#az_swSede')&&$('#az_swSede').checked;
+    if(!sedeMan){metti('az_via',j.via);metti('az_comune',j.comune);metti('az_cap',j.cap);metti('az_prov',j.prov);}
+    var ln=$('#last_name'),diversa=ln.value.trim()&&j.nome&&ln.value.trim().toUpperCase()!==j.nome.toUpperCase();
+    if(!ln.value.trim()&&j.nome){ln.value=j.nome;tag('last_name',true);ln.dispatchEvent(new Event('input',{bubbles:true}));}
+    vbar.className='az-vbar ok';vbar.innerHTML='<span>✓ <b>Trovata nel registro VIES</b>: '+(j.nome||'')+(j.sede?' · '+j.sede:'')+'.'+(diversa?' La ragione sociale che hai scritto è diversa.':'')+'</span>'+(diversa?'<button type="button" class="btn btn-secondary">Usa quella del registro</button>':'');
+    var b=$('button',vbar);if(b)b.onclick=function(){ln.value=j.nome;tag('last_name',true);ln.dispatchEvent(new Event('input',{bubbles:true}));b.remove();};
+   }).catch(function(){vbar.className='az-vbar ko';vbar.textContent='Registro VIES non raggiungibile adesso: compila a mano.';});}
+  piva.addEventListener('input',function(){clearTimeout(timer);timer=setTimeout(cercaVies,500);});
+  ['last_name','az_via','az_comune','az_cap','az_prov'].forEach(function(id){var e=$('#'+id);if(e)e.addEventListener('keydown',function(){tag(id,false);});});
+  /* ---------- bollette e profilo fiscale sotto il legale rappresentante ---------- */
+  var blk=document.createElement('div');blk.className='az-blk';
+  blk.innerHTML='<h4>Bollette</h4><div class="az-bl" id="azBoll"></div>'
+   +'<h4>Profilo fiscale</h4><div class="az-g2"><div><label for="az_forma">Forma giuridica</label><select id="az_forma"><option value="">—</option><option value="srl">S.r.l.</option><option value="srls">S.r.l.s.</option><option value="spa">S.p.A.</option><option value="sapa">S.a.p.a.</option><option value="coop">Società cooperativa</option><option value="snc">S.n.c.</option><option value="sas">S.a.s.</option><option value="ss">Società semplice</option><option value="di">Ditta individuale</option><option value="prof">Professionista / studio associato</option></select><div class="az-src" id="az_forma_src"></div></div>'
+   +'<div><label>IVA detraibile</label><span class="az-seg" id="az_iva"><button type="button" class="on" data-v="si">Sì</button><button type="button" data-v="no">No</button></span><div class="az-src"></div></div></div>';
+  $('.pb',cLr).appendChild(blk);
+  function bollette(){var box=$('#azBoll'),lid=($('#existing_lead_id')||{}).value||($('#existing_lead')||{}).value||'';
+   function riga(tipo,b){if(!b)return '<div class="r"><span class="d no"></span>'+tipo+' · non arrivata<small><button type="button" class="btn btn-secondary" disabled title="La richiesta su WhatsApp arriva con il prossimo passo" style="font-size:12px;padding:4px 10px">Chiedi al cliente</button></small></div>';
+    var det=b.tipo==='elettrica'?(b.kwh_anno?it(b.kwh_anno)+' kWh':'')+(b.kwh_f1&&b.kwh_anno?' · F1 '+Math.round(100*b.kwh_f1/b.kwh_anno)+'%':''):(b.quantita_anno?it(b.quantita_anno)+' Sm³':'');
+    return '<div class="r"><span class="d ok"></span>'+tipo+(b.fornitore?' · '+b.fornitore:'')+(b.confermata_at?'':' · da confermare')+'<small>'+det+'</small></div>';}
+   function mostra(){var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});box.innerHTML=riga('Elettrica',el)+riga('Termico (gas)',te);ricalcola();}
+   BOLL=[];if(!/^[0-9a-f-]{36}$/i.test(lid))return mostra();
+   chiama('cosa=bollette&lead='+lid).then(function(j){BOLL=j.bollette||[];mostra();}).catch(mostra);}
+  bollette();var sl=$('#existing_lead');if(sl)sl.addEventListener('change',function(){setTimeout(bollette,300);});
+  var forma=$('#az_forma'),formaMano=false;
+  function leggiForma(){if(formaMano)return;var s=($('#last_name').value||'').toUpperCase().replace(/\./g,'').replace(/\s+/g,' ');var v='';
+   if(/\bSRLS\b|\bS R L S\b/.test(s))v='srls';else if(/\bSRL\b|\bS R L\b/.test(s))v='srl';else if(/\bSAPA\b/.test(s))v='sapa';else if(/\bSPA\b|\bS P A\b/.test(s))v='spa';else if(/\bSNC\b|\bS N C\b/.test(s))v='snc';else if(/\bSAS\b|\bS A S\b/.test(s))v='sas';else if(/\bSS\b|SOCIETA SEMPLICE/.test(s))v='ss';else if(/COOP/.test(s))v='coop';
+   forma.value=v;$('#az_forma_src').textContent=v?'rilevata dalla ragione sociale':'non rilevata: sceglila';ricalcola();}
+  $('#last_name').addEventListener('input',leggiForma);forma.addEventListener('change',function(){formaMano=true;$('#az_forma_src').textContent='scelta a mano';ricalcola();});
+  $('#az_iva').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$$('button',this).forEach(function(x){x.classList.toggle('on',x===b);});});
+  /* ---------- agevolazione: per le aziende iperammortamento al posto della detrazione ---------- */
+  var det=$('input[name="tipo_agevolazione"][value="detrazione"]'),iper=null;
+  if(det){var lab=det.closest('label'),cl=lab.cloneNode(true);var ip=$('input',cl);ip.value='iperammortamento';ip.checked=false;ip.disabled=false;cl.classList.remove('opt-arr');cl.title='';var sp=$('span',cl);if(sp)sp.textContent='Iperammortamento';cl.style.display='none';lab.after(cl);iper=ip;
+   ip.addEventListener('change',ricalcola);$$('input[name="tipo_agevolazione"]').forEach(function(r){r.addEventListener('change',ricalcola);});}
+  function agev(){var on=az();if(!det)return;var lab=det.closest('label'),ilab=iper.closest('label');lab.style.display=on?'none':'';ilab.style.display=on?'':'none';
+   if(!on&&iper.checked){var nn=$('input[name="tipo_agevolazione"][value="nessuna"]');if(nn){nn.checked=true;nn.dispatchEvent(new Event('change',{bubbles:true}));}}
+   var oz=$('#cardOfferta');if(oz)oz.hidden=!on;if(on)leggiForma();ricalcola();}
+  $('#sgTipo').addEventListener('click',function(){setTimeout(agev,0);});
+  ['existing_lead','prevSelect'].forEach(function(id){var s=$('#'+id);if(s)s.addEventListener('change',function(){setTimeout(agev,0);});});
+  /* ---------- scheda Prodotti: Offerta azienda ---------- */
+  var T=$('#tabProdotti'),pag=$$('.pc',T).find(function(c){return /Pagamento e note/.test(c.textContent);});
+  var c=document.createElement('section');c.className='pc oaz';c.id='cardOfferta';c.hidden=true;
+  c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip" title="Si salverà con il prossimo passo">in arrivo</span></span></div><div class="pb">'
+   +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="10" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
+   +'<h4>Parametri dell\'offerta</h4><div class="pg">'
+   +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="1" value="0"><div class="az-src">sulla produzione stimata</div></div>'
+   +'<div><label for="oaz_aliq">Aliquota fiscale %</label><input type="number" id="oaz_aliq" min="0" max="60" step="0.1"><div class="az-src" id="oaz_aliq_src"></div></div>'
+   +'<div><label for="oaz_costo">Costo evitato €/kWh</label><input type="number" id="oaz_costo" min="0" step="0.001"><div class="az-src" id="oaz_costo_src"></div></div></div>'
+   +'<h4>Dettaglio economico</h4><label class="swl"><input type="checkbox" class="sw-in" id="oaz_det"> Mostra le voci con gli importi nell\'offerta</label>'
+   +'<div class="dv" id="oaz_voci" hidden><div id="oaz_righe"></div><button type="button" class="btn btn-secondary" id="oaz_add" style="font-size:12px;padding:4px 10px;margin:2px 0 8px">+ Aggiungi voce</button><div class="som" id="oaz_som"></div></div></div>';
+  if(pag)pag.parentNode.insertBefore(c,pag);
+  var aliqMano=false,costoMano=false;
+  $('#oaz_aliq').addEventListener('input',function(){aliqMano=true;$('#oaz_aliq_src').textContent='scritta a mano';});
+  $('#oaz_costo').addEventListener('input',function(){costoMano=true;$('#oaz_costo_src').textContent='scritto a mano';});
+  $('#oaz_rid').addEventListener('input',ricalcola);
+  function voce(d,e){var r=document.createElement('div');r.className='r';r.innerHTML='<input type="text" placeholder="Descrizione della voce"><input type="text" inputmode="decimal" placeholder="€"><button type="button" class="x" title="Togli la voce">×</button>';$$('input',r)[0].value=d||'';$$('input',r)[1].value=e||'';$('#oaz_righe').appendChild(r);$('.x',r).onclick=function(){r.remove();somma();};$$('input',r)[1].addEventListener('input',somma);}
+  $('#oaz_det').addEventListener('change',function(){$('#oaz_voci').hidden=!this.checked;if(this.checked&&!$('#oaz_righe').children.length){voce('Moduli, inverter e strutture');voce('Installazione e collaudo');voce('Pratiche e connessione');}somma();});
+  $('#oaz_add').onclick=function(){voce();};
+  function somma(){var s=$$('#oaz_righe .r').reduce(function(t,r){return t+n($$('input',r)[1].value);},0),tot=n(($('[name="fv_totale_eur"]')||{}).value),el=$('#oaz_som');
+   if(!tot){el.className='som ko';el.textContent='Somma delle voci '+it(s)+' € · manca il Totale FV';return;}
+   var ok=Math.abs(s-tot)<0.5;el.className='som '+(ok?'ok':'ko');el.textContent=ok?'✓ Somma delle voci '+it(s)+' € = Totale FV':'Somma delle voci '+it(s)+' € · Totale FV '+it(tot)+' €: differenza '+it(s-tot)+' €';}
+  T.addEventListener('input',function(e){if(e.target.name==='fv_totale_eur')somma();if(/fv_consumi_kwh|fv_kwp|resa_kwh_kwp/.test(e.target.name||e.target.id||''))ricalcola();});
+  T.addEventListener('change',function(e){if(e.target.name==='fv_pannello'||e.target.name==='fv_kwp')ricalcola();});
+  function ricalcola(){var box=$('#v105');if(!box||!az())return;
+   /* aliquota e costo evitato proposti */
+   var f=forma.value,cap=['srl','srls','spa','sapa','coop'].indexOf(f)>=0;
+   if(!aliqMano){$('#oaz_aliq').value=f?(cap?'27.9':'35'):'';$('#oaz_aliq_src').textContent=f?(cap?'IRES 24% + IRAP 3,9%':'IRPEF dei soci, marginale tipica: da verificare'):'scegli la forma giuridica';}
+   var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});
+   if(!costoMano){var q=el&&el.quota_consumi_eur_kwh!=null?Number(el.quota_consumi_eur_kwh)+Number(el.accisa_eur_kwh||0):null;$('#oaz_costo').value=q!=null?q.toFixed(4):'';$('#oaz_costo_src').textContent=q!=null?'dalla bolletta: quota consumi + accisa, senza IVA':'arriva dalla bolletta elettrica';}
+   var ip=iper&&iper.checked;$('#oaz105').hidden=!ip;if(!ip)return;
+   var kwhE=(el&&el.kwh_anno)?Number(el.kwh_anno):n(($('#fv_consumi_kwh')||{}).value),fonteE=(el&&el.kwh_anno)?'bolletta'+(el.fornitore?' '+el.fornitore:''):'consumi scritti in Prodotti';
+   var gi=$('#oaz_smc');if(!gi.dataset.mano){gi.value=te&&te.quantita_anno?Number(te.quantita_anno):'';}$('#oaz_smc_src').textContent=gi.dataset.mano?'scritto a mano':(te?'dalla bolletta del gas':'senza bolletta: scrivilo se lo sai');var smc=n(gi.value);var out=$('#v105c');
+   var resa=n(($('#resa_kwh_kwp_input')||{}).value),rid=n($('#oaz_rid').value)/100,netta=resa*(1-rid),kwp=n(($('[name="fv_kwp"]')||{}).value);
+   var mod=MOD[($('#fv_pannello')||{}).value]||null;
+   if(!kwhE){box.className='v105 nd';out.innerHTML='Servono i consumi elettrici: dalla bolletta o dal campo «Consumi annui».';return;}
+   var term=smc*GAS,fab=kwhE+term,lim=fab*1.05;
+   var h='<table><tr><td>Consumo elettrico ('+fonteE+')</td><td>'+it(kwhE)+' kWh</td></tr>'
+    +'<tr><td>Gas '+(smc?it(smc)+' Sm³ × '+it(GAS,2)+' kWhe':'(nessun consumo termico)')+'</td><td>'+it(term)+' kWh</td></tr>'
+    +'<tr class="tot"><td>Fabbisogno</td><td>'+it(fab)+' kWh</td></tr><tr><td>Limite 105%</td><td>'+it(lim)+' kWh</td></tr>';
+   var gas='';
+   if(!resa){box.className='v105 nd';out.innerHTML=gas+h+'</table>Manca la producibilità del sito: salva la posizione in Mappa tetto per avere i dati PVGIS.';return;}
+   var kmax=lim/netta,prod=kwp*netta;
+   h+='<tr><td>Producibilità del sito'+(rid?' (ridotta del '+it(rid*100)+'%)':'')+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
+   var catTxt='';if(mod){if(!mod.categoria_enea)catTxt='<div class="msg">⚠ Categoria ENEA del modulo '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp non registrata nel catalogo: verificala sul registro prima di offrire l\'iperammortamento.</div>';else if(mod.categoria_enea==='A')catTxt='<div class="msg">⚠ '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp è in categoria A del registro ENEA: non dà diritto all\'iperammortamento.</div>';}
+   if(!kwp){box.className='v105 nd';out.innerHTML=gas+h+catTxt+'Scrivi la potenza per la verifica.';return;}
+   if(prod<=lim){box.className='v105 ok';out.innerHTML=gas+h+'<div class="msg">✓ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: '+it(100*prod/fab)+'% del fabbisogno, dentro il limite.</div>'+catTxt;return;}
+   var wp=mod?Number(mod.potenza_wp):0,nm=wp?Math.floor(kmax*1000/wp):0;
+   box.className='v105 ko';out.innerHTML=gas+h+'<div class="msg">⚠ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: il '+it(100*prod/fab)+'% del fabbisogno.</div>'+catTxt
+    +'<div class="scel"><label><input type="radio" name="oaz_strada" value="A"><span><b>A · Riporta al limite</b><small>'+(nm?nm+' moduli '+mod.brand+' '+Math.round(wp)+' Wp · '+it(nm*wp/1000,2)+' kWp':'potenza massima '+it(kmax,2)+' kWp')+' · con iperammortamento</small></span></label>'
+    +'<label><input type="radio" name="oaz_strada" value="B"><span><b>B · Piena potenza senza iperammortamento</b><small>moduli di categoria A (es. LONGi) · ammortamento ordinario</small></span></label></div>'
+    +'<button type="button" class="btn btn-primary" disabled style="opacity:.55;cursor:not-allowed;margin-top:8px;width:100%" title="La generazione delle due offerte arriva con il motore del preventivo aziende">Genera offerte alternative A e B</button>';
+   }
+  $('#oaz_smc').addEventListener('input',function(){this.dataset.mano=this.value?'1':'';ricalcola();});
+  window.__aziendaRicalcola=ricalcola;
+  agev();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,50);});else setTimeout(via,50);
+})();
+</script>
 </body>
