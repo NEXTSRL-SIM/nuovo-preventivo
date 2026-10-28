@@ -331,7 +331,7 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-falda{border:1px solid var(--border);border-radius:12px;padding:9px 11px;margin-bottom:8px;display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 10px;align-items:center}
 .lv-n{grid-row:span 3;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--text);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
 .lv-r1{display:flex;gap:6px;align-items:center;font-size:12.5px;min-width:0}.lv-r1 b{margin-left:auto}.lv-r1 select,.lv-r1 input{width:auto!important;height:30px!important;padding:3px 6px!important;margin:0!important}.lv-r1 input{width:58px!important}
-.lv-r4{margin-top:4px;flex-wrap:wrap}.lv-r4 span{min-width:62px}.lv-r4 button{min-width:30px}.lv-pos{grid-column:2;font-size:11px;color:var(--text-muted);margin:4px 0 2px;line-height:1.35}.lv-nessuno{grid-column:2;font-size:11.5px;margin:6px 0 2px}.lv-incl{display:inline-flex;align-items:center;gap:3px}.lv-incl em{font-style:normal;font-weight:700;font-size:12px;color:var(--text)}.lv-guida span{position:absolute;transform:translate(6px,-50%);white-space:nowrap;background:#22C55E;color:#fff;font:700 10.5px Manrope,sans-serif;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.lv-pico{position:absolute;top:12px;right:64px;z-index:1100;width:36px;height:36px;border-radius:10px;border:1px solid rgba(0,0,0,.2);background:#fff;color:#0F172A;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}.lv-pico:hover{background:#ECFAFD}.lv-pico[hidden],.lv-pann[hidden]{display:none}.lv-pann{position:absolute;top:12px;right:64px;z-index:1100;width:262px;background:#fff;color:#0F172A;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.3);font:12px Manrope,sans-serif;overflow:hidden}.lv-ph{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#075E73;color:#fff;cursor:move;user-select:none}.lv-ph b{font-size:12.5px}.lv-px{border:0;background:transparent;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0 2px}.lv-pb{padding:8px 10px 10px}.lv-pr{display:flex;align-items:center;gap:4px;margin-top:7px}.lv-pr span{width:60px;flex:none;color:#64748B;font-size:11.5px}.lv-pr button{border:1px solid #CBD5E1;background:#F8FAFC;border-radius:7px;min-width:28px;height:26px;cursor:pointer;font:600 12px Manrope,sans-serif;color:#0F172A}.lv-pr button:hover{background:#ECFAFD}.lv-pr .lv-pc{padding:0 7px}.lv-pst{margin-top:8px;color:#334155;font-size:11.5px;line-height:1.4}.lv-pv{margin:6px 0 0;color:#64748B;font-size:11px;line-height:1.35}.lv-pn{font-size:12px;margin:0}.lv-num-sel{outline:3px solid #FF7A00;border-radius:50%}.lv-toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:1200;background:#111827;color:#fff;font:600 12.5px Manrope,sans-serif;padding:8px 14px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s;max-width:80%;text-align:center}.lv-toast.on{opacity:1}.lv-r4{margin-top:4px;flex-wrap:wrap}.lv-r4 span{min-width:62px}.lv-r4 button{min-width:30px}.lv-pos{grid-column:2;font-size:11px;color:var(--text-muted);margin:4px 0 2px;line-height:1.35}.lv-nessuno{grid-column:2;font-size:11.5px;margin:6px 0 2px}.lv-incl{display:inline-flex;align-items:center;gap:3px}.lv-incl em{font-style:normal;font-weight:700;font-size:12px;color:var(--text)}.lv-guida span{position:absolute;transform:translate(6px,-50%);white-space:nowrap;background:#22C55E;color:#fff;font:700 10.5px Manrope,sans-serif;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .lv-r3{grid-column:2;display:flex;align-items:center;gap:0;font-size:11.5px;color:var(--text-muted)}.lv-r3 span{margin-right:8px}.lv-r3 button{border:1px solid var(--border);background:var(--sf2);color:var(--text-muted);font:600 11.5px Manrope,sans-serif;padding:4px 7px;cursor:pointer;margin-left:-1px}.lv-r3 button:first-of-type{border-radius:7px 0 0 7px}.lv-r3 button:last-child{border-radius:0 7px 7px 0}.lv-r3 button.on{background:var(--acw);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
 .lv-r2{grid-column:2;font-size:11.5px;color:var(--text-muted)}.lv-r2 a{color:#dc2626}
 .lv-az{display:flex;flex-direction:column;gap:8px;margin-top:14px}.lv-az2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-az .btn{width:100%;justify-content:center}
@@ -1644,10 +1644,11 @@ document.addEventListener('DOMContentLoaded', function(){
     Automatica: si provano le origini a passi di 1/5 di modulo, poi si rifinisce a 5 cm intorno alla migliore; vince il massimo dei moduli,
     a parità quella più centrata nella falda. Le frecce spostano l'origine e la posa si rifà: se entrano più moduli compaiono. */
  function griglia(poly,ost,w,h,px,py){var xs=poly.map(function(p){return p[0];}),ys=poly.map(function(p){return p[1];}),x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys);
-  var PX=w+GAP,PY=h+GAP;px=((px%PX)+PX)%PX;py=((py%PY)+PY)%PY;var m=[],sp=0;
-  for(var y=y0+MARG+py;y+h<=y1-MARG+1e-6;y+=PY){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);sp++;}run=[];};
-   for(var x=x0+MARG+px;x+w<=x1-MARG+1e-6;x+=PX){if(valido(poly,ost,x,y,w,h))run.push([x,y,w,h]);else chiudi();}chiudi();}
-  return {m:m,s:m.length-.25*sp,w:w,h:h,px:px,py:py};}
+  var PX=w+GAP,PY=h+GAP,pxn=((px%PX)+PX)%PX,pyn=((py%PY)+PY)%PY;var m=[],sp=0;
+  for(var y=y0+MARG+pyn;y+h<=y1-MARG+1e-6;y+=PY){var run=[];var chiudi=function(){if(run.length>=2){m.push.apply(m,run);sp++;}run=[];};
+   for(var x=x0+MARG+pxn;x+w<=x1-MARG+1e-6;x+=PX){if(valido(poly,ost,x,y,w,h))run.push([x,y,w,h]);else chiudi();}chiudi();}
+  /* ax,ay = ancora della griglia (origine non ridotta al passo): le celle dei moduli aggiunti si contano da qui */
+  return {m:m,s:m.length-.25*sp,w:w,h:h,px:px,py:py,ax:x0+MARG+px,ay:y0+MARG+py,PX:PX,PY:PY};}
  function sbilancio(poly,ost,g){if(!g.m.length)return 0;var l=corsa(poly,ost,g.m,-1,0),r=corsa(poly,ost,g.m,1,0),d=corsa(poly,ost,g.m,0,-1),u=corsa(poly,ost,g.m,0,1);g.lim={l:l,r:r,d:d,u:u};return Math.abs(l-r)+Math.abs(d-u);}
  var CACHE={},NCACHE=0;
  function posaAuto(poly,ost,rot){var key=JSON.stringify([poly.map(function(p){return [+p[0].toFixed(3),+p[1].toFixed(3)];}),ost,rot]);if(CACHE[key])return CACHE[key];
@@ -1685,7 +1686,22 @@ document.addEventListener('DOMContentLoaded', function(){
    var SP={auto:auto.m.length,man:g!==auto,lim:g.lim||{l:0,r:0,d:0,u:0},th:th,k:k,org:{w:g.w,h:g.h,px:g.px,py:g.py},esclusa:esclusa,prova:function(px,py){var G=griglia(PR,box,g.w,g.h,px,py);if(G.m.length)sbilancio(PR,box,G);return G;}};
    if(mods.length){SP.bx=[Math.min.apply(0,mods.map(function(m){return m.cell[0];})),Math.max.apply(0,mods.map(function(m){return m.cell[0]+m.cell[2];})),Math.min.apply(0,mods.map(function(m){return m.cell[1];})),Math.max.apply(0,mods.map(function(m){return m.cell[1]+m.cell[3];}))];}
    var wh=f.rot==='vert'?[MOD_C,MOD_L]:f.rot==='orizz'?[MOD_L,MOD_C]:(mods.length?[mods[0].cell[2],mods[0].cell[3]]:[MOD_C,MOD_L]);
-   ST.A.forEach(function(ad,ai){if(ad.fi!==fi||esclusa)return;var cc=av(aM(ad.c)),w=wh[0],h=wh[1],x=cc[0]-w/2,y=cc[1]-h/2;mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
+   /* moduli aggiunti a mano (Sante 28/10, quarta tornata): posizione libera nel riferimento della falda, x,y in metri dall'ancora
+      della griglia (angolo del modulo), così seguono il blocco quando si usano le frecce. Conversione automatica dei formati
+      precedenti: {r,k} (cella) e {c} (punto sulla mappa). Un modulo aggiunto non valido in quella posizione non si conta. */
+   var cella=function(r2,k2){return [g.ax+k2*g.PX,g.ay+r2*g.PY];},idx=function(x,y){return [Math.round((y-g.ay)/g.PY),Math.round((x-g.ax)/g.PX)];};
+   var RET=[];mods.forEach(function(m){if(spento(m)<0)RET.push({x:m.cell[0],y:m.cell[1],w:m.cell[2],h:m.cell[3],id:m.key});});
+   var urta=function(x,y,w,h,salta){return RET.some(function(o){return o.id!==salta&&x<o.x+o.w+GAP-1e-4&&x+w>o.x-GAP+1e-4&&y<o.y+o.h+GAP-1e-4&&y+h>o.y-GAP+1e-4;});};
+   var vale=function(x,y,salta){return valido(PR,box,x,y,g.w,g.h)&&!urta(x,y,g.w,g.h,salta);};
+   var libera=function(r2,k2,salta){var c2=cella(r2,k2);return vale(c2[0],c2[1],salta);};
+   var vicina=function(r2,k2,salta,px2,py2){var C=[];for(var dr=-1;dr<=1;dr++)for(var dk=-1;dk<=1;dk++){var c2=cella(r2+dr,k2+dk);C.push([r2+dr,k2+dk,px2==null?Math.abs(dr)+Math.abs(dk)*.9:Math.hypot(c2[0]+g.w/2-px2,c2[1]+g.h/2-py2)]);}
+    C.sort(function(a2,b2){return a2[2]-b2[2];});for(var ci=0;ci<C.length;ci++)if(libera(C[ci][0],C[ci][1],salta))return C[ci];return null;};
+   ST.A.forEach(function(ad,ai){if(ad.fi!==fi||esclusa||!g.PX)return;
+    if(ad.x===undefined&&ad.r!==undefined){ad.x=ad.k*g.PX;ad.y=ad.r*g.PY;delete ad.r;delete ad.k;}
+    if(ad.x===undefined&&ad.c){var cc=av(aM(ad.c)),t=idx(cc[0]-g.w/2,cc[1]-g.h/2),v0=vicina(t[0],t[1],null,cc[0],cc[1])||t,c0=cella(v0[0],v0[1]);ad.x=c0[0]-g.ax;ad.y=c0[1]-g.ay;delete ad.c;}
+    var x=g.ax+ad.x,y=g.ay+ad.y,w=g.w,h=g.h;if(!vale(x,y,null)){SP.fuori=(SP.fuori||0)+1;return;}
+    RET.push({x:x,y:y,w:w,h:h,id:'a'+ai});mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
+   SP.ax=g.ax;SP.ay=g.ay;SP.PX=g.PX;SP.PY=g.PY;SP.w=g.w;SP.h=g.h;SP.av=av;SP.ind=ind;SP.RET=RET;SP.vale=vale;SP.libera=libera;SP.vicina=vicina;SP.cella=cella;SP.idx=idx;SP.PR=PR;
    var on=mods.filter(function(m){return spento(m)<0;});
    /* verso della falda: normale alla gronda (il lato esterno più lungo), verso l'esterno del tetto; con una falda sola, o se scelto a mano, verso l'esposizione indicata */
    var gi=-1,gl=-1;for(i=0;i<n;i++){if(sulBordo(R[i],R[(i+1)%n],fi))continue;var l2=lato(R,i);if(l2>gl){gl=l2;gi=i;}}if(gi<0)gi=ig;
@@ -1699,9 +1715,9 @@ document.addEventListener('DOMContentLoaded', function(){
  function spento(m){if(m.agg!==undefined||!m.c)return ST.S.indexOf(m.key);var fi=m.key.split(':')[1];
   for(var i=0;i<ST.S.length;i++){var p=String(ST.S[i]).split(':');if(p[0]==='p'&&p[1]===fi&&Math.hypot(+p[2]/100-m.c[0],+p[3]/100-m.c[1])<.3)return i;}return -1;}
  function statoAsse(a,b){if(a+b<.015)return 'fisso';if(Math.abs(a-b)<.015)return 'centrato';if(a<.005)return 'battuta-';if(b<.005)return 'battuta+';return '';}
- function posTesto(e){var sp=e.sp;if(!sp)return '';if(sp.esclusa)return 'falda non utilizzata';var n=e.on.length,d=e.mods.length-sp.auto;
+ function posTesto(e){var sp=e.sp;if(!sp)return '';if(sp.esclusa)return 'falda non utilizzata';var n=e.on.length,d=e.mods.filter(function(m){return m.agg===undefined;}).length-sp.auto;
   var sx=statoAsse(sp.lim.l,sp.lim.r),sy=statoAsse(sp.lim.d,sp.lim.u),t=function(x){return x==='centrato'||x==='fisso'?'al centro':x?'in battuta':'spostati';};
-  return n+' moduli'+(d?' ('+(d>0?'+':'−')+Math.abs(d)+' rispetto alla posa automatica)':'')+' · lungo la gronda '+t(sx)+' · in profondità '+t(sy)+(sp.man?'':' · posa automatica');}
+  return n+' moduli'+(d?' ('+(d>0?'+':'−')+Math.abs(d)+' rispetto alla posa automatica)':'')+' · lungo la gronda '+t(sx)+' · in profondità '+t(sy)+(sp.man?'':' · posa automatica')+(sp.fuori?' · '+(sp.fuori===1?'1 modulo aggiunto non entra':sp.fuori+' moduli aggiunti non entrano')+' in questa posizione':'');}
  /* le frecce seguono lo schermo: → verso est, ↑ verso nord, qualunque sia la direzione della gronda */
  function versi(sp){var cx=Math.cos(sp.th),cy=Math.sin(sp.th);var vx=Math.abs(cx)>=.3?(cx>0?1:-1):(cy>0?1:-1),vy=Math.abs(cx)>=.3?(cx>0?1:-1):(cy<0?1:-1);return {r:[vx,0],l:[-vx,0],u:[0,vy],d:[0,-vy]};}
  function muovi(fi,dir,passo,battuta){var e=ESITO[fi];if(!e||!e.sp||e.sp.esclusa)return;var sp=e.sp,f=ST.F[fi];memo();SEL=fi;
@@ -1722,14 +1738,103 @@ document.addEventListener('DOMContentLoaded', function(){
   if(sy==='battuta+')lin.push([[b[0]-.6,b[3]],[b[1]+.6,b[3]],'in battuta']);if(sy==='battuta-')lin.push([[b[0]-.6,b[2]],[b[1]+.6,b[2]],'in battuta']);
   lin.forEach(function(l){L.polyline([ll(l[0]),ll(l[1])],{color:'#22C55E',weight:2.6,dashArray:'7 4',interactive:false}).addTo(LG);
    L.marker(ll(l[1]),{interactive:false,icon:L.divIcon({className:'lv-guida',iconSize:[0,0],html:'<span>'+l[2]+'</span>'})}).addTo(LG);});}
+ /* ---------- moduli aggiunti: a scatti sulla griglia (Sante 28/10) ---------- */
+ function avviso(t){var mp=$('#lvMap');if(!mp)return;var el=document.getElementById('lvToast');if(!el){el=document.createElement('div');el.id='lvToast';el.className='lv-toast';mp.appendChild(el);}
+  el.textContent=t;el.classList.add('on');clearTimeout(avviso.t);avviso.t=setTimeout(function(){el.classList.remove('on');},3500);}
+ function aggiungi(fi,m){var e=ESITO[fi],sp=e&&e.sp;if(!sp)return;if(sp.esclusa){avviso('Questa falda è segnata «nessun modulo»: toglila prima dalla scheda della falda.');return;}
+  var p=sp.av(m),t=sp.idx(p[0]-sp.w/2,p[1]-sp.h/2),v=sp.vicina(t[0],t[1],null,p[0],p[1]);
+  if(!v){avviso('Qui non c’entra un modulo: la cella è occupata, fuori dai margini o su un ostacolo.');return;}
+  var c2=sp.cella(v[0],v[1]);memo();ST.A.push({fi:fi,x:Math.round((c2[0]-sp.ax)*1000)/1000,y:Math.round((c2[1]-sp.ay)*1000)/1000});disegna();}
+ /* trascinamento libero con agganci magnetici, come nei programmi CAD (Sante 28/10, quarta tornata).
+    Il modulo segue il mouse nel riferimento della falda. Asse per asse (x lungo la gronda, y in profondità) si aggancia, in quest'ordine:
+    a/b) in battuta: sul margine della falda (linea a MARG dal bordo) o accostato a un altro modulo con il gioco GAP → linea verde piena;
+    c) allineato al lato di un altro modulo anche lontano → linea verde tratteggiata che passa per tutti e due.
+    Tolleranza 12 cm, o 10 pixel se lo zoom è basso; finché il mouse resta entro la tolleranza il modulo non si muove («pausa»).
+    Contorno rosso se la posizione non è valida; al rilascio resta nell'ultima posizione valida.
+    Un modulo posato trascinato si spegne e nasce un modulo aggiunto nella nuova posizione. Un clic senza trascinare fa come prima. */
+ function trascina(m,fi,ev0,clic){if(SEL!==fi){SEL=fi;pannello();}var e=ESITO[fi],sp=e.sp,w=sp.w,h=sp.h,salta=m.key,agg=m.agg!==undefined,mosso=false,finito=false,p0=ev0.containerPoint,us=document.body.style.userSelect;
+  MAP.dragging.disable();document.body.style.userSelect='none';try{if(ev0.originalEvent)ev0.originalEvent.preventDefault();var sl=window.getSelection&&window.getSelection();if(sl)sl.removeAllRanges();}catch(x){}
+  var fr=function(ll){return sp.av(aM([ll.lat,ll.lng]));},M0=fr(ev0.latlng),off=[M0[0]-m.cell[0],M0[1]-m.cell[1]];
+  var a1=aM([MAP.containerPointToLatLng([0,0]).lat,MAP.containerPointToLatLng([0,0]).lng]),a2=aM([MAP.containerPointToLatLng([10,0]).lat,MAP.containerPointToLatLng([10,0]).lng]),tol=Math.max(.12,Math.hypot(a2[0]-a1[0],a2[1]-a1[1]));
+  var SX=null,SY=null,ULT=null,LG2=L.layerGroup().addTo(MAP),ll=function(p){return aLL(sp.ind(p));};
+  var ghost=L.polygon(m.q.map(aLL),{color:'#22C55E',weight:3,fill:true,fillColor:'#0AA6C9',fillOpacity:.55,interactive:false}).addTo(MAP);
+  var ok=function(ax,v,o){return ax==='x'?sp.vale(v,o,salta):sp.vale(o,v,salta);};
+  /* confine preciso al millimetro fra una posizione buona e una no */
+  var bordo=function(ax,buono,cattivo,o){for(var k=0;k<12;k++){var mid=(buono+cattivo)/2;if(ok(ax,mid,o))buono=mid;else cattivo=mid;}return buono;};
+  var causa=function(ax,v,o,dir){var x=ax==='x'?v+dir*.004:o,y=ax==='x'?o:v+dir*.004;if(valido(sp.PR,[],x,y,w,h)){var R=sp.RET.filter(function(r){return r.id!==salta&&x<r.x+r.w+GAP&&x+w>r.x-GAP&&y<r.y+r.h+GAP&&y+h>r.y-GAP;});if(R.length)return {tipo:'modulo',r:R[0]};}return {tipo:'margine'};};
+  var aggancia=function(ax,raw,o,cur){
+   if(cur&&Math.abs(raw-cur.v)<tol*1.5&&ok(ax,cur.v,o))return cur;
+   var best=null,prova=function(c){if(!best||Math.abs(c.v-raw)<Math.abs(best.v-raw))best=c;};
+   if(ok(ax,raw,o)){[-1,1].forEach(function(dir){for(var t=.01;t<=tol+1e-9;t+=.01){if(!ok(ax,raw+dir*t,o)){var v=bordo(ax,raw+dir*(t-.01),raw+dir*t,o);var c=causa(ax,v,o,dir);c.v=v;c.dir=dir;prova(c);break;}}});}
+   else{[-1,1].forEach(function(dir){for(var t=.01;t<=tol+1e-9;t+=.01){if(ok(ax,raw+dir*t,o)){var v=bordo(ax,raw+dir*t,raw+dir*(t-.01),o);var c=causa(ax,v,o,-dir);c.v=v;c.dir=-dir;prova(c);break;}}});}
+   if(best)return best;
+   /* allineamento ai lati degli altri moduli */
+   sp.RET.forEach(function(r){if(r.id===salta)return;(ax==='x'?[[r.x,'min'],[r.x+r.w-w,'max']]:[[r.y,'min'],[r.y+r.h-h,'max']]).forEach(function(c){if(Math.abs(c[0]-raw)<tol&&ok(ax,c[0],o)&&(!best||Math.abs(c[0]-raw)<Math.abs(best.v-raw)))best={v:c[0],tipo:'allineato',r:r,lato:c[1]};});});
+   return best;};
+  var linee=function(X,Y){LG2.clearLayers();[['x',SX],['y',SY]].forEach(function(z){var ax=z[0],c=z[1];if(!c)return;var seg=null,tr=false;
+    if(c.tipo==='margine'){/* il lato del poligono di fronte al lato agganciato, spostato verso l'interno di MARG */
+     var px=ax==='x'?(c.dir>0?X+w:X):X+w/2,py=ax==='x'?Y+h/2:(c.dir>0?Y+h:Y),P=sp.PR,bi=-1,bd=1e9;for(var k=0;k<P.length;k++){var d=dseg([px,py],P[k],P[(k+1)%P.length]);if(d<bd){bd=d;bi=k;}}
+     var A=P[bi],B=P[(bi+1)%P.length],gx=P.reduce(function(s2,p){return s2+p[0];},0)/P.length,gy=P.reduce(function(s2,p){return s2+p[1];},0)/P.length,L2=Math.hypot(B[0]-A[0],B[1]-A[1]),nx=-(B[1]-A[1])/L2,ny=(B[0]-A[0])/L2;
+     if(((A[0]+B[0])/2-gx)*nx+((A[1]+B[1])/2-gy)*ny>0){nx=-nx;ny=-ny;}seg=[[A[0]+nx*MARG,A[1]+ny*MARG],[B[0]+nx*MARG,B[1]+ny*MARG]];}
+    else{var r=c.r,lo,hi;if(ax==='x'){var xv=c.tipo==='modulo'?(c.dir>0?r.x:r.x+r.w):(c.lato==='min'?r.x:r.x+r.w);lo=Math.min(Y,r.y)-.4;hi=Math.max(Y+h,r.y+r.h)+.4;seg=[[xv,lo],[xv,hi]];}
+     else{var yv=c.tipo==='modulo'?(c.dir>0?r.y:r.y+r.h):(c.lato==='min'?r.y:r.y+r.h);lo=Math.min(X,r.x)-.4;hi=Math.max(X+w,r.x+r.w)+.4;seg=[[lo,yv],[hi,yv]];}tr=c.tipo==='allineato';}
+    L.polyline(seg.map(ll),{color:'#22C55E',weight:tr?2:3.2,dashArray:tr?'8 5':null,interactive:false}).addTo(LG2);
+    L.marker(ll(seg[1]),{interactive:false,icon:L.divIcon({className:'lv-guida',iconSize:[0,0],html:'<span>'+(c.tipo==='margine'?'margine':c.tipo==='modulo'?'accostato':'allineato')+'</span>'})}).addTo(LG2);});};
+  var mv=function(ev){if(!mosso){if(Math.hypot(ev.containerPoint.x-p0.x,ev.containerPoint.y-p0.y)<5)return;mosso=true;}
+   var M=fr(ev.latlng),rx=M[0]-off[0],ry=M[1]-off[1];
+   /* due passate: x con la profondità dell'ultima posizione valida, poi y con quella x, poi di nuovo x con la y trovata */
+   SX=aggancia('x',rx,ULT?ULT[1]:m.cell[1],SX);var X=SX?SX.v:rx;SY=aggancia('y',ry,X,SY);var Y=SY?SY.v:ry;
+   SX=aggancia('x',rx,Y,SX);X=SX?SX.v:rx;if(SY&&!ok('y',Y,X)){SY=aggancia('y',ry,X,null);Y=SY?SY.v:ry;}
+   var buono=sp.vale(X,Y,salta);if(buono)ULT=[X,Y];
+   ghost.setLatLngs([[X,Y],[X+w,Y],[X+w,Y+h],[X,Y+h]].map(ll));ghost.setStyle({color:buono?'#22C55E':'#DC2626',fillColor:buono?'#0AA6C9':'#DC2626',fillOpacity:buono?.55:.25});if(buono)linee(X,Y);else LG2.clearLayers();};
+  var su=function(){if(finito)return;finito=true;MAP.off('mousemove',mv);MAP.off('mouseup',su);document.removeEventListener('mouseup',su);MAP.dragging.enable();document.body.style.userSelect=us;ghost.remove();LG2.remove();
+   if(!mosso){clic();return;}if(!ULT){disegna();return;}memo();var nx2=ULT[0]-sp.ax,ny2=ULT[1]-sp.ay;/* senza arrotondare: in battuta il modulo sta a pochi micron dal limite */
+   if(agg){ST.A[m.agg].x=nx2;ST.A[m.agg].y=ny2;}else{if(spento(m)<0)ST.S.push(m.key);ST.A.push({fi:fi,x:nx2,y:ny2});}disegna();};
+  MAP.on('mousemove',mv);MAP.on('mouseup',su);document.addEventListener('mouseup',su);}
+ /* ---------- pannellino mobile sopra la mappa (Sante 28/10, quinta tornata) ----------
+    Chiuso è un'icona in alto a destra della mappa; aperto mostra i comandi della falda selezionata. Si sposta tenendolo per la testata
+    (posizione ricordata in questo browser) e si chiude con la ×. La falda si seleziona cliccando il suo numero sulla mappa, oppure
+    aggiungendo o trascinando un modulo. Con il pannellino aperto le frecce della tastiera spostano la griglia della falda. */
+ var PANN=null,PICO=null,PAPERTO=false;
+ function seleziona(fi){SEL=fi;if(!PAPERTO)apriPann(true);disegna();}
+ function apriPann(on){PAPERTO=on;if(PANN)PANN.hidden=!on;if(PICO)PICO.hidden=on;try{localStorage.setItem('lv_pann_aperto',on?'1':'0');}catch(x){}pannello();}
+ function costruisciPann(){var mp=$('#lvMap');if(!mp||PANN)return;
+  PICO=document.createElement('button');PICO.type='button';PICO.className='lv-pico';PICO.title='Comandi della falda: sposta i moduli, in battuta, nessun modulo';
+  PICO.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><path d="M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/></svg>';
+  PANN=document.createElement('div');PANN.className='lv-pann';PANN.hidden=true;
+  PANN.innerHTML='<div class="lv-ph"><b id="lvPannT">Clicca una falda</b><button type="button" class="lv-px" title="Chiudi">×</button></div><div class="lv-pb" id="lvPannB"></div>';
+  mp.appendChild(PICO);mp.appendChild(PANN);[PICO,PANN].forEach(function(el){L.DomEvent.disableClickPropagation(el);L.DomEvent.disableScrollPropagation(el);});
+  try{var pos=JSON.parse(localStorage.getItem('lv_pann_pos')||'null');if(pos&&isFinite(pos.x)&&isFinite(pos.y)){PANN.style.left=pos.x+'px';PANN.style.top=pos.y+'px';PANN.style.right='auto';}}catch(x){}
+  PICO.addEventListener('click',function(){apriPann(true);});$('.lv-px',PANN).addEventListener('click',function(){apriPann(false);});
+  /* trascinamento per la testata, dentro i limiti della mappa */
+  $('.lv-ph',PANN).addEventListener('mousedown',function(ev){if(ev.target.closest('.lv-px'))return;ev.preventDefault();var R=mp.getBoundingClientRect(),P=PANN.getBoundingClientRect(),dx=ev.clientX-P.left,dy=ev.clientY-P.top;
+   var mv=function(e2){var x=Math.max(0,Math.min(R.width-P.width,e2.clientX-R.left-dx)),y=Math.max(0,Math.min(R.height-P.height,e2.clientY-R.top-dy));PANN.style.left=x+'px';PANN.style.top=y+'px';PANN.style.right='auto';};
+   var su=function(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',su);try{localStorage.setItem('lv_pann_pos',JSON.stringify({x:parseFloat(PANN.style.left)||0,y:parseFloat(PANN.style.top)||0}));}catch(x){}};
+   document.addEventListener('mousemove',mv);document.addEventListener('mouseup',su);});
+  /* il pannellino rifà il suo contenuto a ogni clic: il clic non deve arrivare alla mappa (aggiungerebbe angoli o moduli) */
+  ['click','mousedown','dblclick'].forEach(function(tp){PANN.addEventListener(tp,function(ev){ev.stopPropagation();});PICO.addEventListener(tp,function(ev){ev.stopPropagation();});});
+  PANN.addEventListener('click',function(ev){var t=ev.target.closest('button');if(!t||SEL<0)return;if(t.dataset.mv!==undefined)muovi(SEL,t.dataset.mv,ev.shiftKey?.25:.05);else if(t.dataset.bt!==undefined)muovi(SEL,t.dataset.bt,0,true);});
+  PANN.addEventListener('change',function(ev){var t=ev.target;if(t.id!=='lvNessuno'||SEL<0)return;memo();var f=ST.F[SEL];if(t.checked)f.nessuno=true;else delete f.nessuno;disegna();});
+  document.addEventListener('keydown',function(ev){if(!PAPERTO||SEL<0||!OV||!OV.classList.contains('on'))return;var k={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d'}[ev.key];if(!k)return;
+   var t=ev.target,tag=(t&&t.tagName||'').toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable))return;ev.preventDefault();ev.stopPropagation();muovi(SEL,k,ev.shiftKey?.25:.05);},true);
+  var ap=false;try{ap=localStorage.getItem('lv_pann_aperto')==='1';}catch(x){}apriPann(ap);}
+ function pannello(){if(!PANN)return;if(SEL>=ESITO.length)SEL=-1;var tt=$('#lvPannT'),b=$('#lvPannB');
+  if(SEL<0){tt.textContent='Clicca una falda';b.innerHTML='<p class="lv-pv">Clicca il numero di una falda sulla mappa per spostarne i moduli o escluderla.</p>';return;}
+  var e=ESITO[SEL],f=ST.F[SEL],sp=e&&e.sp;tt.textContent='Falda '+(SEL+1);if(!sp){b.innerHTML='';return;}
+  var fr=function(a){return a.map(function(o){return '<button type="button" '+o[0]+' title="'+o[2]+'">'+o[1]+'</button>';}).join('');};
+  b.innerHTML='<label class="swl lv-pn"><input type="checkbox" class="sw-in" id="lvNessuno"'+(f.nessuno?' checked':'')+'>Nessun modulo su questa falda</label>'
+   +(sp.esclusa?'':'<div class="lv-pr"><span>Sposta</span>'+fr([['data-mv="l"','←','Sposta la griglia verso sinistra di 5 cm (Maiusc 25 cm)'],['data-mv="r"','→','Sposta la griglia verso destra di 5 cm (Maiusc 25 cm)'],['data-mv="u"','↑','Sposta la griglia verso l\'alto di 5 cm (Maiusc 25 cm)'],['data-mv="d"','↓','Sposta la griglia verso il basso di 5 cm (Maiusc 25 cm)']])+'<button type="button" data-mv="c" class="lv-pc" title="Torna alla posa automatica: il massimo dei moduli, centrata">Centra</button></div>'
+   +'<div class="lv-pr"><span>In battuta</span>'+fr([['data-bt="l"','←','A filo del margine a sinistra'],['data-bt="r"','→','A filo del margine a destra'],['data-bt="u"','↑','A filo del margine in alto'],['data-bt="d"','↓','A filo del margine in basso']])+'</div>')
+   +'<div class="lv-pst">'+posTesto(e)+'</div>'+(sp.esclusa?'':'<p class="lv-pv">Anche le frecce della tastiera spostano la griglia.</p>');}
  /* ---------- disegno sulla mappa ---------- */
  function disegna(){if(!MAP)return;calcola();LG.clearLayers();var sel=TOOL==='spegni';
   ESITO.forEach(function(e,fi){L.polygon(ST.F[fi].pts,{color:'#fff',weight:1.2,dashArray:'5 4',fill:false,interactive:false,opacity:.8}).addTo(LG);
-   L.polygon(e.R.map(aLL),{color:'#FFD400',weight:2.4,fillColor:'#FFD400',fillOpacity:.08,interactive:false}).addTo(LG);
-   e.mods.forEach(function(m){var off=spento(m)>=0,agg=m.agg!==undefined,att=sel||(TOOL==='aggiungi'&&agg);var p=L.polygon(m.q.map(aLL),{color:off?'#fff':(agg?'#fff':'#075E73'),weight:off?1:(agg?1.6:.8),dashArray:off?'3 3':null,fillColor:off?'#fff':'#0AA6C9',fillOpacity:off?.06:.9,interactive:att,bubblingMouseEvents:false}).addTo(LG);
-    if(att)p.on('click',function(){memo();if(agg){ST.A.splice(m.agg,1);}else{var i=spento(m);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);}disegna();});});
+   L.polygon(e.R.map(aLL),{color:fi===SEL?'#FF7A00':'#FFD400',weight:fi===SEL?4.2:2.4,fillColor:'#FFD400',fillOpacity:.08,interactive:false}).addTo(LG);
+   e.mods.forEach(function(m){var off=spento(m)>=0,agg=m.agg!==undefined,att=sel||TOOL==='aggiungi';var p=L.polygon(m.q.map(aLL),{color:off?'#fff':(agg?'#fff':'#075E73'),weight:off?1:(agg?1.6:.8),dashArray:off?'3 3':null,fillColor:off?'#fff':'#0AA6C9',fillOpacity:off?.06:.9,interactive:att,bubblingMouseEvents:false}).addTo(LG);
+    var clic=function(){if(agg){memo();ST.A.splice(m.agg,1);disegna();return;}if(TOOL!=='spegni')return;memo();var i=spento(m);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);disegna();};
+    if(att&&!off)p.on('mousedown',function(ev){L.DomEvent.stop(ev);trascina(m,fi,ev,clic);});else if(att)p.on('click',clic);});
    var g=e.R.reduce(function(s,p){return [s[0]+p[0]/e.R.length,s[1]+p[1]/e.R.length];},[0,0]);
-   L.marker(aLL(g),{interactive:false,icon:L.divIcon({className:'lv-num',html:String(fi+1),iconSize:[22,22]})}).addTo(LG);
+   L.marker(aLL(g),{interactive:true,bubblingMouseEvents:false,keyboard:false,title:'Seleziona la falda '+(fi+1),icon:L.divIcon({className:'lv-num'+(fi===SEL?' lv-num-sel':''),html:String(fi+1),iconSize:[22,22]})}).on('click',function(ev){L.DomEvent.stop(ev);seleziona(fi);}).addTo(LG);
    /* verso della falda: freccia dalla falda verso dove scende, con esposizione e azimut */
    var ang=Math.atan2(-e.dir[1],e.dir[0])*180/Math.PI,pf=aLL([g[0]+e.dir[0]*1.9,g[1]+e.dir[1]*1.9]);
    L.marker(pf,{interactive:false,icon:L.divIcon({className:'lv-dir',iconSize:[0,0],html:'<div class="lv-frecc" style="transform:translate(-50%,-50%) rotate('+ang.toFixed(1)+'deg)"><svg width="46" height="16" viewBox="0 0 46 16"><path d="M2 8h34" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M30 2l12 6-12 6z" fill="#fff"/><path d="M2 8h34" stroke="#0F172A" stroke-width="1.4" stroke-linecap="round"/><path d="M31 4l8 4-8 4z" fill="#0F172A"/></svg></div><div class="lv-dirlab">'+nomeEspo(e.az)+' · '+(e.az>0?'+':'')+e.az+'°</div>'})}).addTo(LG);
@@ -1742,21 +1847,17 @@ document.addEventListener('DOMContentLoaded', function(){
   if(trasc){L.rectangle([trasc.a,trasc.b],{color:'#DC2626',weight:2,dashArray:'6 3',fillOpacity:.25,interactive:false}).addTo(LG);}
   guide();riepilogo();aiuto();}
  function aiuto(){$('#lvAiuto').textContent={falda:CORR.length?(CORR.length<3?'Continua a cliccare gli angoli della falda.':'Clicca il primo angolo (quello giallo grande) per chiudere la falda.'):'Clicca gli angoli della falda uno dopo l\'altro. Trascina un angolo giallo per correggerlo; la mappa si sposta trascinando.',
-  camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',spegni:'Clicca un modulo per toglierlo o rimetterlo.',aggiungi:'Clicca dove vuoi un modulo in più: si mette nel verso della falda, come gli altri. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
+  camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',spegni:'Clicca un modulo per toglierlo o rimetterlo. Tienilo premuto e trascinalo per spostarlo: si aggancia ai margini e agli altri moduli.',aggiungi:'Clicca dove vuoi un modulo in più: si aggancia alla griglia, accostato agli altri. Tieni premuto un modulo e trascinalo: si aggancia al margine, agli altri moduli e ai loro allineamenti. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
  function nomeEspo(az){var a=Math.abs(az),w=az>0;return a<=22.5?'sud':a<=67.5?(w?'sud-ovest':'sud-est'):a<=112.5?(w?'ovest':'est'):a<=157.5?(w?'nord-ovest':'nord-est'):'nord';}
  function nMod(){return ESITO.reduce(function(s,e){return s+e.on.length;},0);}
  function riepilogo(){var nm=nMod();$('#lvM').textContent=nm;$('#lvP').innerHTML=(nm*WP/1000).toFixed(2).replace('.',',')+' <small>kWp</small>';
   $('#lvC').textContent=ST.O.filter(function(o){return o.t==='camino';}).length;$('#lvO').textContent=ST.O.filter(function(o){return o.t!=='camino';}).length;
   var Lf=$('#lvFalde');if(!ST.F.length){Lf.innerHTML='<div class="lv-vuoto">Nessuna falda: clicca gli angoli sulla mappa.</div>';}else{Lf.innerHTML='';
    ST.F.forEach(function(f,fi){var e=ESITO[fi],d=document.createElement('div');d.className='lv-falda';
-    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><span class="lv-incl" title="Inclinazione della falda in gradi"><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione in gradi"><em>° incl.</em></span><b>'+e.on.length+' moduli</b></div>'
+    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
-     +'<label class="swl lv-nessuno"><input type="checkbox" class="sw-in" data-f="'+fi+'" data-k="nessuno"'+(f.nessuno?' checked':'')+'>Nessun modulo su questa falda</label>'
-     +(e.mods.length||(e.sp&&e.sp.man)?'<div class="lv-r3 lv-r4"><span>Sposta</span>'+[['l','←','sinistra'],['r','→','destra'],['u','↑','su'],['d','↓','giù']].map(function(o){return '<button type="button" data-f="'+fi+'" data-mv="'+o[0]+'" title="Sposta la griglia verso '+o[2]+' di 5 cm (con Maiusc 25 cm): se entrano più moduli compaiono">'+o[1]+'</button>';}).join('')+'<button type="button" data-f="'+fi+'" data-mv="c" title="Torna alla posa automatica: il massimo dei moduli, centrata">Centra</button></div>'
-     +'<div class="lv-r3 lv-r4"><span>In battuta</span>'+[['l','←','a sinistra'],['r','→','a destra'],['u','↑','in alto'],['d','↓','in basso']].map(function(o){return '<button type="button" data-f="'+fi+'" data-bt="'+o[0]+'" title="Porta i moduli a filo del margine '+o[2]+'">'+o[1]+'</button>';}).join('')+'</div>':'')
-     +'<div class="lv-pos">'+posTesto(e)+'</div>'
      +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
-  $('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
+  pannello();$('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
  /* ---------- revisioni ---------- */
  /* revisioni su Supabase (tabella layout_veloce) attraverso la funzione layout-veloce, con la password della regia */
  var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/layout-veloce';
@@ -1860,7 +1961,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#lvAnnulla').addEventListener('click',function(){var s=STORIA.pop();if(!s)return;ST=JSON.parse(s);if(!ST.A)ST.A=[];CORR=[];disegna();});
   $('#lvSvuota').addEventListener('click',async function(){if(!await chiedi('Ricomincia','Tolgo tutte le falde, i camini e gli ostacoli disegnati?','Ricomincia',true))return;memo();ST={F:[],O:[],S:[],A:[]};CORR=[];disegna();});
   $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else if(t.dataset.k==='nessuno'){if(t.checked)f.nessuno=true;else delete f.nessuno;}else f.espo=t.value;disegna();});
-  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.bt!==undefined){muovi(+t.dataset.f,t.dataset.bt,0,true);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){return {fi:a.fi>df?a.fi-1:a.fi,c:a.c};});disegna();});
+  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.bt!==undefined){muovi(+t.dataset.f,t.dataset.bt,0,true);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){var b2=JSON.parse(JSON.stringify(a));b2.fi=a.fi>df?a.fi-1:a.fi;return b2;});disegna();});
   $('#lvChiudi').addEventListener('click',async function(){if(MOD&&nMod()&&!await chiedi('Chiudi il layout veloce','Ci sono modifiche non salvate. Chiudo lo stesso?','Chiudi senza salvare',true))return;OV.classList.remove('on');document.body.style.overflow='';});
   async function tasto(b,nuova){var t=b.textContent;b.disabled=true;b.textContent='Salvo…';try{await salvaRev(nuova);}catch(e){await avvisa('errore','Revisione non salvata',esc(e.message||e));}finally{b.textContent=t;riepilogo();}}
   $('#lvSalva').addEventListener('click',function(){tasto(this,false);});
@@ -1884,10 +1985,12 @@ document.addEventListener('DOMContentLoaded', function(){
    .catch(function(e){$('#lvRev').innerHTML='<div class="lv-vuoto" style="color:#dc2626">Revisioni non lette: '+esc(e.message||e)+'</div>';});
   OV.classList.add('on');document.body.style.overflow='hidden';
   if(!MAP){MAP=L.map('lvMap',{center:[la,lo],zoom:21,maxZoom:22,zoomControl:true,doubleClickZoom:false});
-   L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+TOK,{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1}).addTo(MAP);LG=L.layerGroup().addTo(MAP);window.__lvMap=MAP;
+   L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+TOK,{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1}).addTo(MAP);LG=L.layerGroup().addTo(MAP);window.__lvMap=MAP;costruisciPann();
    MAP.on('click',function(ev){var ll=[ev.latlng.lat,ev.latlng.lng];
     if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push({pts:CORR,espo:'auto',tilt:22});CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
-    if(TOOL==='aggiungi'){var m2=aM(ll),fi2=-1;ESITO.forEach(function(e,i){if(dentro(m2,e.R))fi2=i;});if(fi2<0)return;memo();ST.A.push({fi:fi2,c:ll});disegna();return;}
+    if(TOOL==='aggiungi'){var m2=aM(ll),fi2=-1,dmin=1.2;ESITO.forEach(function(e,i){if(dentro(m2,e.R))fi2=i;});
+     if(fi2<0)ESITO.forEach(function(e,i){var d=Math.min.apply(0,e.R.map(function(p,k){return dseg(m2,p,e.R[(k+1)%e.R.length]);}));if(d<dmin){dmin=d;fi2=i;}});
+     if(fi2<0){avviso('Clicca dentro una falda per aggiungere un modulo.');return;}SEL=fi2;aggiungi(fi2,m2);return;}
     if(TOOL==='camino'){memo();var h=.275,m=aM(ll);ST.O.push({t:'camino',q:[[m[0]-h,m[1]-h],[m[0]+h,m[1]-h],[m[0]+h,m[1]+h],[m[0]-h,m[1]+h]].map(aLL)});disegna();}});
    MAP.on('mousedown',function(ev){if(TOOL!=='ostacolo')return;trasc={a:[ev.latlng.lat,ev.latlng.lng],b:[ev.latlng.lat,ev.latlng.lng]};});
    MAP.on('mousemove',function(ev){if(!trasc)return;trasc.b=[ev.latlng.lat,ev.latlng.lng];disegna();});
