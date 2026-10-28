@@ -1981,11 +1981,11 @@ document.addEventListener('DOMContentLoaded', function(){
   var T=$('#tabProdotti'),pag=$$('.pc',T).find(function(c){return /Pagamento e note/.test(c.textContent);});
   var c=document.createElement('section');c.className='pc oaz';c.id='cardOfferta';c.hidden=true;
   c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip" title="Si salverà con il prossimo passo">in arrivo</span></span></div><div class="pb">'
-   +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="10" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
+   +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="any" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
    +'<h4>Parametri dell\'offerta</h4><div class="pg">'
-   +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="1" value="5"><div class="az-src">sulla produzione stimata</div></div>'
-   +'<div><label for="oaz_aliq">Aliquota fiscale %</label><input type="number" id="oaz_aliq" min="0" max="60" step="0.1"><div class="az-src" id="oaz_aliq_src"></div></div>'
-   +'<div><label for="oaz_costo">Costo evitato €/kWh</label><input type="number" id="oaz_costo" min="0" step="0.001"><div class="az-src" id="oaz_costo_src"></div></div></div>'
+   +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="any" value="5"><div class="az-src">sulla produzione stimata</div></div>'
+   +'<div><label for="oaz_aliq">Aliquota fiscale %</label><input type="number" id="oaz_aliq" min="0" max="60" step="any"><div class="az-src" id="oaz_aliq_src"></div></div>'
+   +'<div><label for="oaz_costo">Costo evitato €/kWh</label><input type="number" id="oaz_costo" min="0" step="any"><div class="az-src" id="oaz_costo_src"></div></div></div>'
    +'<h4>Dettaglio economico</h4><label class="swl"><input type="checkbox" class="sw-in" id="oaz_det"> Mostra le voci con gli importi nell\'offerta</label>'
    +'<div class="dv" id="oaz_voci" hidden><div id="oaz_righe"></div><button type="button" class="btn btn-secondary" id="oaz_add" style="font-size:12px;padding:4px 10px;margin:2px 0 8px">+ Aggiungi voce</button><div class="som" id="oaz_som"></div></div></div>';
   if(pag)pag.parentNode.insertBefore(c,pag);
@@ -2031,6 +2031,14 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<button type="button" class="btn btn-primary" disabled style="opacity:.55;cursor:not-allowed;margin-top:8px;width:100%" title="La generazione delle due offerte arriva con il motore del preventivo aziende">Genera offerte alternative A e B</button>';
    }
   $('#oaz_smc').addEventListener('input',function(){this.dataset.mano=this.value?'1':'';ricalcola();});
+  /* se il salvataggio è bloccato da un campo non valido, lo si dice e si porta il commerciale sul campo (prima il blocco era muto) */
+  var frm=$('#leadForm')||document.forms[0],avvisato=0;
+  if(frm)frm.addEventListener('invalid',function(e){var el=e.target;if(Date.now()-avvisato<800)return;avvisato=Date.now();
+   var tab=el.closest('[id^="tab"]'),btn=tab&&$$('.tab-btn').find(function(b){return 'tab'+b.dataset.tab.charAt(0).toUpperCase()+b.dataset.tab.slice(1)===tab.id;});
+   if(btn&&getComputedStyle(tab).display==='none')btn.click();
+   var lab=el.id&&$('label[for="'+el.id+'"]'),nome=(lab&&lab.textContent.replace('*','').trim())||el.name||el.id||'un campo';
+   var st=$('#status');if(st){st.className='error';st.textContent='❌ Non salvato: controlla «'+nome+'» — '+el.validationMessage;}
+   setTimeout(function(){try{el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}catch(x){}},150);},true);
   window.__aziendaRicalcola=ricalcola;
   $$('.tab-btn').forEach(function(b){b.addEventListener('click',function(){setTimeout(ricalcola,100);});});
   var ps=$('#prevSelect');if(ps)ps.addEventListener('change',function(){setTimeout(ricalcola,800);});
