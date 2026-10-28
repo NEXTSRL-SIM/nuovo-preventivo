@@ -1677,8 +1677,9 @@ document.addEventListener('DOMContentLoaded', function(){
     entra in quel lato. Ogni lato diventa una retta: se è entro 10° dalle direzioni dell'edificio (il lato più lungo e il suo squadro)
     si allinea, altrimenti (displuvi, compluvi) resta com'è. Ogni nodo va nel punto che sta meglio su tutte le sue rette:
     con due rette è l'incrocio, la regola che ha risolto Da Guido. Le falde combaciano per costruzione. */
- function cuci(Ps,toll){var N=[],F=Ps.map(function(P){return P.map(function(p){var k=-1,bd=1.0;N.forEach(function(n,i){var d=Math.hypot(n.p[0]-p[0],n.p[1]-p[1]);if(d<bd){bd=d;k=i;}});
-    if(k<0){N.push({p:p.slice(),s:[p.slice()]});return N.length-1;}N[k].s.push(p.slice());var m=N[k].s.reduce(function(a,q){return [a[0]+q[0],a[1]+q[1]];},[0,0]);N[k].p=[m[0]/N[k].s.length,m[1]/N[k].s.length];return k;});});
+ function cuci(Ps,toll){var N=[],F=Ps.map(function(P,fi){return P.map(function(p){var k=-1,bd=1.0;N.forEach(function(n,i){if(n.f.indexOf(fi)>=0)return;var d=Math.hypot(n.p[0]-p[0],n.p[1]-p[1]);if(d<bd){bd=d;k=i;}});
+    /* PORTALE NEXT-110 (28/10): due angoli della STESSA falda non si fondono mai, anche se vicini: una falda a L teneva il gradino corto e lo tagliava in diagonale */
+    if(k<0){N.push({p:p.slice(),s:[p.slice()],f:[fi]});return N.length-1;}N[k].f.push(fi);N[k].s.push(p.slice());var m=N[k].s.reduce(function(a,q){return [a[0]+q[0],a[1]+q[1]];},[0,0]);N[k].p=[m[0]/N[k].s.length,m[1]/N[k].s.length];return k;});});
   /* angolo sul lato di un'altra falda: si inserisce nel lato */
   N.forEach(function(n,ni){F.forEach(function(f){if(f.indexOf(ni)>=0)return;for(var k=0;k<f.length;k++){var a=N[f[k]].p,b=N[f[(k+1)%f.length]].p;
     if(dseg(n.p,a,b)<0.6&&Math.hypot(n.p[0]-a[0],n.p[1]-a[1])>1&&Math.hypot(n.p[0]-b[0],n.p[1]-b[1])>1){f.splice(k+1,0,ni);return;}}});});
