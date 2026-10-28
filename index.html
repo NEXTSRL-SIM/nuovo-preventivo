@@ -1537,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var sm=$('.ph small',c1);if(sm)sm.textContent=az?'Lead nuovo o cliente già in archivio · azienda':'Lead nuovo o cliente già in archivio';}
   sgT.addEventListener('click',function(e){var b=e.target.closest('button');if(b)tipo(b.dataset.v);});
   /* un lead o un preventivo caricati oggi sono privati: i dati azienda non sono ancora salvati */
-  ['existing_lead','prevSelect'].forEach(function(id){var s=$('#'+id);if(s)s.addEventListener('change',function(){if(TIPO!=='privato')tipo('privato');});});
+  /* (28/10) non si rimette più su Privato al cambio di lead o preventivo: lo decide azienda2-js leggendo il tipo del lead */
   window.__tipoContatto=function(){return TIPO;};
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,0);});else setTimeout(via,0);
@@ -1999,7 +1999,7 @@ document.addEventListener('DOMContentLoaded', function(){
   bollette();var sl=$('#existing_lead');if(sl)sl.addEventListener('change',function(){setTimeout(bollette,300);});
   /* lead azienda già salvato: si accende «Azienda» e si riempiono i dati dalla tabella aziende */
   function caricaAzienda(){var lid=($('#existing_lead')||{}).value||($('#existing_lead_id')||{}).value||'';if(!/^[0-9a-f-]{36}$/i.test(lid))return;
-   var pv=($('#prevSelect')||{}).value||($('#existing_prev_id')||{}).value||'';chiama('cosa=azienda&lead='+lid+(/^[0-9a-f-]{36}$/i.test(pv)?'&prev='+pv:'')).then(function(j){if(!j.ok||j.tipo!=='azienda')return;var P=j.preventivo||null;
+   var pv=($('#prevSelect')||{}).value||($('#existing_prev_id')||{}).value||'';chiama('cosa=azienda&lead='+lid+(/^[0-9a-f-]{36}$/i.test(pv)?'&prev='+pv:'')).then(function(j){if(!j.ok)return;if(j.tipo!=='azienda'){var bp=$('#sgTipo button[data-v="privato"]');if(bp&&!bp.classList.contains('on'))bp.click();return;}var P=j.preventivo||null;
     var b=$('#sgTipo button[data-v="azienda"]');if(b&&!b.classList.contains('on'))b.click();
     var a=j.azienda||{};function put(id,v){var e=$('#'+id);if(e&&v!=null&&v!==''){e.value=v;}}
     put('az_piva',a.partita_iva);put('az_cf',a.codice_fiscale);if(a.codice_fiscale)$('#az_cf').dataset.mano='1';
@@ -2014,8 +2014,8 @@ document.addEventListener('DOMContentLoaded', function(){
      var det=$('#oaz_det');det.checked=!!P.mostra_dettaglio_economico;$('#oaz_righe').innerHTML='';(P.dettaglio_voci_json||[]).forEach(function(v){voce(v.voce,v.importo!=null?String(v.importo):'');});$('#oaz_voci').hidden=!det.checked;somma();
      if(P.gas_smc){var g=$('#oaz_smc');g.value=P.gas_smc;g.dataset.mano='1';}}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
-  if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,400);});
-  var psel=$('#prevSelect');if(psel)psel.addEventListener('change',function(){setTimeout(caricaAzienda,500);});
+  if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
+  var psel=$('#prevSelect');if(psel)psel.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
   $$('input[name="prev_mode"]').forEach(function(r){r.addEventListener('change',function(){setTimeout(caricaAzienda,500);});});
   var forma=$('#az_forma'),formaMano=false;
   function leggiForma(){if(formaMano)return;var s=($('#last_name').value||'').toUpperCase().replace(/\./g,'').replace(/\s+/g,' ');var v='';
