@@ -1991,7 +1991,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function ricalcola(){var box=$('#v105');if(!box||!az())return;
    /* aliquota e costo evitato proposti */
    var f=forma.value,cap=['srl','srls','spa','sapa','coop'].indexOf(f)>=0;
-   if(!aliqMano){$('#oaz_aliq').value=f?(cap?'27.9':'35'):'';$('#oaz_aliq_src').textContent=f?(cap?'IRES 24% + IRAP 3,9%':'IRPEF dei soci, marginale tipica: da verificare'):'scegli la forma giuridica';}
+   if(!aliqMano){$('#oaz_aliq').value=f?(cap?'24':'35'):'';$('#oaz_aliq_src').textContent=f?(cap?'IRES 24%: la maggiorazione non vale per l\'IRAP':'IRPEF dei soci, marginale tipica: da verificare'):'scegli la forma giuridica';}
    var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});
    if(!costoMano){var q=el&&el.quota_consumi_eur_kwh!=null?Number(el.quota_consumi_eur_kwh)+Number(el.accisa_eur_kwh||0):null;$('#oaz_costo').value=q!=null?q.toFixed(4):'';$('#oaz_costo_src').textContent=q!=null?'dalla bolletta: quota consumi + accisa, senza IVA':'arriva dalla bolletta elettrica';}
    var ip=iper&&iper.checked;$('#oaz105').hidden=!ip;if(!ip)return;
