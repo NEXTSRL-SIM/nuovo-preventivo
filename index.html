@@ -1283,6 +1283,11 @@ var coordBar=document.getElementById('mapCoordText');coordBar.textContent='⏳ S
   var kwp=parseFloat(document.getElementById('fv_kwp').value)||0;
   var fvEur=parseFloat(document.querySelector('[name="fv_totale_eur"]')?document.querySelector('[name="fv_totale_eur"]').value:0)||0;
   var pid=(document.getElementById('last_saved_id')||{value:''}).value||(document.getElementById('existing_prev_id')||{value:''}).value||null;
+  /* PORTALE NEXT-110 (28/10): la posizione si scrive subito nel preventivo, senza aspettare il Salva generale */
+  if(pid){var pp='';try{pp=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}
+   fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pp,azione:'posizione',prev_id:pid,lat:lat,lon:lon})})
+   .then(function(r){return r.json();}).then(function(j){window.__posSalvata=!!(j&&j.ok);var cb=document.getElementById('mapCoordText');if(cb&&j&&j.ok&&!/Posizione salvata nel preventivo/.test(cb.textContent))cb.textContent+=' · Posizione salvata nel preventivo';if(!(j&&j.ok)&&typeof avvisaBreve==='function')avvisaBreve('Posizione non salvata nel preventivo: premi Salva.');}).catch(function(){});}
+  else if(typeof avvisaBreve==='function')avvisaBreve('La posizione resta in pagina: premi Salva per tenerla nel preventivo.');
   fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/salva-mappa-satellite',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({preventivo_id:pid,lat:lat,lon:lon})
