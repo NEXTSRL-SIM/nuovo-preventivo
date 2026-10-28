@@ -2030,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'pdf',pid:PID,rev:f.n,pdf_b64:b64})});var j=await r.json().catch(function(){return {};});
   if(!r.ok||!j.ok)throw new Error(j.errore||('errore '+r.status));f.pdf=j.url;f.inCorso=false;f.errPdf='';mostraRev();}
  function ora(){var d=new Date();return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
- function fotografia(){var nm=nMod(),st=cop();st.modulo={cod:MODCORR.cod,nome:MODCORR.nome,modello:MODCORR.modello,l:MODCORR.l,c:MODCORR.c,wp:MODCORR.wp,pred:MODCORR.pred};return {quando:ora(),nm:nm,kwp:nm*WP/1000,stato:st};}
+ function fotografia(){var nm=nMod(),st=cop();st.modulo={cod:MODCORR.cod,nome:MODCORR.nome,modello:MODCORR.modello,l:MODCORR.l,c:MODCORR.c,wp:MODCORR.wp,pred:MODCORR.pred};/* PORTALE NEXT-110 (Sante 28/10): si salvano anche i moduli posati (4 vertici in lat/lon) e l'azimut di ogni falda, per disegnarli nell'offerta aziende */try{st.P=ESITO.map(function(e){return {az:e.az,m:(e.on||[]).map(function(m){return m.q.map(aLL).map(function(p){return [+p[0].toFixed(7),+p[1].toFixed(7)];});})};});}catch(x){}return {quando:ora(),nm:nm,kwp:nm*WP/1000,stato:st};}
  function mostraRev(){var Lr=$('#lvRev');if(!REV.length){Lr.innerHTML='<div class="lv-vuoto">Ancora nessuna revisione.</div>';modificato(MOD);return;}Lr.innerHTML='';
   REV.slice().reverse().forEach(function(r){var i=REV.indexOf(r),d=document.createElement('div');d.className='lv-rev'+(i===APERTA?' on':'');
    d.innerHTML='<b>Rev. '+String(r.n).padStart(2,'0')+'</b><span>'+r.quando+' · '+r.nm+' moduli · '+r.kwp.toFixed(2).replace('.',',')+' kWp'+(i===APERTA?' · <i>aperta</i>':'')+'</span>'+(r.pdf?'<a href="'+esc(r.pdf)+'" target="_blank" rel="noopener" class="lv-pdf">PDF</a> <a href="#" class="lv-pdf lv-pdfdl" data-u="'+esc(r.pdf)+'" data-r="'+String(r.n).padStart(2,'0')+'" title="Salva il PDF sul computer">scarica</a>':r.inCorso?'<em class="lv-pdfw">PDF…</em>':r.errPdf?'<em class="lv-pdfe" title="'+esc(r.errPdf)+'">PDF non creato</em>':'')+(i===APERTA?'':'<a href="#" data-r="'+i+'">apri</a>');Lr.appendChild(d);});modificato(MOD);}
@@ -2271,6 +2271,7 @@ document.addEventListener('DOMContentLoaded', function(){
   /* ---------- bollette e profilo fiscale sotto il legale rappresentante ---------- */
   var blk=document.createElement('div');blk.className='az-blk';
   blk.innerHTML='<h4>Bollette</h4><div class="az-bl" id="azBoll"></div>'
+   +'<div class="az-cf"><label>Consumi usati nei calcoli</label><span class="az-seg" id="az_cfonte"><button type="button" class="on" data-v="bolletta">Bolletta</button><button type="button" data-v="manuale">Scritti a mano</button></span><div class="az-src" id="az_cfonte_src">quelli della bolletta confermata</div></div>'
    +'<h4>Profilo fiscale</h4><div class="az-g2"><div><label for="az_forma">Forma giuridica</label><select id="az_forma"><option value="">—</option><option value="srl">S.r.l.</option><option value="srls">S.r.l.s.</option><option value="spa">S.p.A.</option><option value="sapa">S.a.p.a.</option><option value="coop">Società cooperativa</option><option value="snc">S.n.c.</option><option value="sas">S.a.s.</option><option value="ss">Società semplice</option><option value="di">Ditta individuale</option><option value="prof">Professionista / studio associato</option></select><div class="az-src" id="az_forma_src"></div></div>'
    +'<div><label>IVA detraibile</label><span class="az-seg" id="az_iva"><button type="button" class="on" data-v="si">Sì</button><button type="button" data-v="no">No</button></span><div class="az-src"></div></div></div>';
   /* PORTALE NEXT-110 (Sante 28/10): bollette e profilo fiscale in un riquadro loro, sotto, a tutta larghezza; il legale rappresentante resta da solo */
@@ -2296,11 +2297,15 @@ document.addEventListener('DOMContentLoaded', function(){
   function nr(v){return v==null||v===''?'':String(v);}
   function campo(k,et,v){return '<div><label>'+et+'</label><input data-k="'+k+'" value="'+String(nr(v)).replace(/"/g,'&quot;')+'"></div>';}
   function disegnaDocs(L){var box=$('#azDocs');if(!box)return;if(!L.length){box.innerHTML='';return;}
+   var PER={};L.forEach(function(d){PER[d.id]=d;});
+   function annuoTxt(x){if(!x||!x.stimato)return x&&x.fonte?'annuo dallo '+x.fonte:'';return x.fonte?'annuo stimato: '+x.fonte+' ×12':'annuo stimato da '+x.giorni+' giorni';}
    box.innerHTML=L.map(function(d){var R=d.lettura||{},A=R._annuo||{},boll=/^bolletta_(luce|gas)$/.test(d.tipo||''),gas=d.tipo==='bolletta_gas';
+    var madre=R.pagina_di&&PER[R.pagina_di];
+    if(madre&&!boll){return '<div class="az-doc" data-id="'+d.id+'"><div class="t"><b title="'+d.nome+'">'+d.nome+'</b><span class="az-chipd '+(madre.stato==='confermato'?'ok':'al')+'">pagina '+(R.pagina||'')+' della '+(TIPI[madre.tipo]||'bolletta').toLowerCase()+'</span></div><div class="n">Letta insieme alle altre pagine: i dati sono nella bolletta'+(madre.stato==='confermato'?' confermata.':' qui sopra.')+'</div></div>';}
     var chip=d.stato==='confermato'?'<span class="az-chipd ok">confermata</span>':d.stato==='trasferito'?'<span class="az-chipd ok">passata alla pratica</span>':d.errore?'<span class="az-chipd ko">non letto</span>':d.stato==='letto'?(boll?'<span class="az-chipd att">da confermare</span>':'<span class="az-chipd al">'+(TIPI[d.tipo]||'documento')+'</span>'):'<span class="az-chipd al">caricato</span>';
     var h='<div class="az-doc" data-id="'+d.id+'"><div class="t"><b title="'+d.nome+'">'+(boll?(TIPI[d.tipo]+(R.fornitore?' · '+R.fornitore:'')):d.nome)+'</b>'+chip+'</div>';
     if(boll&&d.stato==='letto'){
-     h+='<div class="n">'+(R.periodo_dal&&R.periodo_al?'Periodo '+R.periodo_dal.split('-').reverse().join('/')+' – '+R.periodo_al.split('-').reverse().join('/')+' · ':'')+(gas?(A.smc&&A.smc.stimato?'annuo stimato da '+A.giorni+' giorni':''):(A.kwh&&A.kwh.stimato?'annuo stimato da '+A.giorni+' giorni':''))+(R.note?' · '+R.note:'')+'</div><div class="g">'
+     h+='<div class="n">'+(R.periodo_dal&&R.periodo_al?'Periodo '+R.periodo_dal.split('-').reverse().join('/')+' – '+R.periodo_al.split('-').reverse().join('/')+' · ':'')+(gas?annuoTxt(A.smc):annuoTxt(A.kwh))+(R.note?' · '+R.note:'')+'</div><div class="g">'
       +(gas?campo('smc_anno','Sm³ annui',A.smc&&A.smc.v)+campo('pdr','PDR',R.pdr)+campo('fornitore','Fornitore',R.fornitore)
           :campo('kwh_anno','kWh annui',A.kwh&&A.kwh.v)+campo('kwh_f1','F1 (periodo)',R.kwh_f1)+campo('kwh_f2','F2 (periodo)',R.kwh_f2)+campo('kwh_f3','F3 (periodo)',R.kwh_f3)+campo('quota_consumi_eur_kwh','Quota consumi €/kWh',R.quota_consumi_eur_kwh)+campo('accisa_eur_kwh','Accisa €/kWh',R.accisa_eur_kwh)+campo('potenza_impegnata_kw','Potenza kW',R.potenza_impegnata_kw)+campo('pod','POD',R.pod)+campo('fornitore','Fornitore',R.fornitore))
       +'</div><div class="b"><button type="button" class="btn btn-secondary" data-az="scarta">Non è una bolletta</button><button type="button" class="btn btn-primary" data-az="conferma">Conferma</button></div>';}
@@ -2311,9 +2316,13 @@ document.addEventListener('DOMContentLoaded', function(){
    fetch(DFN+'?t='+encodeURIComponent(pass())+'&lead='+lid,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){disegnaDocs((j&&j.documenti)||[]);}).catch(function(){});}
   window.__azCaricaDocs=caricaDocs;
   function invia(files){var lid=lidAtt();if(!/^[0-9a-f-]{36}$/i.test(lid)){avvisaAz('Scegli il contatto, o salva prima il preventivo, poi carica i documenti.');return;}
-   var box=$('#azDocs');[].slice.call(files).forEach(function(f){var w=document.createElement('div');w.className='az-doc';w.innerHTML='<div class="t"><b>'+f.name.replace(/</g,'&lt;')+'</b><span class="az-chipd al">lettura in corso…</span></div>';box.appendChild(w);
+   var box=$('#azDocs'),tot=files.length,fin=0,okN=0;
+   function fatto(ok){fin++;if(ok)okN++;if(fin<tot||okN<2)return;
+    var w=document.createElement('div');w.className='az-doc';w.innerHTML='<div class="t"><b>Rileggo insieme i '+okN+' file: spesso sono le pagine della stessa bolletta</b><span class="az-chipd al">lettura in corso…</span></div>';box.appendChild(w);
+    fetch(DFN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'rileggi_lotto',lead_id:lid,lotto:LOTTO})}).then(function(r){return r.json();}).then(function(){caricaDocs();bollette();}).catch(function(){caricaDocs();});}
+   [].slice.call(files).forEach(function(f){var w=document.createElement('div');w.className='az-doc';w.innerHTML='<div class="t"><b>'+f.name.replace(/</g,'&lt;')+'</b><span class="az-chipd al">lettura in corso…</span></div>';box.appendChild(w);
     var fr=new FileReader();fr.onload=function(){fetch(DFN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'carica',lead_id:lid,prev_id:pidAtt(),lotto:LOTTO,nome:f.name,mime:f.type||'application/octet-stream',b64:String(fr.result)})})
-     .then(function(r){return r.json();}).then(function(j){if(!j||!j.ok){w.querySelector('.az-chipd').className='az-chipd ko';w.querySelector('.az-chipd').textContent=(j&&j.errore)||'non caricato';return;}caricaDocs();}).catch(function(){w.querySelector('.az-chipd').className='az-chipd ko';w.querySelector('.az-chipd').textContent='non caricato';});};fr.readAsDataURL(f);});}
+     .then(function(r){return r.json();}).then(function(j){if(!j||!j.ok){w.querySelector('.az-chipd').className='az-chipd ko';w.querySelector('.az-chipd').textContent=(j&&j.errore)||'non caricato';fatto(false);return;}caricaDocs();fatto(true);}).catch(function(){w.querySelector('.az-chipd').className='az-chipd ko';w.querySelector('.az-chipd').textContent='non caricato';fatto(false);});};fr.readAsDataURL(f);});}
   function avvisaAz(t){if(typeof avvisaBreve==='function')avvisaBreve(t);else{var st=$('#status');if(st)st.textContent=t;}}
   var drop=$('#azDrop'),inp=$('#azFile');
   inp.addEventListener('change',function(){if(inp.files.length)invia(inp.files);inp.value='';});
@@ -2333,8 +2342,10 @@ document.addEventListener('DOMContentLoaded', function(){
    if(!(az()&&tipo==='ridotto'))return GEN0.apply(this,arguments);
    var pid=pidAtt(),gs=$('#generaStatus');
    if(!pid){gs.style.color='var(--error)';gs.textContent='Salva prima il preventivo (tab Dati Contatto).';return;}
-   gs.style.color='var(--text-muted)';gs.textContent='⏳ Offerta azienda in preparazione: dati, vincoli, calcoli e PDF… circa mezzo minuto.';
-   fetch(OFFAZ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),prev_id:pid})}).then(function(r){return r.json();}).then(function(j){
+   gs.style.color='var(--text-muted)';
+   var pre=(!$('#tx_comm').value.trim()||!$('#tx_perche').value.trim())?(gs.textContent='⏳ Scrivo i due testi sul committente (ricerca online)…',proponiTesti()):Promise.resolve();
+   pre.then(function(){gs.style.color='var(--text-muted)';gs.textContent='⏳ Offerta azienda in preparazione: dati, vincoli, calcoli e PDF… circa mezzo minuto.';return fetch(OFFAZ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),prev_id:pid})}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.blocco){gs.style.color='';gs.innerHTML='<div style="padding:10px 12px;border-radius:10px;background:#FEF3C7;border:1px solid #F5C98A;color:#7C2D12;font-size:13px;line-height:1.5"><b>Offerta non generata: con questi dati non si fa.</b><br>'+String(j.errore).replace(/</g,'&lt;').replace(/ Strade: /,'<br><b>Strade:</b> ').replace(/ (A\)|B\)) /g,'<br>$1 ')+'</div>';return;}
     if(!j||!j.ok){gs.style.color='var(--error)';gs.textContent='Offerta non generata: '+((j&&j.errore)||'errore');return;}
     var u=j.url.split('?')[0]+'?v='+Date.now();window._pdfUrls=window._pdfUrls||{};window._pdfUrls.ridotto=u;
     gs.style.color='var(--success)';
@@ -2343,8 +2354,29 @@ document.addEventListener('DOMContentLoaded', function(){
     var db=$('#downloadBox');if(db)db.style.display='block';
     var dati={};Object.keys(window._pdfUrls).forEach(function(k){if(window._pdfUrls[k])dati['pdf_'+k+'_url']=window._pdfUrls[k];});
     if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(dati);
-   }).catch(function(e){gs.style.color='var(--error)';gs.textContent='Offerta non generata: '+e.message;});
+   });}).catch(function(e){gs.style.color='var(--error)';gs.textContent='Offerta non generata: '+e.message;});
   };
+  /* ---------- testi dell'offerta: due frasi ciascuno, validi da subito, correggibili ---------- */
+  var TXF='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/testi-azienda';
+  var cTx=document.createElement('section');cTx.className='pc az-larga';cTx.id='cardTesti';cTx.hidden=cBo.hidden;
+  cTx.innerHTML='<div class="ph"><span class="pi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><div><b>Testi dell\'offerta</b><small>Chi è il committente e perché il fotovoltaico: due frasi, scritte dalla ricerca online. Si correggono qui e valgono subito.</small></div><span class="px"></span></div>'
+   +'<div class="pb"><div class="tx-2"><div><label for="tx_comm">Il committente</label><textarea id="tx_comm" rows="3" placeholder="Si scrive da solo alla prima offerta, oppure con «Riscrivi»"></textarea></div><div><label for="tx_perche">Perché il fotovoltaico, in questo caso specifico</label><textarea id="tx_perche" rows="3"></textarea></div></div>'
+   +'<div class="tx-b"><span id="tx_st" class="az-src"></span><button type="button" class="btn btn-secondary" id="tx_rifai" style="font-size:12px;padding:5px 11px">Riscrivi dai dati online</button></div><div id="tx_fonti" class="az-src"></div></div>';
+  cBo.parentNode.insertBefore(cTx,cBo.nextSibling);
+  new MutationObserver(function(){cTx.hidden=cBo.hidden;}).observe(cBo,{attributes:true,attributeFilter:['hidden']});
+  var stTx=document.createElement('style');stTx.textContent='#cardTesti{grid-column:1/-1;order:5}.tx-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tx-2 textarea{width:100%;font-size:13px;line-height:1.45;padding:8px 10px;border:1px solid #E3E7EC;border-radius:9px;resize:vertical}.tx-b{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}#tx_fonti a{color:#0891B2}.az-cf{margin:12px 0 10px}@media (max-width:900px){.tx-2{grid-template-columns:1fr}}';document.head.appendChild(stTx);
+  function mostraTesti(P){P=P||{};$('#tx_comm').value=P.testo_committente||'';$('#tx_perche').value=P.testo_perche||'';
+   var F=(P.testi_fonti_json&&P.testi_fonti_json.fonti)||[];
+   $('#tx_fonti').innerHTML=F.length?'Fonti: '+F.map(function(f){return '<a href="'+String(f.url).replace(/"/g,'')+'" target="_blank" rel="noopener">'+String(f.titolo||f.url).replace(/</g,'&lt;')+'</a>';}).join(' · '):'';
+   $('#tx_st').textContent=P.testo_committente?(P.testi_approvati_da==='maschera Nuovo preventivo'?'corretti a mano':'scritti dalla ricerca online'):'';}
+  window.__azMostraTesti=mostraTesti;
+  function proponiTesti(){var pid=pidAtt();if(!pid)return Promise.resolve();$('#tx_st').textContent='scrivo i testi: ricerca online in corso…';$('#tx_rifai').disabled=true;
+   return fetch(TXF,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'proponi',prev_id:pid})}).then(function(r){return r.json();}).then(function(j){$('#tx_rifai').disabled=false;
+    if(!j||!j.ok){$('#tx_st').textContent='testi non scritti: '+((j&&j.errore)||'errore');return;}
+    mostraTesti({testo_committente:j.committente,testo_perche:j.perche,testi_fonti_json:{fonti:j.fonti}});}).catch(function(){$('#tx_rifai').disabled=false;$('#tx_st').textContent='testi non scritti';});}
+  $('#tx_rifai').addEventListener('click',function(){if(!pidAtt()){avvisaAz('Salva prima il preventivo.');return;}proponiTesti();});
+  ['tx_comm','tx_perche'].forEach(function(id){$('#'+id).addEventListener('change',function(){var pid=pidAtt(),c=$('#tx_comm').value.trim(),p=$('#tx_perche').value.trim();if(!pid||!c||!p)return;
+   $('#tx_st').textContent='salvo…';fetch(TXF,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'salva',prev_id:pid,committente:c,perche:p})}).then(function(r){return r.json();}).then(function(j){$('#tx_st').textContent=j&&j.ok?'corretti a mano · salvati':'non salvati: '+((j&&j.errore)||'errore');}).catch(function(){$('#tx_st').textContent='non salvati';});});});
   /* ---------- con «Azienda» l'elenco dei lead mostra solo le aziende ---------- */
   var AZL=null,RXAZ=/\b(s\.?\s?r\.?\s?l\.?s?|s\.?\s?p\.?\s?a\.?|s\.?\s?n\.?\s?c\.?|s\.?\s?a\.?\s?s\.?|s\.?\s?s\.?|soc\.?|società|coop|cooperativa|ditta|studio|srls)\b/i;
   function filtraLead(){var s=$('#existing_lead');if(!s)return;var on=az();
@@ -2382,7 +2414,8 @@ document.addEventListener('DOMContentLoaded', function(){
      if(P.aliquota_fiscale_pct!=null){$('#oaz_aliq').value=P.aliquota_fiscale_pct;aliqMano=true;$('#oaz_aliq_src').textContent='salvata con il preventivo';}
      if(P.tipo_agevolazione==='iperammortamento'&&iper){iper.checked=true;}
      var det=$('#oaz_det');det.checked=!!P.mostra_dettaglio_economico;$('#oaz_righe').innerHTML='';(P.dettaglio_voci_json||[]).forEach(function(v){voce(v.voce,v.importo!=null?String(v.importo):'');});$('#oaz_voci').hidden=!det.checked;somma();
-     if(P.gas_smc){var g=$('#oaz_smc');g.value=P.gas_smc;g.dataset.mano='1';}}
+     if(P.gas_smc){var g=$('#oaz_smc');g.value=P.gas_smc;g.dataset.mano='1';}
+     segCf(P.consumi_fonte==='manuale'?'manuale':'bolletta');if(window.__azMostraTesti)window.__azMostraTesti(P);}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
   var psel=$('#prevSelect');if(psel)psel.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
@@ -2433,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});
    if(!costoMano){var q=el&&el.quota_consumi_eur_kwh!=null?Number(el.quota_consumi_eur_kwh)+Number(el.accisa_eur_kwh||0):null;$('#oaz_costo').value=q!=null?q.toFixed(4):'';$('#oaz_costo_src').textContent=q!=null?'dalla bolletta: quota consumi + accisa, senza IVA':'arriva dalla bolletta elettrica';}
    var ip=iper&&iper.checked;$('#oaz105').hidden=!ip;if(!ip)return;
-   var kwhE=(el&&el.kwh_anno)?Number(el.kwh_anno):n(($('#fv_consumi_kwh')||{}).value),fonteE=(el&&el.kwh_anno)?'bolletta'+(el.fornitore?' '+el.fornitore:''):'consumi scritti in Prodotti';
+   var usaB=cfonte()!=='manuale'&&el&&el.kwh_anno,kwhE=usaB?Number(el.kwh_anno):(n(($('#fv_consumi_kwh')||{}).value)||(el&&el.kwh_anno?Number(el.kwh_anno):0)),fonteE=usaB?'bolletta'+(el.fornitore?' '+el.fornitore:''):'consumi scritti in Prodotti';
    var gi=$('#oaz_smc');if(!gi.dataset.mano){gi.value=te&&te.quantita_anno?Number(te.quantita_anno):'';}$('#oaz_smc_src').textContent=gi.dataset.mano?'scritto a mano':(te?'dalla bolletta del gas':'senza bolletta: scrivilo se lo sai');var smc=n(gi.value);var out=$('#v105c');
    var resa=n(($('#resa_kwh_kwp_input')||{}).value),stima=false;if(!resa){var la=n(($('#map_lat')||{}).value),lo=n(($('#map_lon')||{}).value),kk=la.toFixed(4)+','+lo.toFixed(4);if(la&&lo){if(PVR[kk]){resa=PVR[kk];stima=true;}else if(PVR[kk]!==0){PVR[kk]=0;fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/pvgis-resa?lat='+la+'&lon='+lo).then(function(r){return r.json();}).then(function(j){if(j.ok){PVR[kk]=j.resa_kwh_kwp;ricalcola();}}).catch(function(){});}}}var rid=n($('#oaz_rid').value)/100,netta=resa*(1-rid),kwp=n(($('[name="fv_kwp"]')||{}).value);
    var mod=MOD[($('#fv_pannello')||{}).value]||null;
@@ -2456,6 +2489,9 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<button type="button" class="btn btn-primary" disabled style="opacity:.55;cursor:not-allowed;margin-top:8px;width:100%" title="La generazione delle due offerte arriva con il motore del preventivo aziende">Genera offerte alternative A e B</button>';
    }
   $('#oaz_smc').addEventListener('input',function(){this.dataset.mano=this.value?'1':'';ricalcola();});
+  function cfonte(){var b=$('#az_cfonte button.on');return b?b.dataset.v:'bolletta';}
+  function segCf(v){$$('#az_cfonte button').forEach(function(x){x.classList.toggle('on',x.dataset.v===v);});$('#az_cfonte_src').textContent=v==='manuale'?'quelli scritti in Prodotti («Consumi annui»): la bolletta resta, ma non entra nei calcoli':'quelli della bolletta confermata';ricalcola();}
+  $('#az_cfonte').addEventListener('click',function(e){var b=e.target.closest('button');if(b)segCf(b.dataset.v);});
   /* se il salvataggio è bloccato da un campo non valido, lo si dice e si porta il commerciale sul campo (prima il blocco era muto) */
   var frm=$('#leadForm')||document.forms[0],avvisato=0;
   if(frm)frm.addEventListener('invalid',function(e){var el=e.target;if(Date.now()-avvisato<800)return;avvisato=Date.now();
@@ -2473,7 +2509,7 @@ document.addEventListener('DOMContentLoaded', function(){
      codice_sdi:sv('az_sdi').toUpperCase(),pec:sv('az_pec'),email_amministrazione:sv('az_mailamm'),referente:sv('az_referente'),referente_ruolo:sv('az_ruolo'),
      legale:{cognome:sv('az_lrcog'),nome:sv('az_lrnom'),cf:sv('az_lrcf').toUpperCase()}},
     preventivo:{con_iperammortamento:!!(iper&&iper.checked),riduzione_prudenziale_pct:n($('#oaz_rid').value),aliquota_fiscale_pct:$('#oaz_aliq').value===''?null:n($('#oaz_aliq').value),
-     mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null}};}
+     mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,consumi_fonte:cfonte(),gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null}};}
   var F0=window.fetch;
   window.fetch=function(u,o){var p=F0.apply(this,arguments);
    if(typeof u==='string'&&u.indexOf('/webhook/preventivo-submit')>=0&&az()){p.then(function(r){return r.clone().json();}).then(function(j){
