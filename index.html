@@ -749,18 +749,28 @@ async function inviaMailPdf(url, nome) {
     gs.style.color='var(--text-muted)';
     gs.innerHTML='⏳ Generazione '+label+'... <span id="gsTimer">60</span>s';
     fetch(GENERA_EP+'?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo).catch(function(){});
-    var secs=60;
+    /* PORTALE NEXT-110 (Sante 28/10): il file ha sempre lo stesso nome, quindi l'indirizzo c'e' gia' prima che il nuovo sia pronto.
+       Si aspetta che il file nello storage sia piu' recente della richiesta, poi lo si mette nei «PDF gia' generati». */
+    var t0=Date.now();
+    var secs=90;
     var iv=setInterval(function(){secs--;var el=document.getElementById('gsTimer');if(el)el.textContent=secs;if(secs<=0)clearInterval(iv);},1000);
     var poll=function(){
       fetch('https://n8n.srv1030489.hstgr.cloud/webhook/get-pdf-url?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo)
         .then(function(r){return r.ok?r.json():null;})
         .then(function(j){
           if(j&&j.url){
-            clearInterval(iv);
-            window._pdfUrls[tipo]=j.url;
-            gs.style.color='var(--success)';
-            gs.innerHTML='✅ '+label+' pronto — <a href="'+j.url+'" target="_blank" style="color:var(--teal);font-weight:600">📄 Apri PDF</a>';
-            document.getElementById('downloadBox').style.display='block';
+            return fetch(j.url,{method:'HEAD',cache:'no-store'}).then(function(h){var lm=Date.parse(h.headers.get('last-modified')||'');
+              var nuovo=isNaN(lm)?(Date.now()-t0>25000):(lm>t0-3000);
+              if(!nuovo){if(secs>0)setTimeout(poll,3000);return;}
+              clearInterval(iv);
+              var u=j.url.split('?')[0]+'?v='+Date.now();
+              window._pdfUrls[tipo]=u;
+              gs.style.color='var(--success)';
+              gs.innerHTML='✅ '+label+' pronto — <a href="'+u+'" target="_blank" style="color:var(--teal);font-weight:600">📄 Apri PDF</a>';
+              document.getElementById('downloadBox').style.display='block';
+              var dati={};Object.keys(window._pdfUrls).forEach(function(k){if(window._pdfUrls[k])dati['pdf_'+k+'_url']=window._pdfUrls[k];});
+              if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(dati);
+            }).catch(function(){if(secs>0)setTimeout(poll,3000);});
           } else if(secs>0){setTimeout(poll,3000);}
           else{gs.style.color='var(--error)';gs.textContent='PDF non pronto. Ripremi il tasto.';}
         }).catch(function(){});
