@@ -1909,7 +1909,7 @@ document.addEventListener('DOMContentLoaded', function(){
  function n(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
  function it(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
  function az(){return window.__tipoContatto&&window.__tipoContatto()==='azienda';}
- var MOD={},GAS=4.4706,BOLL=[];
+ var MOD={},GAS=4.4706,BOLL=[],PVR={};
  function via(){
   var cAz=$('#cardAzienda'),cLr=$('#cardLegale');if(!cAz||!cLr||!window.__tipoContatto)return setTimeout(via,150);
   /* ---------- moduli dal catalogo: categoria ENEA, e quelli che mancano nella tendina ---------- */
@@ -1983,7 +1983,7 @@ document.addEventListener('DOMContentLoaded', function(){
   c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip" title="Si salverà con il prossimo passo">in arrivo</span></span></div><div class="pb">'
    +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="10" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
    +'<h4>Parametri dell\'offerta</h4><div class="pg">'
-   +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="1" value="0"><div class="az-src">sulla produzione stimata</div></div>'
+   +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="1" value="5"><div class="az-src">sulla produzione stimata</div></div>'
    +'<div><label for="oaz_aliq">Aliquota fiscale %</label><input type="number" id="oaz_aliq" min="0" max="60" step="0.1"><div class="az-src" id="oaz_aliq_src"></div></div>'
    +'<div><label for="oaz_costo">Costo evitato €/kWh</label><input type="number" id="oaz_costo" min="0" step="0.001"><div class="az-src" id="oaz_costo_src"></div></div></div>'
    +'<h4>Dettaglio economico</h4><label class="swl"><input type="checkbox" class="sw-in" id="oaz_det"> Mostra le voci con gli importi nell\'offerta</label>'
@@ -2001,7 +2001,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var ok=Math.abs(s-tot)<0.5;el.className='som '+(ok?'ok':'ko');el.textContent=ok?'✓ Somma delle voci '+it(s)+' € = Totale FV':'Somma delle voci '+it(s)+' € · Totale FV '+it(tot)+' €: differenza '+it(s-tot)+' €';}
   T.addEventListener('input',function(e){if(e.target.name==='fv_totale_eur')somma();if(/fv_consumi_kwh|fv_kwp|resa_kwh_kwp/.test(e.target.name||e.target.id||''))ricalcola();});
   T.addEventListener('change',function(e){if(e.target.name==='fv_pannello'||e.target.name==='fv_kwp')ricalcola();});
-  function ricalcola(){var box=$('#v105');if(!box||!az())return;
+  function ricalcola(){var box=$('#v105');if(!box||!az())return;if($('#oaz_rid').value==='')$('#oaz_rid').value='5';
    /* aliquota e costo evitato proposti */
    var f=forma.value,cap=['srl','srls','spa','sapa','coop'].indexOf(f)>=0;
    if(!aliqMano){$('#oaz_aliq').value=f?(cap?'24':'35'):'';$('#oaz_aliq_src').textContent=f?(cap?'IRES 24%: la maggiorazione non vale per l\'IRAP':'IRPEF dei soci, marginale tipica: da verificare'):'scegli la forma giuridica';}
@@ -2010,7 +2010,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var ip=iper&&iper.checked;$('#oaz105').hidden=!ip;if(!ip)return;
    var kwhE=(el&&el.kwh_anno)?Number(el.kwh_anno):n(($('#fv_consumi_kwh')||{}).value),fonteE=(el&&el.kwh_anno)?'bolletta'+(el.fornitore?' '+el.fornitore:''):'consumi scritti in Prodotti';
    var gi=$('#oaz_smc');if(!gi.dataset.mano){gi.value=te&&te.quantita_anno?Number(te.quantita_anno):'';}$('#oaz_smc_src').textContent=gi.dataset.mano?'scritto a mano':(te?'dalla bolletta del gas':'senza bolletta: scrivilo se lo sai');var smc=n(gi.value);var out=$('#v105c');
-   var resa=n(($('#resa_kwh_kwp_input')||{}).value),rid=n($('#oaz_rid').value)/100,netta=resa*(1-rid),kwp=n(($('[name="fv_kwp"]')||{}).value);
+   var resa=n(($('#resa_kwh_kwp_input')||{}).value),stima=false;if(!resa){var la=n(($('#map_lat')||{}).value),lo=n(($('#map_lon')||{}).value),kk=la.toFixed(4)+','+lo.toFixed(4);if(la&&lo){if(PVR[kk]){resa=PVR[kk];stima=true;}else if(PVR[kk]!==0){PVR[kk]=0;fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/pvgis-resa?lat='+la+'&lon='+lo).then(function(r){return r.json();}).then(function(j){if(j.ok){PVR[kk]=j.resa_kwh_kwp;ricalcola();}}).catch(function(){});}}}var rid=n($('#oaz_rid').value)/100,netta=resa*(1-rid),kwp=n(($('[name="fv_kwp"]')||{}).value);
    var mod=MOD[($('#fv_pannello')||{}).value]||null;
    if(!kwhE){box.className='v105 nd';out.innerHTML='Servono i consumi elettrici: dalla bolletta o dal campo «Consumi annui».';return;}
    var term=smc*GAS,fab=kwhE+term,lim=fab*1.05;
@@ -2020,7 +2020,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var gas='';
    if(!resa){box.className='v105 nd';out.innerHTML=gas+h+'</table>Manca la producibilità del sito: salva la posizione in Mappa tetto per avere i dati PVGIS.';return;}
    var kmax=lim/netta,prod=kwp*netta;
-   h+='<tr><td>Producibilità del sito'+(rid?' (ridotta del '+it(rid*100)+'%)':'')+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
+   h+='<tr><td>Producibilità del sito'+(stima?' — stima PVGIS sud 30°, da affinare in Mappa tetto':'')+(rid?' (ridotta del '+it(rid*100)+'%)':'')+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
    var catTxt='';if(mod){if(!mod.categoria_enea)catTxt='<div class="msg">⚠ Categoria ENEA del modulo '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp non registrata nel catalogo: verificala sul registro prima di offrire l\'iperammortamento.</div>';else if(mod.categoria_enea==='A')catTxt='<div class="msg">⚠ '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp è in categoria A del registro ENEA: non dà diritto all\'iperammortamento.</div>';}
    if(!kwp){box.className='v105 nd';out.innerHTML=gas+h+catTxt+'Scrivi la potenza per la verifica.';return;}
    if(prod<=lim){box.className='v105 ok';out.innerHTML=gas+h+'<div class="msg">✓ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: '+it(100*prod/fab)+'% del fabbisogno, dentro il limite.</div>'+catTxt;return;}
@@ -2032,6 +2032,8 @@ document.addEventListener('DOMContentLoaded', function(){
    }
   $('#oaz_smc').addEventListener('input',function(){this.dataset.mano=this.value?'1':'';ricalcola();});
   window.__aziendaRicalcola=ricalcola;
+  $$('.tab-btn').forEach(function(b){b.addEventListener('click',function(){setTimeout(ricalcola,100);});});
+  var ps=$('#prevSelect');if(ps)ps.addEventListener('change',function(){setTimeout(ricalcola,800);});
   agev();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,50);});else setTimeout(via,50);
