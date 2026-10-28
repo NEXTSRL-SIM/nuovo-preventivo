@@ -2267,7 +2267,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var cBo=document.createElement('section');cBo.className='pc az-larga';cBo.id='cardBollette';cBo.hidden=cLr.hidden;
   cBo.innerHTML='<div class="ph"><span class="pi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><div><b>Bollette, documenti e profilo fiscale</b><small>Consumi per il calcolo dell\'offerta e trattamento fiscale dell\'azienda</small></div><span class="px"></span></div><div class="pb"></div>';
   var hs=blk.querySelectorAll('h4'),sx=document.createElement('div'),dx=document.createElement('div');sx.className='az-bo-sx';dx.className='az-bo-dx';
-  if(hs.length===2){var n=blk.firstChild,dest=sx;while(n){var nx=n.nextSibling;if(n===hs[1])dest=dx;dest.appendChild(n);n=nx;}blk.appendChild(sx);blk.appendChild(dx);blk.classList.add('az-bo-2');}
+  if(hs.length===2){var nd=blk.firstChild,dest=sx;while(nd){var nx=nd.nextSibling;if(nd===hs[1])dest=dx;dest.appendChild(nd);nd=nx;}blk.appendChild(sx);blk.appendChild(dx);blk.classList.add('az-bo-2');}
   $('.pb',cBo).appendChild(blk);
   cLr.parentNode.insertBefore(cBo,cLr.nextSibling);
   new MutationObserver(function(){cBo.hidden=cLr.hidden;}).observe(cLr,{attributes:true,attributeFilter:['hidden']});
