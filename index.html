@@ -2553,8 +2553,13 @@ document.addEventListener('DOMContentLoaded', function(){
    bt.addEventListener('click',function(){var b=bt,es=$('#generaStatus'),pid=pidAtt();
     var scrivi=function(h){if(es){es.style.color='';es.innerHTML=h;}};
     if(!pid){scrivi('<span style="color:var(--error)">Salva prima il preventivo (tab Dati Contatto).</span>');return;}
-    if(!AB.attivo){scrivi('<span style="color:var(--error)">Le offerte alternative servono quando, con l\'iperammortamento, la produzione supera il 105%: qui il limite è rispettato, basta il «Preventivo ridotto».</span>');return;}
-    var V=[{sigla:'A',modulo:AB.mA,n_moduli:n(AB.nA),totale_eur:n(AB.pA),iper:true},{sigla:'B',modulo:AB.mB,n_moduli:n(AB.nB),totale_eur:n(AB.pB),iper:false}];
+    /* PORTALE NEXT-110 (Sante 29/10 17:38): A e B si fanno sempre con l'iperammortamento acceso. Oltre il 105%: A ritarata al limite, B a potenza piena.
+       Dentro il 105%: A è il preventivo così com'è (3SUN, iperammortamento), B è l'impianto normale del riquadro «Confronto nell'offerta» (più grande, prezzo suo, ordinario). */
+    var V;
+    if(AB.attivo)V=[{sigla:'A',modulo:AB.mA,n_moduli:n(AB.nA),totale_eur:n(AB.pA),iper:true},{sigla:'B',modulo:AB.mB,n_moduli:n(AB.nB),totale_eur:n(AB.pB),iper:false}];
+    else{var codA=($('#fv_pannello')||{}).value||'',mA0=MOD[codA],kwA=n(($('[name="fv_kwp"]')||{}).value),totA=n(($('[name="fv_totale_eur"]')||{}).value);
+     if(!CONF||!CONF.mB||!(n(CONF.nB)>0)||!(n(CONF.pB)>0)){scrivi('<span style="color:var(--error)">Per l\'offerta B serve l\'impianto normale: scegli modulo, numero di moduli e prezzo nel riquadro «Confronto nell\'offerta» della verifica del 105% (tab Prodotti), poi salva.</span>');return;}
+     V=[{sigla:'A',modulo:codA,n_moduli:mA0&&kwA?Math.round(kwA*1000/mA0.potenza_wp):0,totale_eur:totA,iper:true},{sigla:'B',modulo:CONF.mB,n_moduli:n(CONF.nB),totale_eur:n(CONF.pB),iper:false}];}
     if(V.some(function(v){return !v.modulo||!(v.n_moduli>0)||!(v.totale_eur>0);})){scrivi('<span style="color:var(--error)">Per tutte e due servono modulo, numero di moduli e prezzo: completali nella verifica del 105% (tab Prodotti).</span>');return;}
     b.disabled=true;var righe={A:'⏳ A in preparazione…',B:'in attesa'};var mostra=function(){scrivi('<div>'+righe.A+'</div><div>'+righe.B+'</div>');};mostra();
     var una=function(v){return fetch(OFFAZ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),prev_id:pid,variante:v})}).then(function(r){return r.json();}).then(function(j){
