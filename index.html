@@ -590,6 +590,27 @@ function mostraPdfSalvati(dati) {
   document.getElementById('pdfSalvatiBox').style.display = 'block';
 }
 
+/* PORTALE NEXT-110 (Sante 29/10 18:30): «PDF già generati» elenca TUTTI i PDF del preventivo presenti in archivio
+   (solo offerta, ridotto, alternative A e B, revisioni), dal più recente; si aggiorna da solo dopo ogni generazione. */
+function pdfTipo(nome){var s=String(nome||'');var v=(s.match(/-([AB])\s+(SP|PR|PE)\.pdf$/i)||[])[1];var f=(s.match(/\s(SP|PR|PE)\.pdf$/i)||[])[1]||'';f=f.toUpperCase();
+ var t=f==='SP'?'Solo offerta':f==='PE'?'Preventivo esteso':'Preventivo ridotto';var rv=(s.match(/\bRev\.?\s*(\d+)/i)||[])[1];
+ return (v?'Offerta alternativa '+v.toUpperCase()+' · ':'')+t+(/^OFFERTA FV AZIENDA/i.test(s)?' · azienda':'')+(rv?' · rev. '+rv:'');}
+window.__pdfArchivio=function(){var pid=(document.getElementById('last_saved_id')||{}).value||(document.getElementById('existing_prev_id')||{}).value||'';
+ if(!/^[0-9a-f-]{36}$/i.test(pid))return;var pass='';try{pass=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}
+ fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo?cosa=pdf&prev='+pid+'&t='+encodeURIComponent(pass),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+  if(!j||!j.ok||!Array.isArray(j.pdf)||!j.pdf.length)return;var lista=document.getElementById('pdfSalvatiList');if(!lista)return;lista.innerHTML='';
+  j.pdf.forEach(function(f){var d=f.quando?new Date(f.quando):null,qd=d?d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
+   var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+   var nm=String(f.nome).replace(/'/g,"\\'");
+   row.innerHTML='<span style="flex:1;font-size:11.5px;color:#444"><b>'+pdfTipo(f.nome)+'</b><br><span style="color:#888;font-size:10.5px">'+qd+'</span></span>'
+    +'<a href="'+f.url+'?v='+Date.now()+'" target="_blank" style="background:var(--teal);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none">⬇ Scarica</a>'
+    +'<button onclick="inviaMailPdf(\''+f.url+'\',\''+nm+'\')" style="background:var(--teal-bg);color:var(--teal);border:1.5px solid var(--teal-border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">✉ Invia email</button>';
+   lista.appendChild(row);});
+  document.getElementById('pdfSalvatiBox').style.display='block';}).catch(function(){});};
+(function(){var orig=window.mostraPdfSalvati;window.mostraPdfSalvati=function(d){try{orig&&orig(d);}catch(e){}setTimeout(window.__pdfArchivio,300);};
+ var tent=0;(function osserva(){var gs=document.getElementById('generaStatus');if(!gs){if(++tent<50)setTimeout(osserva,200);return;}
+  var t=null;new MutationObserver(function(){clearTimeout(t);t=setTimeout(window.__pdfArchivio,1500);}).observe(gs,{childList:true,subtree:true,characterData:true});})();})();
+
 async function inviaMailPdf(url, nome) {
   var email = await chiediTesto('Invia il PDF per email','Indirizzo email del destinatario','nome@esempio.it');
   if (!email) return;
