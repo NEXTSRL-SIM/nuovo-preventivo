@@ -138,6 +138,7 @@ fieldset{border-radius:12px!important}
 .opt{border-radius:999px!important}.opt:hover,.opt-cliente:hover{border-color:var(--accent)!important}
 .opt-cliente{border-radius:999px!important}
 .product-section{background:var(--surface)!important;border-color:var(--teal-border)!important;border-radius:12px!important}
+#generaBox{display:none!important}/* PORTALE NEXT-110 (Sante 29/10): il riquadro vecchio resta sempre nascosto, si usa la scheda «Genera report preventivo» */
 #generaBox{background:var(--surface)!important;border:1.5px solid var(--accent)!important;box-shadow:0 0 0 3px var(--accent-bg)!important;border-radius:14px!important}
 .btn{border-radius:999px!important;font-weight:700!important}
 .btn-primary:hover{background:#0E7490!important;box-shadow:0 4px 12px rgba(8,145,178,.25)!important}
@@ -2548,7 +2549,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   /* il tasto sta dove si generano i preventivi, accanto a «Preventivo ridotto»; si vede con «Azienda» e l'iperammortamento acceso */
   var rowG=$('#generaBox .genera-row');
-  if(rowG){var bt=document.createElement('button');bt.type='button';bt.className='btn-genera ridotto';bt.id='oazAB';bt.style.display='none';bt.textContent='🔀 Offerte alternative A e B';rowG.appendChild(bt);
+  if(rowG){var bt=document.createElement('button');bt.type='button';bt.className='btn-genera ridotto';bt.id='oazAB';bt.style.display='none';bt.textContent='🔀 Offerte alternative A e B';/* PORTALE NEXT-110 (Sante 29/10): il tasto sta nella scheda nuova, accanto a «Genera PDF» */(function mettiAB(k){var gp=[].slice.call(document.querySelectorAll('#tabGenera .pf .btn-primary')).find(function(x){return /Genera PDF/.test(x.textContent);});if(gp){bt.className='btn btn-secondary';gp.parentNode.insertBefore(bt,gp);}else if(k<30)setTimeout(function(){mettiAB(k+1);},200);else rowG.appendChild(bt);})(0);
    bt.addEventListener('click',function(){var b=bt,es=$('#generaStatus'),pid=pidAtt();
     var scrivi=function(h){if(es){es.style.color='';es.innerHTML=h;}};
     if(!pid){scrivi('<span style="color:var(--error)">Salva prima il preventivo (tab Dati Contatto).</span>');return;}
