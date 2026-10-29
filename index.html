@@ -1328,7 +1328,11 @@ var coordBar=document.getElementById('mapCoordText');coordBar.textContent='⏳ S
         var pvgisKwhEl=document.getElementById('display_pvgis_kwh');
         if(pvgisHidden)pvgisHidden.value=kwhAnno;
         if(pvgisKwhEl)pvgisKwhEl.textContent=kwhAnno.toLocaleString('it-IT')+' kWh/anno totali';
-        if(kwpVal>0&&resaEl){var resa=Math.round(kwhAnno/kwpVal);resaEl.textContent=resa.toLocaleString('it-IT');if(resaHidden)resaHidden.value=resa;}
+        if(kwpVal>0&&resaEl){var resa=Math.round(kwhAnno/kwpVal);resaEl.textContent=resa.toLocaleString('it-IT');if(resaHidden)resaHidden.value=resa;
+          /* PORTALE NEXT-110 (29/10): la resa per kWp resta nel preventivo, così la produzione segue la potenza anche se cambia dopo */
+          if(pid){var pr='';try{pr=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}
+           fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pr,azione:'resa',prev_id:pid,resa:kwhAnno/kwpVal})}).catch(function(){});}
+          if(window.__aziendaRicalcola)setTimeout(window.__aziendaRicalcola,50);}
         else if(resaEl){resaEl.textContent='— (inserire kWp)';}
       } else{mrStatus.textContent='PVGIS: '+(d.errore||'risposta non valida');}
     }).catch(function(e){document.getElementById('mr_status').textContent='Errore PVGIS: '+e.message;});
@@ -2418,6 +2422,9 @@ document.addEventListener('DOMContentLoaded', function(){
      if(P.tipo_agevolazione==='iperammortamento'&&iper){iper.checked=true;}
      var det=$('#oaz_det');det.checked=!!P.mostra_dettaglio_economico;$('#oaz_righe').innerHTML='';(P.dettaglio_voci_json||[]).forEach(function(v){voce(v.voce,v.importo!=null?String(v.importo):'');});$('#oaz_voci').hidden=!det.checked;somma();
      if(P.gas_smc){var g=$('#oaz_smc');g.value=P.gas_smc;g.dataset.mano='1';}
+     /* PORTALE NEXT-110 (29/10 17:30): resa per kWp salvata da Mappa tetto e impianto normale del confronto */
+     if(P.pvgis_resa_kwh_kwp){var rh=$('#resa_kwh_kwp_input');if(rh)rh.value=P.pvgis_resa_kwh_kwp;var rd=$('#display_resa_kwh_kwp');if(rd)rd.textContent=Math.round(P.pvgis_resa_kwh_kwp).toLocaleString('it-IT');}
+     CONF=P.offerta_confronto?{mB:P.offerta_confronto.modulo,nB:P.offerta_confronto.n_moduli,pB:P.offerta_confronto.totale_eur}:null;CONFtoccato=false;
      segCf(P.consumi_fonte==='manuale'?'manuale':'bolletta');if(window.__azMostraTesti)window.__azMostraTesti(P);}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
@@ -2471,7 +2478,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var ip=iper&&iper.checked;$('#oaz105').hidden=!ip;mostraAB();AB.attivo=false;if(!ip)return;
    var usaB=cfonte()!=='manuale'&&el&&el.kwh_anno,kwhE=usaB?Number(el.kwh_anno):(n(($('#fv_consumi_kwh')||{}).value)||(el&&el.kwh_anno?Number(el.kwh_anno):0)),fonteE=usaB?'bolletta'+(el.fornitore?' '+el.fornitore:''):'consumi scritti in Prodotti';
    var gi=$('#oaz_smc');if(!gi.dataset.mano){gi.value=te&&te.quantita_anno?Number(te.quantita_anno):'';}$('#oaz_smc_src').textContent=gi.dataset.mano?'scritto a mano':(te?'dalla bolletta del gas':'senza bolletta: scrivilo se lo sai');var smc=n(gi.value);var out=$('#v105c');
-   var resa=n(($('#resa_kwh_kwp_input')||{}).value),stima=false;if(!resa){var la=n(($('#map_lat')||{}).value),lo=n(($('#map_lon')||{}).value),kk=la.toFixed(4)+','+lo.toFixed(4);if(la&&lo){if(PVR[kk]){resa=PVR[kk];stima=true;}else if(PVR[kk]!==0){PVR[kk]=0;fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/pvgis-resa?lat='+la+'&lon='+lo).then(function(r){return r.json();}).then(function(j){if(j.ok){PVR[kk]=j.resa_kwh_kwp;ricalcola();}}).catch(function(){});}}}var rid=n($('#oaz_rid').value)/100,netta=resa*(1-rid),kwp=n(($('[name="fv_kwp"]')||{}).value);
+   var resa=n(($('#resa_kwh_kwp_input')||{}).value),stima=false;if(!resa){var la=n(($('#map_lat')||{}).value),lo=n(($('#map_lon')||{}).value),kk=la.toFixed(4)+','+lo.toFixed(4);if(la&&lo){if(PVR[kk]){resa=PVR[kk];stima=true;}else if(PVR[kk]!==0){PVR[kk]=0;fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/pvgis-resa?lat='+la+'&lon='+lo).then(function(r){return r.json();}).then(function(j){if(j.ok){PVR[kk]=j.resa_kwh_kwp;ricalcola();}}).catch(function(){});}}}var rid=n($('#oaz_rid').value)/100,netta=resa/* PORTALE NEXT-110 (Sante 29/10): il 105% si verifica SENZA la riduzione prudenziale */,kwp=n(($('[name="fv_kwp"]')||{}).value);
    var mod=MOD[($('#fv_pannello')||{}).value]||null;
    if(!kwhE){box.className='v105 nd';out.innerHTML='Servono i consumi elettrici: dalla bolletta o dal campo «Consumi annui».';return;}
    var term=smc*GAS,fab=kwhE+term,lim=fab*1.05;
@@ -2481,12 +2488,12 @@ document.addEventListener('DOMContentLoaded', function(){
    var gas='';
    if(!resa){box.className='v105 nd';out.innerHTML=gas+h+'</table>Manca la producibilità del sito: salva la posizione in Mappa tetto per avere i dati PVGIS.';return;}
    var kmax=lim/netta,prod=kwp*netta;window.__azCalcolo={fabbisogno_kwh:Math.round(fab),fabbisogno_termico_kwhe:Math.round(term),limite_105_kwh:Math.round(lim),kwp_massimo_105:Math.round(kmax*100)/100,produzione_netta_kwh:Math.round(prod)};
-   h+='<tr><td>Producibilità del sito'+(stima?' — stima PVGIS sud 30°, da affinare in Mappa tetto':'')+(rid?' (ridotta del '+it(rid*100)+'%)':'')+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
+   h+='<tr><td>Producibilità del sito'+(stima?' — stima PVGIS sud 30°, da affinare in Mappa tetto':'')+' — senza riduzione prudenziale'+'</td><td>'+it(netta)+' kWh/kWp</td></tr><tr class="tot"><td>Potenza massima</td><td>'+it(kmax,2)+' kWp</td></tr></table>';
    var catTxt='';if(mod){if(!mod.categoria_enea)catTxt='<div class="msg">⚠ Categoria ENEA del modulo '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp non registrata nel catalogo: verificala sul registro prima di offrire l\'iperammortamento.</div>';else if(mod.categoria_enea==='A')catTxt='<div class="msg">⚠ '+mod.brand+' '+Math.round(mod.potenza_wp)+' Wp è in categoria A del registro ENEA: non dà diritto all\'iperammortamento.</div>';}
    if(!kwp){box.className='v105 nd';out.innerHTML=gas+h+catTxt+'Scrivi la potenza per la verifica.';return;}
-   if(prod<=lim){box.className='v105 ok';out.innerHTML=gas+h+'<div class="msg">✓ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: '+it(100*prod/fab)+'% del fabbisogno, dentro il limite.</div>'+catTxt;return;}
+   if(prod<=lim){box.className='v105 ok';out.innerHTML=gas+h+'<div class="msg">✓ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: '+it(100*prod/fab)+'% del fabbisogno, dentro il limite.</div>'+notaP(prod,netta,kwp,rid)+catTxt+cfForm(kwp);return;}
    var wp=mod?Number(mod.potenza_wp):0,nm=wp?Math.floor(kmax*1000/wp):0;
-   box.className='v105 ko';out.innerHTML=gas+h+'<div class="msg">⚠ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: il '+it(100*prod/fab)+'% del fabbisogno.</div>'+catTxt
+   box.className='v105 ko';out.innerHTML=gas+h+'<div class="msg">⚠ '+it(kwp,2)+' kWp producono '+it(prod)+' kWh: il '+it(100*prod/fab)+'% del fabbisogno.</div>'+notaP(prod,netta,kwp,rid)+catTxt
     +abForm(mod,wp,nm,kwp,kmax);
    }
   $('#oaz_smc').addEventListener('input',function(){this.dataset.mano=this.value?'1':'';ricalcola();});
@@ -2494,6 +2501,16 @@ document.addEventListener('DOMContentLoaded', function(){
      A: potenza riportata al limite, con iperammortamento (modulo di categoria B o C). B: potenza piena senza iperammortamento,
      con un modulo scelto qui. Moduli e prezzo di ciascuna si scrivono qui: il preventivo salvato non cambia, escono due PDF a parte. */
   var AB={};
+  /* PORTALE NEXT-110 (Sante 29/10 17:30): nota sul calcolo e impianto normale per il confronto nell'offerta */
+  var CONF=null,CONFtoccato=false;
+  function notaP(prod,resa,kwp,rid){return '<div class="msg" style="font-size:11.5px;font-weight:500">Calcolo fatto su una produzione di '+it(prod)+' kWh ('+it(resa)+' kWh/kWp × '+it(kwp,2)+' kWp), senza considerare l\'ulteriore riduzione prudenziale'+(rid?' del '+it(rid*100)+'%':'')+', che vale solo per i conti economici dell\'offerta.</div>';}
+  function cfForm(kwp){var noC=function(m){return !/^[BC]$/.test(String(m.categoria_enea||''))&&m.tipo!=='inverter';};
+   if(!CONF){var cand=Object.keys(MOD).map(function(k){return MOD[k];}).filter(noC).sort(function(a,b){return b.potenza_wp-a.potenza_wp;});var m=cand[0];CONF={mB:m?m.codice_preventivo:'',nB:m?Math.round(kwp*1000/m.potenza_wp):'',pB:''};}
+   var mm=MOD[CONF.mB],kB=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';
+   return '<div class="ab2" style="grid-template-columns:1fr"><div class="abx"><b>Confronto nell\'offerta · impianto normale, senza iperammortamento</b><small>modulo non di categoria C, ammortamento ordinario · nel preventivo ridotto esce la tabella «con l\'iperammortamento o con un impianto normale». Senza prezzo il confronto non compare.</small>'
+    +'<label>Modulo<select data-cf="mB">'+modOpt(noC,CONF.mB)+'</select></label>'
+    +'<div class="abr"><label>Moduli<input type="number" min="1" step="1" data-cf="nB" value="'+CONF.nB+'"></label><span class="abk" id="cfkB">'+kB+'</span></div>'
+    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-cf="pB" value="'+CONF.pB+'"></label></div></div>';}
   function eur(v){return Math.round(v).toLocaleString('it-IT');}
   function modOpt(filtro,sel){return Object.keys(MOD).map(function(k){return MOD[k];}).filter(filtro).sort(function(a,b){return a.potenza_wp-b.potenza_wp;})
     .map(function(m){return '<option value="'+m.codice_preventivo+'"'+(m.codice_preventivo===sel?' selected':'')+'>'+m.brand+' '+Math.round(m.potenza_wp)+' Wp — '+String(m.modello).replace(/\s*\d+\s*Wp$/i,'')+(m.categoria_enea?' · cat. '+m.categoria_enea:' · cat. non registrata')+'</option>';}).join('');}
@@ -2517,6 +2534,10 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<div class="abesito"><small>Qui si preparano solo i dati. Le due offerte si generano nella scheda di generazione con il tasto «Offerte alternative A e B»: escono due PDF a parte e il preventivo salvato non cambia.</small></div>';}
   var v105c=$('#v105c');
   if(v105c){
+   v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-cf');if(!k||!CONF)return;CONF[k]=e.target.value;CONFtoccato=true;var mm=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';});
+   v105c.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-cf');if(!k||!CONF)return;CONF[k]=e.target.value;CONFtoccato=true;
+    if(k==='mB'){var mm=MOD[e.target.value],kw=n(($('[name="fv_kwp"]')||{}).value);if(mm&&kw){CONF.nB=Math.round(kw*1000/mm.potenza_wp);var y=$('[data-cf="nB"]');if(y)y.value=CONF.nB;}}
+    var mm2=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm2?it(n(CONF.nB)*mm2.potenza_wp/1000,2)+' kWp':'—';});
    v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-ab');if(!k)return;AB[k]=e.target.value;
     ['A','B'].forEach(function(x){var m=MOD[AB['m'+x]],el=$('#abk'+x);if(el)el.textContent=m?it(n(AB['n'+x])*m.potenza_wp/1000,2)+' kWp':'—';});});
    v105c.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-ab');if(!k)return;AB[k]=e.target.value;
@@ -2562,7 +2583,9 @@ document.addEventListener('DOMContentLoaded', function(){
      codice_sdi:sv('az_sdi').toUpperCase(),pec:sv('az_pec'),email_amministrazione:sv('az_mailamm'),referente:sv('az_referente'),referente_ruolo:sv('az_ruolo'),
      legale:{cognome:sv('az_lrcog'),nome:sv('az_lrnom'),cf:sv('az_lrcf').toUpperCase()}},
     preventivo:{con_iperammortamento:!!(iper&&iper.checked),riduzione_prudenziale_pct:n($('#oaz_rid').value),aliquota_fiscale_pct:$('#oaz_aliq').value===''?null:n($('#oaz_aliq').value),
-     mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,consumi_fonte:cfonte(),gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null}};}
+     mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,consumi_fonte:cfonte(),gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null,
+     offerta_confronto:CONFtoccato&&CONF?(CONF.mB&&n(CONF.nB)>0&&n(CONF.pB)>0?{modulo:CONF.mB,n_moduli:n(CONF.nB),totale_eur:n(CONF.pB)}:null):undefined,
+     pvgis_resa_kwh_kwp:n(($('#resa_kwh_kwp_input')||{}).value)||undefined}};}
   var F0=window.fetch;
   window.fetch=function(u,o){var p=F0.apply(this,arguments);
    if(typeof u==='string'&&u.indexOf('/webhook/preventivo-submit')>=0&&az()){p.then(function(r){return r.clone().json();}).then(function(j){
