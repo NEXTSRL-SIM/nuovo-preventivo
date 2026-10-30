@@ -2447,6 +2447,7 @@ document.addEventListener('DOMContentLoaded', function(){
      /* PORTALE NEXT-110 (29/10 17:30): resa per kWp salvata da Mappa tetto e impianto normale del confronto */
      if(P.pvgis_resa_kwh_kwp){var rh=$('#resa_kwh_kwp_input');if(rh)rh.value=P.pvgis_resa_kwh_kwp;var rd=$('#display_resa_kwh_kwp');if(rd)rd.textContent=Math.round(P.pvgis_resa_kwh_kwp).toLocaleString('it-IT');}
      CONF=P.offerta_confronto?{mB:P.offerta_confronto.modulo,nB:P.offerta_confronto.n_moduli,pB:P.offerta_confronto.totale_eur}:null;CONFtoccato=false;
+     OB=P.offerta_b&&P.offerta_b.modo==='grande'?{modo:'grande',m:P.offerta_b.modulo,nn:P.offerta_b.n_moduli,p:P.offerta_b.totale_eur==null?'':P.offerta_b.totale_eur}:(P.offerta_b?{modo:'uguale'}:null);OBtoccato=false;
      segCf(P.consumi_fonte==='manuale'?'manuale':'bolletta');if(window.__azMostraTesti)window.__azMostraTesti(P);}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
@@ -2525,14 +2526,31 @@ document.addEventListener('DOMContentLoaded', function(){
   var AB={};
   /* PORTALE NEXT-110 (Sante 29/10 17:30): nota sul calcolo e impianto normale per il confronto nell'offerta */
   var CONF=null,CONFtoccato=false;
+  /* PORTALE NEXT-110 (Sante 30/10 17:57): seconda sezione «Confronto fra offerta A e offerta B», sempre accesa.
+     modo «uguale»: la B è l'approfondimento del confronto nell'offerta (stesso modulo, moduli e prezzo della prima sezione).
+     modo «grande»: la B è un impianto più grande senza iperammortamento: stesso modulo, potenza proposta sotto i 10 kW, tutto modificabile. */
+  var OB=null,OBtoccato=false;
+  function obVal(){if(!OB||OB.modo!=='grande')return {modo:'uguale',m:CONF?CONF.mB:'',nn:CONF?CONF.nB:'',p:CONF?CONF.pB:''};return {modo:'grande',m:OB.m,nn:OB.nn,p:OB.p};}
+  function obSotto10(cod){var mm=MOD[cod];return mm&&mm.potenza_wp?Math.max(1,Math.floor(9999.999/Number(mm.potenza_wp))):'';}
+  function obSync(){var v=obVal(),mm=MOD[v.m];var s=$('[data-ob="m"]'),x=$('[data-ob="nn"]'),y=$('[data-ob="p"]'),k=$('#obk');
+   if(v.modo==='uguale'){if(s)s.value=v.m;if(x)x.value=v.nn;if(y)y.value=v.p;}
+   if(k)k.textContent=mm?it(n(v.nn)*mm.potenza_wp/1000,2)+' kWp':'—';}
   function notaP(prod,resa,kwp,rid){return '<div class="msg" style="font-size:11.5px;font-weight:500">Calcolo fatto su una produzione di '+it(prod)+' kWh ('+it(resa)+' kWh/kWp × '+it(kwp,2)+' kWp), senza considerare l\'ulteriore riduzione prudenziale'+(rid?' del '+it(rid*100)+'%':'')+', che vale solo per i conti economici dell\'offerta.</div>';}
   function cfForm(kwp){var noC=function(m){return !/^[BC]$/.test(String(m.categoria_enea||''))&&m.tipo!=='inverter';};
    if(!CONF){var cand=Object.keys(MOD).map(function(k){return MOD[k];}).filter(noC).sort(function(a,b){return b.potenza_wp-a.potenza_wp;});var m=cand[0];CONF={mB:m?m.codice_preventivo:'',nB:m?Math.round(kwp*1000/m.potenza_wp):'',pB:''};}
    var mm=MOD[CONF.mB],kB=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';
-   return '<div class="ab2" style="grid-template-columns:1fr"><div class="abx"><b>Confronto nell\'offerta · impianto normale, senza iperammortamento</b><small>modulo non di categoria C, ammortamento ordinario · nel preventivo ridotto esce la tabella «con l\'iperammortamento o con un impianto normale». Senza prezzo il confronto non compare.</small>'
+   var v=obVal(),gr=v.modo==='grande',mo=MOD[v.m],kO=mo?it(n(v.nn)*mo.potenza_wp/1000,2)+' kWp':'—',dis=gr?'':' disabled';
+   return '<div class="ab2" style="grid-template-columns:1fr"><div class="abx"><b>Confronto nell\'offerta · impianto normale, senza iperammortamento</b><small>stessa potenza, più o meno, con un modulo non di categoria C: costa meno e ha l\'ammortamento ordinario. Il numero di moduli si calcola sulla potenza dell\'impianto con iperammortamento e si può cambiare. Nell\'offerta esce la tabella «con l\'iperammortamento o con un impianto normale»; senza prezzo non compare.</small>'
     +'<label>Modulo<select data-cf="mB">'+modOpt(noC,CONF.mB)+'</select></label>'
     +'<div class="abr"><label>Moduli<input type="number" min="1" step="1" data-cf="nB" value="'+CONF.nB+'"></label><span class="abk" id="cfkB">'+kB+'</span></div>'
-    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-cf="pB" value="'+CONF.pB+'"></label></div></div>';}
+    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-cf="pB" value="'+CONF.pB+'"></label>'
+    +'<div class="obsep"></div>'
+    +'<b>Confronto fra offerta A e offerta B</b><small>L\'offerta A è quella con l\'iperammortamento, oggetto di questo preventivo, con dentro il confronto qui sopra. L\'offerta B è un secondo preventivo completo, con la sua copertina e la stessa configurazione (accumulo compreso, se c\'è): esce con il tasto «Offerte alternative A e B».</small>'
+    +'<div class="obsw"><button type="button" data-obm="uguale"'+(gr?'':' class="on"')+'>Uguale al confronto qui sopra</button><button type="button" data-obm="grande"'+(gr?' class="on"':'')+'>Impianto più grande</button></div>'
+    +'<small>'+(gr?'La B propone l\'impianto più grande che il tetto può avere senza iperammortamento: di partenza lo stesso modulo e la potenza più alta sotto i 10 kW. Modulo, moduli e prezzo si cambiano qui.':'La B è l\'approfondimento del confronto qui sopra: stesso modulo, stessi moduli, stesso prezzo. Per un impianto più grande usa l\'interruttore.')+'</small>'
+    +'<label>Modulo<select data-ob="m"'+dis+'>'+modOpt(noC,v.m)+'</select></label>'
+    +'<div class="abr"><label>Moduli<input type="number" min="1" step="1" data-ob="nn" value="'+v.nn+'"'+dis+'></label><span class="abk" id="obk">'+kO+'</span></div>'
+    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-ob="p" value="'+v.p+'"'+dis+'></label></div></div>';}
   function eur(v){return Math.round(v).toLocaleString('it-IT');}
   function modOpt(filtro,sel){return Object.keys(MOD).map(function(k){return MOD[k];}).filter(filtro).sort(function(a,b){return a.potenza_wp-b.potenza_wp;})
     .map(function(m){return '<option value="'+m.codice_preventivo+'"'+(m.codice_preventivo===sel?' selected':'')+'>'+m.brand+' '+Math.round(m.potenza_wp)+' Wp — '+String(m.modello).replace(/\s*\d+\s*Wp$/i,'')+(m.categoria_enea?' · cat. '+m.categoria_enea:' · cat. non registrata')+'</option>';}).join('');}
@@ -2556,10 +2574,14 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<div class="abesito"><small>Qui si preparano solo i dati. Le due offerte si generano nella scheda di generazione con il tasto «Offerte alternative A e B»: escono due PDF a parte e il preventivo salvato non cambia.</small></div>';}
   var v105c=$('#v105c');
   if(v105c){
-   v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-cf');if(!k||!CONF)return;CONF[k]=e.target.value;CONFtoccato=true;var mm=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';});
+   v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-cf');if(!k||!CONF)return;CONF[k]=e.target.value;CONFtoccato=true;var mm=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';obSync();});
+   v105c.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-obm]');if(!b)return;var md=b.getAttribute('data-obm');OBtoccato=true;
+    if(md==='grande'){var c=(CONF&&CONF.mB)||'';OB={modo:'grande',m:c,nn:obSotto10(c),p:''};}else OB={modo:'uguale'};ricalcola();});
+   v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-ob');if(!k||!OB||OB.modo!=='grande')return;OB[k]=e.target.value;OBtoccato=true;
+    if(k==='m'){OB.nn=obSotto10(OB.m);var x=$('[data-ob="nn"]');if(x)x.value=OB.nn;}obSync();});
    v105c.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-cf');if(!k||!CONF)return;CONF[k]=e.target.value;CONFtoccato=true;
     if(k==='mB'){var mm=MOD[e.target.value],kw=n(($('[name="fv_kwp"]')||{}).value);if(mm&&kw){CONF.nB=Math.round(kw*1000/mm.potenza_wp);var y=$('[data-cf="nB"]');if(y)y.value=CONF.nB;}}
-    var mm2=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm2?it(n(CONF.nB)*mm2.potenza_wp/1000,2)+' kWp':'—';});
+    var mm2=MOD[CONF.mB],el=$('#cfkB');if(el)el.textContent=mm2?it(n(CONF.nB)*mm2.potenza_wp/1000,2)+' kWp':'—';obSync();});
    v105c.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-ab');if(!k)return;AB[k]=e.target.value;
     ['A','B'].forEach(function(x){var m=MOD[AB['m'+x]],el=$('#abk'+x);if(el)el.textContent=m?it(n(AB['n'+x])*m.potenza_wp/1000,2)+' kWp':'—';});});
    v105c.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-ab');if(!k)return;AB[k]=e.target.value;
@@ -2579,8 +2601,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var V;
     if(AB.attivo)V=[{sigla:'A',modulo:AB.mA,n_moduli:n(AB.nA),totale_eur:n(AB.pA),iper:true},{sigla:'B',modulo:AB.mB,n_moduli:n(AB.nB),totale_eur:n(AB.pB),iper:false}];
     else{var codA=($('#fv_pannello')||{}).value||'',mA0=MOD[codA],kwA=n(($('[name="fv_kwp"]')||{}).value),totA=n(($('[name="fv_totale_eur"]')||{}).value);
-     if(!CONF||!CONF.mB||!(n(CONF.nB)>0)||!(n(CONF.pB)>0)){scrivi('<span style="color:var(--error)">Per l\'offerta B serve l\'impianto normale: scegli modulo, numero di moduli e prezzo nel riquadro «Confronto nell\'offerta» della verifica del 105% (tab Prodotti), poi salva.</span>');return;}
-     V=[{sigla:'A',modulo:codA,n_moduli:mA0&&kwA?Math.round(kwA*1000/mA0.potenza_wp):0,totale_eur:totA,iper:true},{sigla:'B',modulo:CONF.mB,n_moduli:n(CONF.nB),totale_eur:n(CONF.pB),iper:false}];}
+     /* PORTALE NEXT-110 (Sante 30/10 17:57): la B esce dalla seconda sezione «Confronto fra offerta A e offerta B»; la A porta dentro il confronto della prima */
+     var ob=obVal();
+     if(!ob.m||!(n(ob.nn)>0)||!(n(ob.p)>0)){scrivi('<span style="color:var(--error)">Per l\'offerta B servono modulo, numero di moduli e prezzo: '+(ob.modo==='grande'?'completali nella sezione «Confronto fra offerta A e offerta B»':'completali nel «Confronto nell\'offerta»')+' della verifica del 105% (tab Prodotti), poi salva.</span>');return;}
+     V=[{sigla:'A',modulo:codA,n_moduli:mA0&&kwA?Math.round(kwA*1000/mA0.potenza_wp):0,totale_eur:totA,iper:true,con_confronto:true},{sigla:'B',modulo:ob.m,n_moduli:n(ob.nn),totale_eur:n(ob.p),iper:false}];}
     if(V.some(function(v){return !v.modulo||!(v.n_moduli>0)||!(v.totale_eur>0);})){scrivi('<span style="color:var(--error)">Per tutte e due servono modulo, numero di moduli e prezzo: completali nella verifica del 105% (tab Prodotti).</span>');return;}
     b.disabled=true;var righe={A:'⏳ A in preparazione…',B:'in attesa'};var mostra=function(){scrivi('<div>'+righe.A+'</div><div>'+righe.B+'</div>');};mostra();
     var una=function(v){return fetch(OFFAZ,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),prev_id:pid,variante:v})}).then(function(r){return r.json();}).then(function(j){
@@ -2589,7 +2613,7 @@ document.addEventListener('DOMContentLoaded', function(){
       .catch(function(x){righe[v.sigla]='<span style="color:var(--error)">'+v.sigla+' non generata: '+x.message+'</span>';mostra();});};
     una(V[0]).then(function(){righe.B='⏳ B in preparazione…';mostra();return una(V[1]);}).then(function(){b.disabled=false;});});}
   function mostraAB(){var bt=$('#oazAB');if(bt)bt.style.display=az()&&iper&&iper.checked?'':'none';}
-  var stAB=document.createElement('style');stAB.textContent='.ab2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.abx{border:1px solid #E3E7EC;border-radius:10px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:6px}.abx b{font-size:13px}.abx small{color:#64748B;font-size:11.5px}.abx label{font-size:11.5px;color:#64748B;display:flex;flex-direction:column;gap:3px}.abx select,.abx input{font-size:12.5px;padding:5px 7px;border:1px solid #E3E7EC;border-radius:7px}.abr{display:flex;gap:8px;align-items:flex-end}.abr label{flex:1}.abk{font-weight:700;color:#0891B2;font-size:12.5px;padding-bottom:6px}.abesito{margin-top:8px;font-size:12.5px;line-height:1.6}.abesito .ko{color:#B91C1C}.abesito a{color:#0891B2;font-weight:600}@media (max-width:900px){.ab2{grid-template-columns:1fr}}';document.head.appendChild(stAB);
+  var stAB=document.createElement('style');stAB.textContent='.ab2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.abx{border:1px solid #E3E7EC;border-radius:10px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:6px}.abx b{font-size:13px}.abx small{color:#64748B;font-size:11.5px}.abx label{font-size:11.5px;color:#64748B;display:flex;flex-direction:column;gap:3px}.abx select,.abx input{font-size:12.5px;padding:5px 7px;border:1px solid #E3E7EC;border-radius:7px}.abr{display:flex;gap:8px;align-items:flex-end}.abr label{flex:1}.abk{font-weight:700;color:#0891B2;font-size:12.5px;padding-bottom:6px}.abesito{margin-top:8px;font-size:12.5px;line-height:1.6}.obsep{border-top:1px solid #E3E7EC;margin:8px -12px 4px}.obsw{display:inline-flex;border:1px solid #E3E7EC;border-radius:8px;overflow:hidden;align-self:flex-start}.obsw button{border:0;background:#fff;color:#64748B;font-family:inherit;font-weight:600;font-size:12px;padding:5px 10px;cursor:pointer}.obsw button+button{border-left:1px solid #E3E7EC}.obsw button.on{background:#0891B2;color:#fff}.abx select:disabled,.abx input:disabled{background:#F4F6F9;color:#64748B}.abesito .ko{color:#B91C1C}.abesito a{color:#0891B2;font-weight:600}@media (max-width:900px){.ab2{grid-template-columns:1fr}}';document.head.appendChild(stAB);
   function cfonte(){var b=$('#az_cfonte button.on');return b?b.dataset.v:'bolletta';}
   function segCf(v){$$('#az_cfonte button').forEach(function(x){x.classList.toggle('on',x.dataset.v===v);});$('#az_cfonte_src').textContent=v==='manuale'?'quelli scritti in Prodotti («Consumi annui»): la bolletta resta, ma non entra nei calcoli':'quelli della bolletta confermata';ricalcola();}
   $('#az_cfonte').addEventListener('click',function(e){var b=e.target.closest('button');if(b)segCf(b.dataset.v);});
@@ -2612,6 +2636,7 @@ document.addEventListener('DOMContentLoaded', function(){
     preventivo:{con_iperammortamento:!!(iper&&iper.checked),riduzione_prudenziale_pct:n($('#oaz_rid').value),aliquota_fiscale_pct:$('#oaz_aliq').value===''?null:n($('#oaz_aliq').value),
      mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,consumi_fonte:cfonte(),gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null,
      offerta_confronto:CONFtoccato&&CONF?(CONF.mB&&n(CONF.nB)>0&&n(CONF.pB)>0?{modulo:CONF.mB,n_moduli:n(CONF.nB),totale_eur:n(CONF.pB)}:null):undefined,
+     offerta_b:OBtoccato&&OB?(OB.modo==='grande'?{modo:'grande',modulo:OB.m,n_moduli:n(OB.nn)||null,totale_eur:n(OB.p)||null}:{modo:'uguale'}):undefined,
      pvgis_resa_kwh_kwp:n(($('#resa_kwh_kwp_input')||{}).value)||undefined}};}
   var F0=window.fetch;
   window.fetch=function(u,o){var p=F0.apply(this,arguments);
