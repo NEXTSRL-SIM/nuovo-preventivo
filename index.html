@@ -560,7 +560,7 @@ function setManutCosto(val){var el=document.getElementById('manut_eur');if(val!=
 <!-- BLOCCO PDF GIA GENERATI -->
 <div id="pdfSalvatiBox" style="display:none;margin-bottom:14px;border:1.5px solid var(--teal-border);border-radius:10px;overflow:hidden">
   <div style="background:var(--teal-bg);padding:10px 14px;font-size:12px;font-weight:700;color:var(--teal)">📄 PDF già generati — richiama senza rigenarare</div>
-  <div style="padding:12px 14px;background:white;display:flex;flex-direction:column;gap:8px" id="pdfSalvatiList"></div>
+  <div style="padding:12px 14px;background:white;display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto" id="pdfSalvatiList"></div>
 </div>
 <script>
 function mostraPdfSalvati(dati) {
@@ -605,7 +605,11 @@ window.__pdfArchivio=function(){var pid=(document.getElementById('last_saved_id'
    row.innerHTML='<span style="flex:1;font-size:11.5px;color:#444"><b>'+pdfTipo(f.nome)+'</b><br><span style="color:#888;font-size:10.5px">'+qd+'</span></span>'
     +'<a href="'+f.url+'?v='+Date.now()+'" target="_blank" style="background:var(--teal);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none">⬇ Scarica</a>'
     +'<button onclick="inviaMailPdf(\''+f.url+'\',\''+nm+'\')" style="background:var(--teal-bg);color:var(--teal);border:1.5px solid var(--teal-border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">✉ Invia email</button>';
-   lista.appendChild(row);});
+   /* PORTALE NEXT-110 (Sante 31/10 10:46): la X cancella il PDF per sempre, dall'archivio e dal preventivo, dopo la conferma */
+   var x=document.createElement('button');x.type='button';x.title='Cancella questo PDF';x.textContent='✕';x.style.cssText='background:#fff;color:#B91C1C;border:1.5px solid #FCA5A5;border-radius:6px;width:28px;height:26px;font-size:12px;font-weight:700;cursor:pointer;flex:0 0 auto';
+   x.onclick=async function(){if(!await chiedi('Cancellare il PDF?','Cancello per sempre <b>'+fEsc(pdfTipo(f.nome))+'</b> del '+fEsc(qd)+'.<br><br>Il file sparisce dall\'archivio e dal preventivo: non si può recuperare.','Cancella',true))return;
+    x.disabled=true;fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass,azione:'cancella_pdf',prev_id:pid,nome:f.nome})}).then(function(r){return r.json();}).then(function(k){if(!k||!k.ok){x.disabled=false;avvisa('errore','PDF non cancellato',fEsc((k&&k.errore)||'errore'));return;}row.remove();if(!lista.children.length)document.getElementById('pdfSalvatiBox').style.display='none';}).catch(function(e){x.disabled=false;avvisa('errore','PDF non cancellato',fEsc(e.message));});};
+   row.appendChild(x);lista.appendChild(row);});
   document.getElementById('pdfSalvatiBox').style.display='block';}).catch(function(){});};
 (function(){var orig=window.mostraPdfSalvati;window.mostraPdfSalvati=function(d){try{orig&&orig(d);}catch(e){}setTimeout(window.__pdfArchivio,300);};
  var tent=0;(function osserva(){var gs=document.getElementById('generaStatus');if(!gs){if(++tent<50)setTimeout(osserva,200);return;}
