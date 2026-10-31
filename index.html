@@ -1692,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', function(){
     «1754 x 1303 x 30»). Senza modulo scelto o senza misure resta il formato predefinito 1722 × 1134 mm a 410 Wp. Le posizioni restano in metri. */
  var MODCORR={cod:'',nome:'',modello:'',l:1.722,c:1.134,mm:[1722,1134],wp:410,pred:true};
  function misureMm(t){var n=String(t||'').match(/\d+(?:[.,]\d+)?/g);if(!n||n.length<2)return null;var a=parseFloat(n[0].replace(',','.')),b=parseFloat(n[1].replace(',','.'));if(!(a>=500&&a<=3500&&b>=500&&b<=3500))return null;return [Math.max(a,b),Math.min(a,b)];}
- function leggiModulo(){var el=document.getElementById('fv_pannello'),cod=el?String(el.value||''):'',cat=window.__moduliCatalogo||{},m=cod&&cat[cod]||null,mm=m&&misureMm(m.dimensioni_mm),wp=m&&+m.potenza_wp>0?+m.potenza_wp:410;
+ function leggiModulo(){var el=document.getElementById('fv_pannello'),ob=VAR==='B'?modB():null,cod=VAR==='B'?String(ob&&ob.m||''):(el?String(el.value||''):''),cat=window.__moduliCatalogo||{},m=cod&&cat[cod]||null,mm=m&&misureMm(m.dimensioni_mm),wp=m&&+m.potenza_wp>0?+m.potenza_wp:410;
   var n={cod:cod,nome:m?String(m.brand||'')+' '+Math.round(wp)+' Wp':'',modello:m?String(m.modello||''):'',l:mm?mm[0]/1000:1.722,c:mm?mm[1]/1000:1.134,mm:mm||[1722,1134],wp:wp,pred:!mm};
   var cambia=n.l!==MOD_L||n.c!==MOD_C||n.wp!==WP||n.cod!==MODCORR.cod;MODCORR=n;MOD_L=n.l;MOD_C=n.c;WP=n.wp;return cambia;}
  function m3(x){return x.toFixed(3).replace('.',',');}
@@ -1779,6 +1779,9 @@ document.addEventListener('DOMContentLoaded', function(){
   if(r.m.length){if(!r.lim)sbilancio(poly,ost,r);var sx=(r.lim.r-r.lim.l)/2,sy=(r.lim.u-r.lim.d)/2;if(Math.abs(sx)>=.01||Math.abs(sy)>=.01){var g2=griglia(poly,ost,r.w,r.h,r.px+sx,r.py+sy);if(g2.m.length>=r.m.length)r=g2;}}
   if(++NCACHE>300){CACHE={};NCACHE=0;}CACHE[key]=r;return r;}
  /* ---------- stato ---------- */
+ /* PORTALE NEXT-110 (Sante 31/10 19:05): due schede, «Offerta A» e «Offerta B». La B nasce come copia delle falde della A, usa il modulo
+    e i moduli dell'offerta B (riquadro «Confronto fra offerta A e offerta B») e si salva a parte (layout_veloce.variante). */
+ var VAR='A';function modB(){try{return window.__offertaB?window.__offertaB():null;}catch(e){return null;}}
  var ST={F:[],O:[],S:[],A:[]},CORR=[],TOOL='falda',STORIA=[],ESITO=[],REV=[],APERTA=-1,MAP=null,LG=null,trasc=null,PID='';
  function cop(){return JSON.parse(JSON.stringify(ST));}
  function memo(){STORIA.push(JSON.stringify(ST));if(STORIA.length>60)STORIA.shift();modificato(true);}
@@ -2040,19 +2043,19 @@ document.addEventListener('DOMContentLoaded', function(){
     d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
      +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
-  mostraModulo();pannello();$('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;}
+  mostraModulo();pannello();$('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;boxB();}
  /* ---------- revisioni ---------- */
  /* revisioni su Supabase (tabella layout_veloce) attraverso la funzione layout-veloce, con la password della regia */
  var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/layout-veloce';
  function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
  function fmt(d){d=new Date(d);return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
  function daRiga(r){return {n:r.rev,quando:fmt(r.aggiornato_at||r.creato_at),nm:r.moduli,kwp:Number(r.kwp)||0,stato:r.stato,pdf:r.pdf_url||''};}
- async function caricaRev(){var r=await fetch(FN+'?pid='+encodeURIComponent(PID)+'&t='+encodeURIComponent(pass()),{cache:'no-store'});var j=await r.json().catch(function(){return {};});
+ async function caricaRev(){var r=await fetch(FN+'?pid='+encodeURIComponent(PID)+'&v='+VAR+'&t='+encodeURIComponent(pass()),{cache:'no-store'});var j=await r.json().catch(function(){return {};});
   if(!r.ok||!j.ok)throw new Error(j.errore||('errore '+r.status));REV=(j.revisioni||[]).map(daRiga);}
  async function salvaRev(nuova){var f=fotografia(),rev=nuova||APERTA<0?null:REV[APERTA].n;
-  var r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'salva',pid:PID,rev:rev,stato:f.stato,moduli:f.nm,kwp:f.kwp,modulo:modLungo()})});
+  var r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'salva',variante:VAR,pid:PID,rev:rev,stato:f.stato,moduli:f.nm,kwp:f.kwp,modulo:modLungo()})});
   var j=await r.json().catch(function(){return {};});if(!r.ok||!j.ok)throw new Error(j.errore||('errore '+r.status));
-  f.n=j.rev;f.pdf='';f.inCorso=true;var i=REV.findIndex(function(x){return x.n===j.rev;});if(i>=0)REV[i]=f;else{REV.push(f);i=REV.length-1;}APERTA=i;MOD=false;mostraRev();riepilogo();
+  f.n=j.rev;f.pdf='';f.inCorso=true;try{document.dispatchEvent(new Event('lv-salvato'));}catch(x){}var i=REV.findIndex(function(x){return x.n===j.rev;});if(i>=0)REV[i]=f;else{REV.push(f);i=REV.length-1;}APERTA=i;MOD=false;mostraRev();riepilogo();
   generaPdf(f).catch(function(e){f.inCorso=false;f.errPdf=String(e.message||e);mostraRev();});}
  /* PDF delle tavole: tetto intero e, con più falde, una tavola per falda; si archivia con il preventivo */
  function script(src){return new Promise(function(ok,ko){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){ko(new Error('libreria PDF non raggiungibile'));};document.head.appendChild(s);});}
@@ -2063,7 +2066,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'}),box=document.createElement('div');box.style.cssText='position:fixed;left:-20000px;top:0;width:1123px;height:794px;overflow:hidden';document.body.appendChild(box);
   try{for(var i=0;i<pag.length;i++){if(i)doc.addPage('a4','landscape');box.innerHTML=pag[i];await doc.svg(box.firstElementChild,{x:0,y:0,width:297,height:210});}}finally{box.remove();}
   var b64=doc.output('datauristring').split(',')[1];
-  var r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'pdf',pid:PID,rev:f.n,pdf_b64:b64})});var j=await r.json().catch(function(){return {};});
+  var r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'pdf',variante:VAR,pid:PID,rev:f.n,pdf_b64:b64})});var j=await r.json().catch(function(){return {};});
   if(!r.ok||!j.ok)throw new Error(j.errore||('errore '+r.status));f.pdf=j.url;f.inCorso=false;f.errPdf='';mostraRev();}
  function ora(){var d=new Date();return d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
  function fotografia(){var nm=nMod(),st=cop();st.modulo={cod:MODCORR.cod,nome:MODCORR.nome,modello:MODCORR.modello,l:MODCORR.l,c:MODCORR.c,wp:MODCORR.wp,pred:MODCORR.pred};/* PORTALE NEXT-110 (Sante 28/10): si salvano anche i moduli posati (4 vertici in lat/lon) e l'azimut di ogni falda, per disegnarli nell'offerta aziende */try{st.P=ESITO.map(function(e){return {az:e.az,m:(e.on||[]).map(function(m){return m.q.map(aLL).map(function(p){return [+p[0].toFixed(7),+p[1].toFixed(7)];});})};});}catch(x){}return {quando:ora(),nm:nm,kwp:nm*WP/1000,stato:st};}
@@ -2127,13 +2130,13 @@ document.addEventListener('DOMContentLoaded', function(){
  /* ---------- finestra ---------- */
  var OV=null;
  function costruisci(){OV=document.createElement('div');OV.className='lv-ov';OV.innerHTML=
-  '<div class="lv-win"><div class="lv-top"><div><b>Layout veloce</b><small id="lvSub"></small></div><span class="lv-chip" id="lvChip">Rev. —</span><span class="lv-modc" id="lvModC"></span><span style="flex:1"></span><button type="button" class="btn btn-secondary" id="lvChiudi">Chiudi</button></div>'
+  '<div class="lv-win"><div class="lv-top"><div><b>Layout veloce</b><small id="lvSub"></small></div><span class="lv-tabs" id="lvTabs"><button type="button" data-v="A" class="on">Offerta A</button><button type="button" data-v="B">Offerta B</button></span><span class="lv-chip" id="lvChip">Rev. —</span><span class="lv-modc" id="lvModC"></span><span style="flex:1"></span><button type="button" class="btn btn-secondary" id="lvChiudi">Chiudi</button></div>'
   +'<div class="lv-grid"><section class="lv-sx"><div class="lv-bar">'
   +'<button type="button" class="lv-tool on" data-t="falda">Falda</button><button type="button" class="lv-tool" data-t="camino">Camino</button><button type="button" class="lv-tool" data-t="ostacolo">Ostacolo</button><button type="button" class="lv-tool" data-t="aggiungi">Aggiungi modulo</button><button type="button" class="lv-tool" data-t="spegni">Togli modulo</button>'
   +'<span style="flex:1"></span><label class="swl"><input type="checkbox" class="sw-in" id="lvRadd" checked>Raddrizza falde</label><button type="button" class="lv-tool" id="lvAnnulla">Annulla</button><button type="button" class="lv-tool" id="lvSvuota">Ricomincia</button></div>'
   +'<div class="lv-dock" id="lvDock"></div><div class="lv-mapw"><div id="lvMap"></div><div class="lv-nord" title="La mappa ha sempre il nord in alto"><svg width="44" height="54" viewBox="0 0 44 54"><circle cx="22" cy="32" r="19" fill="rgba(255,255,255,.92)" stroke="#0F172A" stroke-width="1.4"/><path d="M22 15 28 40 22 35 16 40z" fill="#0F172A"/><text x="22" y="11" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="12" fill="#fff" stroke="#0F172A" stroke-width="3" paint-order="stroke">N</text></svg></div><div class="lv-aiuto" id="lvAiuto"></div></div></section>'
   +'<aside class="lv-dx"><div class="lv-k"><div class="lv-kb big"><i>Moduli</i><b id="lvM">0</b></div><div class="lv-kb"><i>Potenza</i><b id="lvP">0</b></div><div class="lv-kb"><i>Camini</i><b id="lvC">0</b></div><div class="lv-kb"><i>Ostacoli</i><b id="lvO">0</b></div></div>'
-  +'<div class="lv-sl">Modulo</div><div class="lv-modi" id="lvModInfo"></div><p class="lv-nota">Si sceglie in Prodotti, «Modulo fotovoltaico»: cambiandolo, il layout si ricalcola con le sue misure.</p>'
+  +'<div id="lvB" hidden></div><div class="lv-sl">Modulo</div><div class="lv-modi" id="lvModInfo"></div><p class="lv-nota">Si sceglie in Prodotti, «Modulo fotovoltaico»: cambiandolo, il layout si ricalcola con le sue misure.</p>'
   +'<div class="lv-sl">Falde</div><div id="lvFalde"></div>'
   +'<div class="lv-az"><button type="button" class="btn btn-primary" id="lvTav">Genera la tavola</button><div class="lv-az2"><button type="button" class="btn btn-secondary" id="lvSalva">Salva</button><button type="button" class="btn btn-secondary" id="lvNuova">Nuova revisione</button></div></div>'
   +'<div class="lv-sl">Revisioni</div><div id="lvRev"></div><p class="lv-nota">«Salva» aggiorna la revisione aperta; «Nuova revisione» ne crea un\'altra. Si salvano con il preventivo, con il PDF delle tavole.</p></aside></div></div>'
@@ -2179,7 +2182,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var az=window.__tipoContatto&&window.__tipoContatto()==='azienda',cli=az?v('last_name'):(T_(v('first_name'))+' '+T_(v('last_name'))).trim();
   $('#lvSub').textContent=[cli,[v('address'),v('city')].filter(Boolean).join(', ')].filter(Boolean).join(' · ');
   REV=[];APERTA=-1;ST={F:[],O:[],S:[],A:[]};STORIA=[];CORR=[];MOD=false;$('#lvRev').innerHTML='<div class="lv-vuoto">Carico le revisioni…</div>';
-  caricaRev().then(function(){APERTA=REV.length?REV.length-1:-1;if(APERTA>=0){ST=JSON.parse(JSON.stringify(REV[APERTA].stato));if(!ST.A)ST.A=[];controllaModuloRev();}disegna();mostraRev();})
+  VAR='A';tabsVar();caricaRev().then(function(){APERTA=REV.length?REV.length-1:-1;if(APERTA>=0){ST=JSON.parse(JSON.stringify(REV[APERTA].stato));if(!ST.A)ST.A=[];controllaModuloRev();}disegna();mostraRev();})
    .catch(function(e){$('#lvRev').innerHTML='<div class="lv-vuoto" style="color:#dc2626">Revisioni non lette: '+esc(e.message||e)+'</div>';});
   OV.classList.add('on');document.body.style.overflow='hidden';
   if(!MAP){MAP=L.map('lvMap',{center:[la,lo],zoom:21,maxZoom:22,zoomControl:true,doubleClickZoom:false});
@@ -2200,6 +2203,46 @@ document.addEventListener('DOMContentLoaded', function(){
  function cambioModulo(){if(!OV||!OV.classList.contains('on'))return;var ex=MODCORR.cod;if(leggiModulo()){if(ST.F.length&&MODCORR.cod!==ex)modificato(true);disegna();}}
  document.addEventListener('change',function(e){if(e.target&&e.target.id==='fv_pannello')cambioModulo();});
  document.addEventListener('lv-moduli',cambioModulo);
+ /* ---------- schede «Offerta A» / «Offerta B» (Sante 31/10 19:05) ---------- */
+ (function(){var st=document.createElement('style');st.textContent='.lv-tabs{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:0 8px}.lv-tabs button{border:0;background:#fff;color:var(--text-muted);font:inherit;font-weight:700;font-size:12px;padding:5px 12px;cursor:pointer}.lv-tabs button+button{border-left:1px solid var(--border)}.lv-tabs button.on{background:#0891B2;color:#fff}.lv-bmsg{font-size:12px;line-height:1.5;padding:7px 9px;border-radius:8px;background:#F4F6F9;margin:4px 0}.lv-bmsg.ko{background:#FEF2F2;color:#B91C1C;font-weight:700;border:1px solid #FCA5A5}.lv-bmsg.av{background:#FFFBEB;color:#92400E}.lv-bmsg.ok{background:#ECFDF5;color:#065F46}.lv-bmsg a,#lvB a{color:#0891B2;font-weight:700}';document.head.appendChild(st);})();
+ function tabsVar(){var t=$('#lvTabs');if(t)t.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.v===VAR);});boxB();}
+ function capB(){return ESITO.reduce(function(s,e){return s+(e.mods||[]).filter(function(m){return m.agg===undefined;}).length;},0);}
+ function boxB(){var el=$('#lvB');if(!el)return;if(VAR!=='B'){el.hidden=true;el.innerHTML='';return;}el.hidden=false;
+  var ob=modB()||{},n0=Math.round(Number(ob.nn)||0),on=nMod(),cap=capB(),h='<div class="lv-sl">Offerta B</div>';
+  if(!ob.m||!(n0>0))h+='<div class="lv-bmsg ko">Manca l\'offerta B: scegli modulo e numero di moduli nel riquadro «Confronto fra offerta A e offerta B» (Prodotti, Offerta azienda).</div>';
+  else{h+='<div class="lv-bmsg">L\'offerta B prevede <b>'+n0+' moduli '+esc(MODCORR.nome||'')+'</b>, '+(n0*MODCORR.wp/1000).toFixed(2).replace('.',',')+' kWp. Le falde sono copiate dall\'offerta A; qui puoi contornarne altre solo per la B.</div>';
+   if(ST.F.length&&cap<n0)h+='<div class="lv-bmsg ko">Non ci stanno: sulle falde contornate entrano al massimo '+cap+' moduli, l\'offerta B ne prevede '+n0+'. Riduci la potenza della B oppure contorna altre falde.</div>';
+   else if(ST.F.length&&on!==n0)h+='<div class="lv-bmsg av">Posati '+on+' moduli, l\'offerta B ne prevede '+n0+'. <a href="#" id="lvAdatta">Adatta a '+n0+' moduli</a></div>';
+   else if(ST.F.length)h+='<div class="lv-bmsg ok">✓ '+on+' moduli posati, come l\'offerta B. Salva la revisione perché l\'offerta B li usi.</div>';}
+  h+='<div style="font-size:12px;margin:4px 0 2px"><a href="#" id="lvRicopia">Ricopia le falde dall\'offerta A</a></div>';el.innerHTML=h;}
+ /* dei moduli di una falda se ne tengono n: file intere dalla centrale, l'ultima fila parziale centrata (come la posa del generatore) */
+ function scegliCelle(M,n){if(n>=M.length)return M.slice();if(n<=0)return [];var righe=[];
+  M.slice().sort(function(a,b){return a.cell[1]-b.cell[1]||a.cell[0]-b.cell[0];}).forEach(function(m){var r=righe.find(function(x){return Math.abs(x[0].cell[1]-m.cell[1])<1e-6;});if(r)r.push(m);else righe.push([m]);});
+  var mid=(righe.length-1)/2,ord=righe.map(function(_,i){return i;}).sort(function(a,b){return Math.abs(a-mid)-Math.abs(b-mid)||a-b;}),out=[],resta=n;
+  ord.forEach(function(i){if(!resta)return;var r=righe[i];if(r.length<=resta){out.push.apply(out,r);resta-=r.length;return;}
+   var x0=Math.min.apply(0,r.map(function(m){return m.cell[0];})),x1=Math.max.apply(0,r.map(function(m){return m.cell[0]+m.cell[2];})),cx=(x0+x1)/2;
+   out.push.apply(out,r.slice().sort(function(a,b){return Math.abs(a.cell[0]+a.cell[2]/2-cx)-Math.abs(b.cell[0]+b.cell[2]/2-cx);}).slice(0,resta));resta=0;});return out;}
+ function adattaB(){if(VAR!=='B')return;var ob=modB(),n0=Math.round(Number(ob&&ob.nn)||0);if(!(n0>0))return;memo();ST.S=[];ST.A=[];disegna();
+  var cap=ESITO.map(function(e){return (e.mods||[]).filter(function(m){return m.agg===undefined;}).length;}),tot=cap.reduce(function(a,b){return a+b;},0);
+  if(tot>n0){var al=cap.map(function(c){return Math.floor(n0*c/tot);}),resto=n0-al.reduce(function(a,b){return a+b;},0);
+   while(resto>0){var bi=-1,bl=0;cap.forEach(function(c,i){if(c-al[i]>bl){bl=c-al[i];bi=i;}});if(bi<0)break;al[bi]++;resto--;}
+   ESITO.forEach(function(e,fi){var M=(e.mods||[]).filter(function(m){return m.agg===undefined;}),tieni=scegliCelle(M,al[fi]);M.forEach(function(m){if(tieni.indexOf(m)<0)ST.S.push(m.key);});});}
+  disegna();modificato(true);}
+ async function copiaDaA(){var r=await fetch(FN+'?pid='+encodeURIComponent(PID)+'&v=A&t='+encodeURIComponent(pass()),{cache:'no-store'});var j=await r.json().catch(function(){return {};});
+  var L=(j&&j.revisioni)||[],s=L.length?L[L.length-1].stato:null;
+  if(!s||!s.F||!s.F.length){leggiModulo();disegna();mostraRev();avviso('Nell\'offerta A non ci sono falde da copiare: contornale prima nella scheda «Offerta A».');return;}
+  memo();ST={F:s.F.map(function(f){var g=JSON.parse(JSON.stringify(f));delete g.org;return g;}),O:JSON.parse(JSON.stringify(s.O||[])),S:[],A:[]};CORR=[];leggiModulo();disegna();adattaB();mostraRev();modificato(true);}
+ async function vaiVar(v){if(v===VAR||!OV)return;if(MOD&&ST.F.length&&!await chiedi('Cambi offerta','Le modifiche non salvate della scheda «Offerta '+VAR+'» si perdono. Continuo?','Continua',true))return;
+  VAR=v;tabsVar();REV=[];APERTA=-1;ST={F:[],O:[],S:[],A:[]};STORIA=[];CORR=[];MOD=false;$('#lvRev').innerHTML='<div class="lv-vuoto">Carico le revisioni…</div>';
+  try{await caricaRev();}catch(e){$('#lvRev').innerHTML='<div class="lv-vuoto" style="color:#dc2626">Revisioni non lette: '+esc(e.message||e)+'</div>';return;}
+  APERTA=REV.length?REV.length-1:-1;
+  if(APERTA>=0){ST=JSON.parse(JSON.stringify(REV[APERTA].stato));if(!ST.A)ST.A=[];if(!ST.S)ST.S=[];leggiModulo();disegna();mostraRev();modificato(false);return;}
+  if(VAR==='B'){await copiaDaA();return;}leggiModulo();disegna();mostraRev();}
+ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lvTabs button');if(b){vaiVar(b.dataset.v);return;}
+  if(e.target.id==='lvAdatta'){e.preventDefault();adattaB();return;}
+  if(e.target.id==='lvRicopia'){e.preventDefault();(async function(){if(ST.F.length&&!await chiedi('Ricopia dall\'offerta A','Sostituisco falde e ostacoli della scheda B con quelli dell\'offerta A?','Ricopia',true))return;copiaDaA();})();}});
+ /* il modulo o i moduli dell'offerta B cambiano nel riquadro del 105%: la scheda B si ricalcola */
+ document.addEventListener('lv-offb',function(){if(!OV||!OV.classList.contains('on')||VAR!=='B')return;if(leggiModulo()&&ST.F.length)modificato(true);disegna();});
 })();
 </script>
 <script>
@@ -2551,13 +2594,25 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-acc');if(!k||!ACC)return;var i=+e.target.getAttribute('data-i');if(!ACC[i])return;ACC[i][k]=k==='bat'?e.target.value:e.target.value;ACCtoccato=true;});
   document.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-acc');if(!k||!ACC)return;var i=+e.target.getAttribute('data-i');if(!ACC[i])return;ACC[i][k]=e.target.value;ACCtoccato=true;});
   (function aspetta(){if(document.getElementById('oazAcc'))accDisegna();else setTimeout(aspetta,400);})();
+  window.__offertaB=function(){return obVal();};
   function obVal(){if(!OB||OB.modo!=='grande')return {modo:'uguale',m:CONF?CONF.mB:'',nn:CONF?CONF.nB:'',p:CONF?CONF.pB:''};return {modo:'grande',m:OB.m,nn:OB.nn,p:OB.p};}
   function obSotto10(cod){var mm=MOD[cod];return mm&&mm.potenza_wp?Math.max(1,Math.floor(9999.999/Number(mm.potenza_wp))):'';}
   function obSync(){var v=obVal(),mm=MOD[v.m];var s=$('[data-ob="m"]'),x=$('[data-ob="nn"]'),y=$('[data-ob="p"]'),k=$('#obk');
    if(v.modo==='uguale'){if(s)s.value=v.m;if(x)x.value=v.nn;if(y)y.value=v.p;}
-   if(k)k.textContent=mm?it(n(v.nn)*mm.potenza_wp/1000,2)+' kWp':'—';}
+   if(k)k.textContent=mm?it(n(v.nn)*mm.potenza_wp/1000,2)+' kWp':'—';
+   try{document.dispatchEvent(new Event('lv-offb'));}catch(x){}obCap();}
+  /* PORTALE NEXT-110 (Sante 31/10 19:03): i moduli della B devono stare sul tetto rilevato; se non ci stanno, avviso rosso */
+  var CAPK='',CAPH='',CAPT=null;document.addEventListener('lv-salvato',function(){CAPK='';obCap();});
+  function obCap(){var el=$('#obCap');if(!el)return;var v=obVal(),pid=pidAtt(),nn=Math.round(n(v.nn));
+   if(!pid||!v.m||!(nn>0)){el.innerHTML='';return;}var k=pid+'|'+v.m+'|'+nn;if(k===CAPK){el.innerHTML=CAPH;return;}
+   clearTimeout(CAPT);CAPT=setTimeout(function(){CAPK=k;CAPH='';fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/offerta-azienda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'capienza',prev_id:pid,modulo:v.m,n:nn})})
+    .then(function(r){return r.json();}).then(function(j){if(CAPK!==k)return;var h='';
+     if(j&&j.ok&&j.scheda_b)h=j.entra?'<span style="color:#15803D">✓ Mappa tetto, scheda «Offerta B»: '+j.posati+' moduli posati, come l\'offerta.</span>':'<span style="color:#B91C1C">✕ Mappa tetto, scheda «Offerta B»: posati '+j.posati+' moduli, l\'offerta ne prevede '+nn+'. Aprila e adatta, oppure riduci la potenza della B.</span>';
+     else if(j&&j.ok&&j.rilievo)h=j.entra?'<span style="color:#15803D">✓ Sul tetto rilevato entrano fino a '+j.entrano+' moduli: i '+nn+' dell\'offerta B ci stanno.</span>':'<span style="color:#B91C1C">✕ Non ci stanno: sul tetto rilevato entrano al massimo '+j.entrano+' moduli ('+it(j.kwp_max,2)+' kWp), non '+nn+'. Riduci la potenza della B oppure contorna altre falde nella Mappa tetto, scheda «Offerta B».</span>';
+     else if(j&&j.ok)h='<span style="color:#64748B">Posa sul tetto non verificata: '+String(j.motivo||'')+'.</span>';
+     CAPH=h;var e2=$('#obCap');if(e2)e2.innerHTML=h;}).catch(function(){CAPK='';});},500);}
   function notaP(prod,resa,kwp,rid){return '<div class="msg" style="font-size:11.5px;font-weight:500">Calcolo fatto su una produzione di '+it(prod)+' kWh ('+it(resa)+' kWh/kWp × '+it(kwp,2)+' kWp), senza considerare l\'ulteriore riduzione prudenziale'+(rid?' del '+it(rid*100)+'%':'')+', che vale solo per i conti economici dell\'offerta.</div>';}
-  function cfForm(kwp){var noC=function(m){return !/^[BC]$/.test(String(m.categoria_enea||''))&&m.tipo!=='inverter';};
+  function cfForm(kwp){setTimeout(function(){try{obCap();}catch(x){}},60);var noC=function(m){return !/^[BC]$/.test(String(m.categoria_enea||''))&&m.tipo!=='inverter';};
    if(!CONF){var cand=Object.keys(MOD).map(function(k){return MOD[k];}).filter(noC).sort(function(a,b){return b.potenza_wp-a.potenza_wp;});var m=cand[0];CONF={mB:m?m.codice_preventivo:'',nB:m?Math.round(kwp*1000/m.potenza_wp):'',pB:''};}
    var mm=MOD[CONF.mB],kB=mm?it(n(CONF.nB)*mm.potenza_wp/1000,2)+' kWp':'—';
    var v=obVal(),gr=v.modo==='grande',mo=MOD[v.m],kO=mo?it(n(v.nn)*mo.potenza_wp/1000,2)+' kWp':'—',dis=gr?'':' disabled';
@@ -2571,7 +2626,7 @@ document.addEventListener('DOMContentLoaded', function(){
     +'<small>'+(gr?'Impianto personalizzato, senza iperammortamento: di partenza lo stesso modulo e la potenza più alta sotto i 10 kW, poi modulo, moduli e prezzo si scelgono qui.':'La B è l\'approfondimento del confronto qui sopra: stesso modulo, stessi moduli, stesso prezzo. Per un impianto diverso scegli «Impianto personalizzato».')+'</small>'
     +'<label>Modulo<select data-ob="m"'+dis+'>'+modOpt(noC,v.m)+'</select></label>'
     +'<div class="abr"><label>Moduli<input type="number" min="1" step="1" data-ob="nn" value="'+v.nn+'"'+dis+'></label><span class="abk" id="obk">'+kO+'</span></div>'
-    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-ob="p" value="'+v.p+'"'+dis+'></label></div></div>';}
+    +'<label>Prezzo totale, IVA 10% inclusa (€)<input type="number" min="0" step="any" data-ob="p" value="'+v.p+'"'+dis+'></label><div id="obCap" style="font-size:12px;font-weight:600;line-height:1.5"></div></div></div>';}
   function eur(v){return Math.round(v).toLocaleString('it-IT');}
   function modOpt(filtro,sel){return Object.keys(MOD).map(function(k){return MOD[k];}).filter(filtro).sort(function(a,b){return a.potenza_wp-b.potenza_wp;})
     .map(function(m){return '<option value="'+m.codice_preventivo+'"'+(m.codice_preventivo===sel?' selected':'')+'>'+m.brand+' '+Math.round(m.potenza_wp)+' Wp — '+String(m.modello).replace(/\s*\d+\s*Wp$/i,'')+(m.categoria_enea?' · cat. '+m.categoria_enea:' · cat. non registrata')+'</option>';}).join('');}
