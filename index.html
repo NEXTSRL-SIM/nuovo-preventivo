@@ -2452,6 +2452,7 @@ document.addEventListener('DOMContentLoaded', function(){
      if(P.pvgis_resa_kwh_kwp){var rh=$('#resa_kwh_kwp_input');if(rh)rh.value=P.pvgis_resa_kwh_kwp;var rd=$('#display_resa_kwh_kwp');if(rd)rd.textContent=Math.round(P.pvgis_resa_kwh_kwp).toLocaleString('it-IT');}
      CONF=P.offerta_confronto?{mB:P.offerta_confronto.modulo,nB:P.offerta_confronto.n_moduli,pB:P.offerta_confronto.totale_eur}:null;CONFtoccato=false;
      OB=P.offerta_b&&P.offerta_b.modo==='grande'?{modo:'grande',m:P.offerta_b.modulo,nn:P.offerta_b.n_moduli,p:P.offerta_b.totale_eur==null?'':P.offerta_b.totale_eur}:(P.offerta_b?{modo:'uguale'}:null);OBtoccato=false;
+     ACC=Array.isArray(P.analisi_accumulo)&&P.analisi_accumulo.length?P.analisi_accumulo.map(function(o){return {bat:o.bat,n:o.n,prezzo:o.prezzo==null?'':o.prezzo};}):null;ACCtoccato=false;accDisegna();
      segCf(P.consumi_fonte==='manuale'?'manuale':'bolletta');if(window.__azMostraTesti)window.__azMostraTesti(P);}
     setTimeout(function(){bollette();agev();},50);}).catch(function(){});}
   if(sl)sl.addEventListener('change',function(){setTimeout(caricaAzienda,150);});
@@ -2477,6 +2478,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var c=document.createElement('section');c.className='pc oaz';c.id='cardOfferta';c.hidden=true;
   c.innerHTML='<div class="ph"><span class="pi vi"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5l7-3v19M19 21V9l-7-3"/></svg></span><div><b>Offerta azienda</b><small>Iperammortamento, parametri e dettaglio economico</small></div><span class="px"><span class="az-chip oaz-chip" title="Si salva con il preventivo">si salva con il preventivo</span></span></div><div class="pb">'
    +'<div id="oaz105"><h4>Verifica limite 105% · DM 7/5/2026</h4><div class="v105 nd" id="v105"><div class="gas">Gas annuo (Sm³) <input type="number" min="0" step="any" id="oaz_smc" placeholder="da bolletta"><span id="oaz_smc_src" style="font-size:11.5px"></span></div><div id="v105c"></div></div></div>'
+   +'<h4>Accumulo · analisi nell\'offerta e backup</h4><div id="oazAcc"></div>'
    +'<h4>Parametri dell\'offerta</h4><div class="pg">'
    +'<div><label for="oaz_rid">Riduzione prudenziale %</label><input type="number" id="oaz_rid" min="0" max="30" step="any" value="5"><div class="az-src">sulla produzione stimata</div></div>'
    +'<div><label for="oaz_aliq">Aliquota fiscale %</label><input type="number" id="oaz_aliq" min="0" max="60" step="any"><div class="az-src" id="oaz_aliq_src"></div></div>'
@@ -2534,6 +2536,15 @@ document.addEventListener('DOMContentLoaded', function(){
      modo «uguale»: la B è l'approfondimento del confronto nell'offerta (stesso modulo, moduli e prezzo della prima sezione).
      modo «grande»: la B è un impianto più grande senza iperammortamento: stesso modulo, potenza proposta sotto i 10 kW, tutto modificabile. */
   var OB=null,OBtoccato=false;
+  /* PORTALE NEXT-110 (Sante 31/10 11:19): le taglie di accumulo che l'offerta mette a confronto (pagina «Il sistema di accumulo»)
+     e il loro prezzo in più, IVA 10% inclusa; senza prezzo l'offerta mostra energia e beneficio ma non il rientro. */
+  var ACC=null,ACCtoccato=false,ACCBAT=[['WECO_5','WeCo 5,12 kWh'],['WECO_16','WeCo 16,3 kWh'],['ZCS','ZCS Azzurro 5,12 kWh']];
+  function accDisegna(){var box=document.getElementById('oazAcc');if(!box)return;var A=ACC||[{bat:'WECO_5',n:1,prezzo:''},{bat:'WECO_5',n:2,prezzo:''},{bat:'WECO_16',n:1,prezzo:''}];if(!ACC)ACC=A;
+   box.innerHTML='<div style="font-size:11.5px;color:#64748B;margin:0 0 6px">Tre taglie da mettere a confronto nell\'offerta, con o senza accumulo nel preventivo. Il prezzo è quello in più per la batteria, IVA 10% inclusa: senza prezzo esce solo l\'energia recuperata.</div>'
+    +A.map(function(o,i){return '<div class="abr" style="margin-bottom:6px"><label style="flex:2">Batteria<select data-acc="bat" data-i="'+i+'">'+ACCBAT.map(function(b){return '<option value="'+b[0]+'"'+(b[0]===o.bat?' selected':'')+'>'+b[1]+'</option>';}).join('')+'</select></label><label style="flex:.6">Quante<input type="number" min="1" max="6" step="1" data-acc="n" data-i="'+i+'" value="'+(o.n||1)+'"></label><label style="flex:1.2">Prezzo in più, IVA incl. (€)<input type="number" min="0" step="any" data-acc="prezzo" data-i="'+i+'" value="'+(o.prezzo==null?'':o.prezzo)+'"></label></div>';}).join('');}
+  document.addEventListener('input',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-acc');if(!k||!ACC)return;var i=+e.target.getAttribute('data-i');if(!ACC[i])return;ACC[i][k]=k==='bat'?e.target.value:e.target.value;ACCtoccato=true;});
+  document.addEventListener('change',function(e){var k=e.target.getAttribute&&e.target.getAttribute('data-acc');if(!k||!ACC)return;var i=+e.target.getAttribute('data-i');if(!ACC[i])return;ACC[i][k]=e.target.value;ACCtoccato=true;});
+  (function aspetta(){if(document.getElementById('oazAcc'))accDisegna();else setTimeout(aspetta,400);})();
   function obVal(){if(!OB||OB.modo!=='grande')return {modo:'uguale',m:CONF?CONF.mB:'',nn:CONF?CONF.nB:'',p:CONF?CONF.pB:''};return {modo:'grande',m:OB.m,nn:OB.nn,p:OB.p};}
   function obSotto10(cod){var mm=MOD[cod];return mm&&mm.potenza_wp?Math.max(1,Math.floor(9999.999/Number(mm.potenza_wp))):'';}
   function obSync(){var v=obVal(),mm=MOD[v.m];var s=$('[data-ob="m"]'),x=$('[data-ob="nn"]'),y=$('[data-ob="p"]'),k=$('#obk');
@@ -2640,6 +2651,7 @@ document.addEventListener('DOMContentLoaded', function(){
     preventivo:{con_iperammortamento:!!(iper&&iper.checked),riduzione_prudenziale_pct:n($('#oaz_rid').value),aliquota_fiscale_pct:$('#oaz_aliq').value===''?null:n($('#oaz_aliq').value),
      mostra_dettaglio_economico:$('#oaz_det').checked,dettaglio_voci_json:voci,consumi_fonte:cfonte(),gas_smc:g&&g.dataset.mano&&g.value?n(g.value):null,calcolo:window.__azCalcolo||null,
      offerta_confronto:CONFtoccato&&CONF?(CONF.mB&&n(CONF.nB)>0&&n(CONF.pB)>0?{modulo:CONF.mB,n_moduli:n(CONF.nB),totale_eur:n(CONF.pB)}:null):undefined,
+     analisi_accumulo:ACCtoccato&&ACC?ACC.map(function(o){return {bat:o.bat,n:Math.max(1,Math.round(n(o.n)||1)),prezzo:n(o.prezzo)||null};}):undefined,
      offerta_b:OBtoccato&&OB?(OB.modo==='grande'?{modo:'grande',modulo:OB.m,n_moduli:n(OB.nn)||null,totale_eur:n(OB.p)||null}:{modo:'uguale'}):undefined,
      pvgis_resa_kwh_kwp:n(($('#resa_kwh_kwp_input')||{}).value)||undefined}};}
   var F0=window.fetch;
