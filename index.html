@@ -3048,4 +3048,60 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+<style>
+/* PORTALE NEXT-110 (Sante 01/11 11:54): scelta veloce di comune e via, come nel configuratore WhatsApp. Il comune porta provincia e CAP, la via si sceglie tra quelle del comune */
+.ix-box{position:relative}
+.ix-sug{position:absolute;left:0;right:0;top:100%;z-index:60;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,.12);overflow:hidden}
+.ix-sug button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:0;border-bottom:1px solid #F0F2F5;background:#fff;font:inherit;font-size:13px;color:var(--text);text-align:left;cursor:pointer}
+.ix-sug button:last-child{border-bottom:0}
+.ix-sug button:hover,.ix-sug button.on{background:var(--acw)}
+.ix-sug small{color:var(--text-muted);font-size:11.5px;white-space:nowrap}
+.ix-tag{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:var(--acw);color:var(--accent);text-transform:none;letter-spacing:0}
+</style>
+<script>
+(function(){
+ var $=function(s,r){return (r||document).querySelector(s);};
+ var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
+ var GEO='https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/';
+ function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
+ function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’'`]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();}
+ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ var COM=null,CAR=null;
+ function comuni(){if(COM)return Promise.resolve(COM);if(!CAR)CAR=fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=comuni').then(function(r){return r.json();}).then(function(j){COM=(j.c||[]).map(function(x){return {n:x[0],s:x[1],cap:String(x[2]||'').split('|').filter(Boolean),k:norm(x[0])};});return COM;}).catch(function(){CAR=null;return [];});return CAR;}
+ function metti(el,v){if(!el)return;el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}
+ function attacca(cfg){
+  var C=$(cfg.comune),V=$(cfg.via),Z=$(cfg.cap),P=$(cfg.prov);if(!C||!V||C.dataset.ix)return false;C.dataset.ix='1';
+  var stato={c:null,area:null},lc=lista(C),lv=lista(V),tv=null,ultima='';
+  C.setAttribute('autocomplete','off');V.setAttribute('autocomplete','off');
+  function lista(inp){var b=inp.parentNode;b.classList.add('ix-box');var d=document.createElement('div');d.className='ix-sug';d.hidden=true;b.appendChild(d);return d;}
+  function chiudi(){lc.hidden=true;lv.hidden=true;}
+  /* comune: filtro locale, prima chi inizia con il testo, poi chi lo contiene, al massimo 8 */
+  C.addEventListener('input',function(e){if(!e.isTrusted)return;stato.c=null;stato.area=null;var q=norm(C.value);if(q.length<2){lc.hidden=true;return;}
+   comuni().then(function(L){if(norm(C.value)!==q)return;var a=L.filter(function(c){return c.k.indexOf(q)===0;}),b=L.filter(function(c){return c.k.indexOf(q)>0;}),l=a.concat(b).slice(0,8);
+    lc.innerHTML=l.map(function(c,i){return '<button type="button" data-i="'+L.indexOf(c)+'"><span>'+esc(c.n)+' ('+esc(c.s)+')</span><small>'+(c.cap.length>1?'più CAP':esc(c.cap[0]||''))+'</small></button>';}).join('');lc.hidden=!l.length;});});
+  lc.addEventListener('mousedown',function(e){var b=e.target.closest('button');if(!b)return;e.preventDefault();var c=COM[+b.dataset.i];scegli(c);});
+  function scegli(c){stato.c=c;stato.area=null;metti(C,c.n);if(P)metti(P,c.s);if(Z)metti(Z,c.cap.length===1?c.cap[0]:'');lc.hidden=true;
+   fetch(GEO+'findAddressCandidates?f=json&maxLocations=1&countryCode=ITA&category=City&SingleLine='+encodeURIComponent(c.n+', '+c.s)).then(function(r){return r.json();}).then(function(j){var k=j&&j.candidates&&j.candidates[0];if(k&&k.extent&&stato.c===c)stato.area={x:k.location.x,y:k.location.y,e:k.extent};}).catch(function(){});
+   if(!V.value.trim())V.focus();}
+  /* via: suggerimenti delle vie del comune scelto (Esri), da 2 caratteri, 250 ms dopo l'ultimo tasto, al massimo 6 */
+  V.addEventListener('input',function(e){if(!e.isTrusted)return;clearTimeout(tv);var q=V.value.trim();if(q.length<2||/\d/.test(q.split(' ').pop()||'')&&lv.hidden){lv.hidden=true;return;}
+   tv=setTimeout(function(){var com=stato.c?stato.c.n:C.value.trim();var u=GEO+'suggest?f=json&countryCode=ITA&category=Address&maxSuggestions=10&text='+encodeURIComponent(stato.area||!com?q:q+', '+com);
+    if(stato.area){var x=stato.area.e;u+='&location='+stato.area.x+','+stato.area.y+'&searchExtent='+x.xmin+','+x.ymin+','+x.xmax+','+x.ymax;}
+    fetch(u).then(function(r){return r.json();}).then(function(j){if(V.value.trim()!==q)return;var nc=norm(com),vis={},l=[];
+     (j.suggestions||[]).forEach(function(s){var p=s.text.split(',').map(function(x){return x.trim();});if(nc&&!p.some(function(x){return norm(x)===nc;}))return;var v=p[0].replace(/\s+\d+[a-zA-Z]?(\/\w+)?$/,'');if(!vis[v]){vis[v]=1;l.push(v);}});
+     lv.innerHTML=l.slice(0,6).map(function(v){return '<button type="button" data-v="'+esc(v)+'"><span>'+esc(v)+'</span><small>'+esc(com)+'</small></button>';}).join('');lv.hidden=!l.length;}).catch(function(){});},250);});
+  lv.addEventListener('mousedown',function(e){var b=e.target.closest('button');if(!b)return;e.preventDefault();var civ=(V.value.match(/\s(\d+[a-zA-Z]?(\/\w+)?)$/)||[])[1]||'';metti(V,b.dataset.v+' '+civ);lv.hidden=true;V.focus();try{V.setSelectionRange(V.value.length,V.value.length);}catch(x){}});
+  /* CAP preciso per i comuni con più CAP, dalla via con il numero civico */
+  V.addEventListener('blur',function(){setTimeout(chiudi,150);var c=stato.c,v=V.value.trim();if(!c||c.cap.length<2||!Z||v===ultima||v.length<4)return;ultima=v;
+   fetch(GEO+'findAddressCandidates?f=json&maxLocations=1&countryCode=ITA&outFields=Postal&SingleLine='+encodeURIComponent(v+', '+c.n+', '+c.s)).then(function(r){return r.json();}).then(function(j){var k=j&&j.candidates&&j.candidates[0],pc=k&&k.attributes&&k.attributes.Postal;if(pc&&c.cap.indexOf(pc)>=0&&stato.c===c)metti(Z,pc);}).catch(function(){});});
+  C.addEventListener('blur',function(){setTimeout(function(){lc.hidden=true;},150);
+   if(stato.c)return;comuni().then(function(L){var q=norm(C.value),t=L.filter(function(c){return c.k===q;});if(t.length===1)scegli(t[0]);});});
+  [C,V].forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Escape')chiudi();});});
+  return true;}
+ function prova(){var ok1=attacca({comune:'#city',via:'#address',cap:'#zip',prov:'#province'}),ok2=attacca({comune:'#az_comune',via:'#az_via',cap:'#az_cap',prov:'#az_prov'});
+  if(!$('#az_comune')||!$('#city'))setTimeout(prova,500);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(prova,400);});else setTimeout(prova,400);
+ setTimeout(comuni,1500);
+})();
+</script>
 </body>
