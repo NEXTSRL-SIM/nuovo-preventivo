@@ -2450,12 +2450,13 @@ document.addEventListener('DOMContentLoaded', function(){
   };
   /* ---------- testi dell'offerta: due frasi ciascuno, validi da subito, correggibili ---------- */
   var TXF='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/testi-azienda';
-  var cTx=document.createElement('section');cTx.className='pc az-larga';cTx.id='cardTesti';cTx.hidden=cBo.hidden;
+  var cTx=document.createElement('section');cTx.className='pc az-larga';cTx.id='cardTesti';cTx.hidden=cLr.hidden;
   cTx.innerHTML='<div class="ph"><span class="pi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><div><b>Testi dell\'offerta</b><small>Chi è il committente e perché il fotovoltaico: due frasi, scritte dalla ricerca online. Si correggono qui e valgono subito.</small></div><span class="px"></span></div>'
    +'<div class="pb"><div class="tx-2"><div><label for="tx_comm">Il committente</label><textarea id="tx_comm" rows="3" placeholder="Si scrive da solo alla prima offerta, oppure con «Riscrivi»"></textarea></div><div><label for="tx_perche">Perché il fotovoltaico, in questo caso specifico</label><textarea id="tx_perche" rows="3"></textarea></div></div>'
    +'<div class="tx-b"><span id="tx_st" class="az-src"></span><button type="button" class="btn btn-secondary" id="tx_rifai" style="font-size:12px;padding:5px 11px">Riscrivi dai dati online</button></div><div id="tx_fonti" class="az-src"></div></div>';
   cBo.parentNode.insertBefore(cTx,cBo.nextSibling);
-  new MutationObserver(function(){cTx.hidden=cBo.hidden;}).observe(cBo,{attributes:true,attributeFilter:['hidden']});
+  /* PORTALE NEXT-110 (01/11): i testi dell'offerta sono solo per le aziende; la scheda bollette ora è anche dei privati, quindi si segue il legale rappresentante */
+  new MutationObserver(function(){cTx.hidden=cLr.hidden;}).observe(cLr,{attributes:true,attributeFilter:['hidden']});
   var stTx=document.createElement('style');stTx.textContent='#cardTesti{grid-column:1/-1;order:5}.tx-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tx-2 textarea{width:100%;font-size:13px;line-height:1.45;padding:8px 10px;border:1px solid #E3E7EC;border-radius:9px;resize:vertical}.tx-b{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}#tx_fonti a{color:#0891B2}.az-cf{margin:12px 0 10px}@media (max-width:900px){.tx-2{grid-template-columns:1fr}}';document.head.appendChild(stTx);
   function mostraTesti(P){P=P||{};$('#tx_comm').value=P.testo_committente||'';$('#tx_perche').value=P.testo_perche||'';
    var F=(P.testi_fonti_json&&P.testi_fonti_json.fonti)||[];
