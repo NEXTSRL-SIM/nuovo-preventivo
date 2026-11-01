@@ -3228,4 +3228,38 @@ document.addEventListener('DOMContentLoaded', function(){
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,600);});else setTimeout(monta,600);
 })();
 </script>
+<style>
+/* PORTALE NEXT-110 (Sante 01/11): parametri dell'analisi economica del termico, come i «Parametri Analisi Economica» del FV, con il gas separato dall'elettricità */
+#teEcon{margin-top:12px}
+#teEcon .param-row input{width:90px}
+#teEcon .te-ec-nota{font-size:11px;color:var(--text-muted);margin:2px 0 10px}
+</style>
+<script>
+(function(){
+ var $=function(s,r){return (r||document).querySelector(s);};
+ var CAMPI=[['prezzo_gas','tePrezzoGas','Prezzo del gas (IVA inclusa)','€/Sm³','0.01','1.05'],['inc_gas','teIncGas','Incremento costo del gas','%/anno','0.1','3.0'],['ets2','teEts2','Aggravio CO₂ sul gas dal 2028 (ETS2)','€/Sm³','0.01','0'],['prezzo_el','tePrezzoEl','Prezzo dell\'energia elettrica','€/kWh','0.01','0.30'],['inc_el','teIncEl','Incremento costo energia elettrica','%/anno','0.1','3.0'],['caldaia_evitata','teEvitata','Caldaia nuova che andrebbe comunque sostituita (costo evitato)','€','50','0'],['fissi_gas','teFissi','Quote fisse del gas evitate (solo se si chiude il contratto gas)','€/anno','10','0']];
+ function monta(){var hb=$('#acc-heat-body'),ct=$('#ctBox');if(!hb||!ct)return setTimeout(monta,500);if($('#teEcon'))return;
+  var d=document.createElement('div');d.className='sub-accordion';d.id='teEcon';
+  d.innerHTML='<div class="sub-accordion-header" onclick="var b=document.getElementById(\'teEconBody\');b.classList.toggle(\'open\');"><span class="sub-label">📊 Parametri analisi economica termico</span><span style="font-size:9px;color:var(--teal)">▼</span></div>'
+   +'<div class="sub-accordion-body" id="teEconBody"><p class="te-ec-nota">Valori usati per il rientro e il piano anno per anno del preventivo termico. Gas ed elettricità crescono ciascuno con il suo incremento. Modificabili per ogni preventivo.</p>'
+   +CAMPI.map(function(c){return '<div class="param-row"><label for="'+c[1]+'">'+c[2]+'</label><input type="number" form="ie-fuori" id="'+c[1]+'" data-par="'+c[0]+'" step="'+c[4]+'" min="0" value="'+c[5]+'" /><span class="param-unit">'+c[3]+'</span></div>';}).join('')
+   +'<p class="te-ec-nota">Il prezzo del gas parte dalla bolletta quando c\'è; l\'ETS2 è la tassa europea sulla CO₂ del riscaldamento dal 2028 (circa 0,09 €/Sm³ a 45 €/t): lasciarlo a 0 se non lo si vuole mostrare.</p></div>';
+  ct.parentNode.insertBefore(d,ct.nextSibling);
+  // l'elettricità segue i parametri FV finché non si tocca qui
+  var pt=$('#p_tariffa'),pi=$('#p_inc');
+  if(pt){$('#tePrezzoEl').value=pt.value||'0.30';pt.addEventListener('input',function(){var e=$('#tePrezzoEl');if(e&&!e.dataset.toccato)e.value=pt.value;});}
+  if(pi){$('#teIncEl').value=pi.value||'3.0';pi.addEventListener('input',function(){var e=$('#teIncEl');if(e&&!e.dataset.toccato)e.value=pi.value;});}
+  d.addEventListener('input',function(e){if(e.target.dataset.par)e.target.dataset.toccato='1';});
+  // il prezzo del gas dalla bolletta, se il campo non è stato toccato
+  var gp=$('#gasPrz');if(gp){var s=function(){var e=$('#tePrezzoGas'),v=parseFloat(String(gp.value).replace(',','.'));if(e&&!e.dataset.toccato&&v)e.value=v.toFixed(2);};['input','change'].forEach(function(k){gp.addEventListener(k,s);});setInterval(s,3000);s();}
+ }
+ function leggi(){var o={};CAMPI.forEach(function(c){var e=$('#'+c[1]);if(e&&e.value!=='')o[c[0]]=parseFloat(String(e.value).replace(',','.'));});return o;}
+ function scrivi(p){CAMPI.forEach(function(c){var e=$('#'+c[1]);if(!e)return;if(p&&p[c[0]]!=null){e.value=p[c[0]];e.dataset.toccato='1';}else{var f=c[0]==='prezzo_el'?$('#p_tariffa'):c[0]==='inc_el'?$('#p_inc'):c[0]==='prezzo_gas'?$('#gasPrz'):null,v=f&&parseFloat(String(f.value).replace(',','.'));e.value=v?v:c[5];delete e.dataset.toccato;}});}
+ function aggancia(){if(!window.__ctDati||!window.__ctCarica)return setTimeout(aggancia,400);if(window.__ctDati.__econ)return;
+  var d0=window.__ctDati,c0=window.__ctCarica;
+  window.__ctDati=function(){var r=d0()||{};r.par=leggi();return r;};window.__ctDati.__econ=1;
+  window.__ctCarica=function(ct){c0(ct);var t=function(){if(!$('#teEcon'))return setTimeout(t,300);scrivi(ct&&ct.par);};t();};}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,900);aggancia();});else{setTimeout(monta,900);aggancia();}
+})();
+</script>
 </body>
