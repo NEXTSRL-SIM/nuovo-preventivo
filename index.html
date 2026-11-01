@@ -2860,7 +2860,8 @@ document.addEventListener('DOMContentLoaded', function(){
    ['int','Integrazione','Pompa di calore affiancata alla caldaia esistente',null],
    ['sol','Solare termico','Impianto nuovo o sostituzione di quello esistente',['Nuovo impianto','Sostituzione']]].map(function(p){
      return '<div class="card-percorso" data-p="'+p[0]+'"><input type="checkbox" data-k="percorsi.'+p[0]+'" value="1"><div style="width:100%"><div class="cp-title">'+p[1]+'</div><div class="cp-desc">'+p[2]+'</div>'
-       +(p[3]?'<div class="ie-ops" hidden>'+p[3].map(function(s,i){return rad('percorsi.'+p[0]+'_tipo',s,s);}).join('')+'</div>':'')+'</div></div>';}).join('')
+       +(p[3]?'<div class="ie-ops" hidden>'+p[3].map(function(s,i){return rad('percorsi.'+p[0]+'_tipo',s,s);}).join('')+'</div>':'')+(p[0]==='rif'?'<div class="ie-av" id="teAvCald" hidden></div>':'')+'</div></div>';}).join('')
+ +'<div class="ie-fs" style="margin-top:4px"><div class="lg">Incentivo da mettere nel preventivo</div><div class="ie-ops">'+rad('incentivo','confronta','Confronta Conto Termico e detrazione',true)+rad('incentivo','ct','Conto Termico 3.0')+rad('incentivo','det50','Detrazione 50% · prima casa')+rad('incentivo','det36','Detrazione 36% · altre unità')+'</div><div class="ie-hint" id="teInc" style="font-size:12px;line-height:1.5"></div></div>'
  +'</div>'
  +'<div style="margin-top:14px"><label class="ie-l">Note impianto termico esistente</label><textarea data-k="note" rows="2" placeholder="Es. caldaia in lavanderia, canna fumaria condominiale…"></textarea></div>';
 
@@ -2952,7 +2953,21 @@ document.addEventListener('DOMContentLoaded', function(){
    $$('.ie-tab',tabs).forEach(function(b){b.addEventListener('click',function(){$$('.ie-tab',tabs).forEach(function(x){x.classList.toggle('on',x===b);});['Fv','Te','Se'].forEach(function(t){$('#iePane'+t).hidden=t!==b.dataset.t;});});});
    function vista(){var d=leggi(te);$('#teDati').style.display=d.esistente==='no'?'none':'';$('#teSol').hidden=(d.acs||[]).indexOf('solare')<0;$$('[data-gen]',te).forEach(function(r){r.hidden=(d.generatori||[]).indexOf(r.dataset.gen)<0;});$('#teCli').hidden=!(d.clima&&d.clima.presenti==='si');
      $$('.card-percorso',te).forEach(function(c){var on=$('input[type=checkbox]',c).checked;c.classList.toggle('selected',on);var o=$('.ie-ops',c);if(o)o.hidden=!on;});
-     $$('.card-percorso',se).forEach(function(c){c.classList.toggle('selected',$('input[type=checkbox]',c).checked);});classe();}
+     $$('.card-percorso',se).forEach(function(c){c.classList.toggle('selected',$('input[type=checkbox]',c).checked);});incentivi(d);classe();}
+   /* PORTALE NEXT-110 (Sante 01/11 10:21): incentivi possibili per i percorsi scelti (regole in termico_regole) */
+   function incentivi(d){var P=d.percorsi||{},av=$('#teAvCald',te),inc=$('#teInc',te);if(!inc)return;
+     var soloCald=P.rif&&P.rif_tipo==='Caldaia a condensazione';
+     if(av){av.hidden=!soloCald;av.innerHTML='<b>Nessun incentivo per la sola caldaia a condensazione.</b> Il Conto Termico 3.0 non la prevede (DM 7/8/2025, art. 8) e per le spese 2025-2027 la caldaia unica a combustibile fossile è esclusa anche dall\'ecobonus. Con il <b>sistema ibrido</b> sì: Conto Termico oppure detrazione.';}
+     var ct=[],det=[],no=[];
+     if(P.rif){if(soloCald)no.push('caldaia a condensazione');else if(P.rif_tipo){ct.push(P.rif_tipo.toLowerCase());det.push(P.rif_tipo.toLowerCase());}}
+     if(P.acs){ct.push('boiler a pompa di calore');det.push('boiler a pompa di calore');}
+     if(P.cli){ct.push('climatizzatore');det.push('climatizzatore');}
+     if(P.int){ct.push('pompa di calore in integrazione');det.push('pompa di calore in integrazione');}
+     if(P.sol){ct.push('solare termico');det.push('solare termico');}
+     var t=[];if(ct.length)t.push('<b>Conto Termico:</b> '+ct.join(', ')+'.');if(det.length)t.push('<b>Detrazione:</b> '+det.join(', ')+'.');if(no.length)t.push('<b style="color:#B91C1C">Senza incentivo:</b> '+no.join(', ')+'.');
+     if(!t.length)t.push('Scegli il percorso: qui compaiono gli incentivi possibili.');
+     t.push('Per lo stesso intervento si sceglie una sola strada: Conto Termico e detrazione non si sommano.');
+     inc.innerHTML=t.join('<br>');}
    window.__ieVista=vista;
    [te,se].forEach(function(p){p.addEventListener('change',vista);p.addEventListener('input',function(e){if(/casa\./.test(e.target.dataset.k||''))classe();});
      p.addEventListener('click',function(e){var c=e.target.closest('.card-percorso');if(!c||e.target.closest('input,label,select'))return;var i=$('input[type=checkbox]',c);i.checked=!i.checked;vista();});});
