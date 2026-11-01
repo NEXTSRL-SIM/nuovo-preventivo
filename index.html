@@ -2774,6 +2774,7 @@ document.addEventListener('DOMContentLoaded', function(){
 .ie-ops{display:flex;flex-wrap:wrap;gap:6px}
 .ie-ops .opt{position:relative}
 .ie-ops .opt:has(input:checked){border-color:var(--accent);background:var(--acw);color:var(--accent);font-weight:600}
+.ie-pane [hidden],#gasBox [hidden]{display:none!important}
 .ie-sub{background:var(--accent-bg);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .ie-sub b{font-size:12px;color:var(--accent)}
 .ie-fs{border:1px solid var(--border);border-radius:12px;padding:10px 14px 12px;display:flex;flex-direction:column;gap:10px}
@@ -2804,6 +2805,7 @@ document.addEventListener('DOMContentLoaded', function(){
  function num(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
  function it(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
  var MARCHE=['Ariston','Argo','Baxi','Beretta','Biasi','Bosch','Buderus','Chaffoteaux','Cosmogas','Daikin','De Dietrich','Elco','Ferroli','Fondital','Hermann Saunier Duval','Immergas','Junkers','Lamborghini','LG','Mitsubishi Electric','Nova Florida','Panasonic','Radiant','Riello','Rossato','Samsung','Saunier Duval','Sime','Toshiba','Unical','Vaillant','Viessmann','Wolf'];
+ var GEN=[['trad','Caldaia tradizionale a metano'],['cond','Caldaia a condensazione'],['gasolio','Caldaia a gasolio'],['gpl','Caldaia a GPL'],['pellet','Pellet o legna'],['pdc','Pompa di calore']];
  var POT=['12','18','20','24','25','26','28','30','32','35'];
  function anni(dal,sel,ultimo){var o='<option value="">—</option>';for(var y=new Date().getFullYear();y>=dal;y--)o+='<option'+(String(y)===String(sel)?' selected':'')+'>'+y+'</option>';o+='<option value="'+ultimo+'">'+ultimo+'</option>';return o;}
  function rad(k,v,t,on){return '<label class="opt"><input type="radio" data-k="'+k+'" name="ie_'+k.replace(/\./g,'_')+'" value="'+v+'"'+(on?' checked':'')+'><span>'+t+'</span></label>';}
@@ -2817,12 +2819,13 @@ document.addEventListener('DOMContentLoaded', function(){
  +'<section class="pc"><div class="ph"><span class="pi" style="background:#FBEDEC;color:#7A1F2B">'+ico('<path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-5.5 1.2 1.2 1.8 2.2 2 3.5 1-2 1.5-4.5 1-8z"/>')+'</span><div><b>Impianto termico esistente</b></div><span class="px"></span></div>'
  +'<div class="pb"><div class="fr"><span>Riscaldamento esistente</span><div class="options seg">'+rad('esistente','no','Nessun impianto (casa nuova)')+rad('esistente','si','Ha già un impianto',true)+'</div></div></div></section>'
  +'<div class="product-section" id="teDati" style="margin-top:14px"><div class="section-title">Dati impianto esistente</div>'
- +fld('Generatore','<div class="ie-ops">'+[['trad','Caldaia tradizionale a metano'],['cond','Caldaia a condensazione'],['gasolio','Caldaia a gasolio'],['gpl','Caldaia a GPL'],['pellet','Pellet o legna'],['pdc','Pompa di calore']].map(function(x){return rad('generatore',x[0],x[1]);}).join('')+'</div>')
- +'<div class="ie-g3">'
- +fld('Marca','<input type="text" data-k="marca" list="ieMarche" placeholder="Scegli o scrivi"><datalist id="ieMarche">'+MARCHE.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>','Elenco precaricato · si sceglie o si scrive')
- +fld('Anno installazione','<select data-k="anno">'+anni(1975,'','prima del 1975')+'</select>')
- +fld('Potenza (kW)','<input type="text" data-k="potenza" list="iePotenze" placeholder="Es. 24"><datalist id="iePotenze">'+POT.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>','Le più comuni nel menu · si può scrivere')
- +'</div>'
+ +fld('Generatore · anche più di uno','<div class="ie-ops">'+GEN.map(function(x){return chk('generatori',x[0],x[1]);}).join('')+'</div>')
+ +'<datalist id="ieMarche">'+MARCHE.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist><datalist id="iePotenze">'+POT.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>'
+ +GEN.map(function(x){return '<div class="ie-sub" data-gen="'+x[0]+'" hidden><b>'+x[1]+'</b><div class="ie-g3">'
+   +fld('Marca','<input type="text" data-k="gen.'+x[0]+'.marca" list="ieMarche" placeholder="Scegli o scrivi">','Elenco precaricato · si sceglie o si scrive')
+   +fld('Anno installazione','<select data-k="gen.'+x[0]+'.anno">'+anni(1975,'','prima del 1975')+'</select>')
+   +fld('Potenza (kW)','<input type="text" data-k="gen.'+x[0]+'.potenza" list="iePotenze" placeholder="Es. 24">','Le più comuni nel menu · si può scrivere')
+   +'</div></div>';}).join('')
  +fld('Terminali',sel('terminali',['Radiatori in ghisa','Radiatori in alluminio o acciaio','Termoarredi','Pavimento radiante','Ventilconvettori (fan coil)','Misto radiatori e pavimento']))
  +'<div class="ie-fs"><div class="lg">Acqua calda sanitaria · anche più di una</div><div class="ie-ops">'+[['caldaia','Dalla caldaia'],['boiler_el','Boiler elettrico'],['boiler_gas','Boiler a gas'],['boiler_pdc','Boiler in pompa di calore'],['solare','Solare termico']].map(function(x){return chk('acs',x[0],x[1]);}).join('')+'</div>'
  +'<div class="ie-sub" id="teSol" hidden><b>Solare termico esistente</b><div class="ie-g3">'+fld('Superficie collettori (m²)','<input type="text" data-k="solare.m2" placeholder="Es. 4">')+fld('Anno installazione','<select data-k="solare.anno">'+anni(1980,'','prima del 1980')+'</select>')+fld('Stato',sel('solare.stato',['Funzionante','Da sostituire','Non funzionante']))+'</div></div></div>'
@@ -2871,12 +2874,12 @@ document.addEventListener('DOMContentLoaded', function(){
  /* ---------- lettura e scrittura dei campi (senza name: non finiscono nel salvataggio n8n) ---------- */
  function leggi(root){var o={};$$('[data-k]',root).forEach(function(e){var k=e.dataset.k,v;
    if(e.type==='radio'){if(!e.checked)return;v=e.value;}
-   else if(e.type==='checkbox'){if(k==='acs'){(o.acs=o.acs||[]);if(e.checked)o.acs.push(e.value);return;}v=e.checked;if(!v)return;}
+   else if(e.type==='checkbox'){if(k==='acs'||k==='generatori'){(o[k]=o[k]||[]);if(e.checked)o[k].push(e.value);return;}v=e.checked;if(!v)return;}
    else{v=e.value.trim();if(v==='')return;}
    var p=k.split('.'),t=o;for(var i=0;i<p.length-1;i++)t=t[p[i]]=t[p[i]]||{};t[p[p.length-1]]=v;});return o;}
  function scrivi(root,o){$$('[data-k]',root).forEach(function(e){var k=e.dataset.k,p=k.split('.'),v=o;for(var i=0;i<p.length&&v!=null;i++)v=v[p[i]];
    if(e.type==='radio')e.checked=(v!=null&&String(v)===e.value);
-   else if(e.type==='checkbox')e.checked=k==='acs'?((o.acs||[]).indexOf(e.value)>=0):!!v;
+   else if(e.type==='checkbox')e.checked=(k==='acs'||k==='generatori')?((o[k]||[]).indexOf(e.value)>=0):!!v;
    else e.value=v==null?'':v;});}
  function svuota(root){$$('[data-k]',root).forEach(function(e){if(e.type==='radio'||e.type==='checkbox')e.checked=e.defaultChecked;else e.value='';});}
 
@@ -2933,7 +2936,7 @@ document.addEventListener('DOMContentLoaded', function(){
    /* i campi nuovi restano fuori dal modulo: non entrano nel salvataggio di n8n, si salvano a parte */
    $$('input,select,textarea',te).concat($$('input,select,textarea',se)).forEach(function(e){e.setAttribute('form','ie-fuori');});
    $$('.ie-tab',tabs).forEach(function(b){b.addEventListener('click',function(){$$('.ie-tab',tabs).forEach(function(x){x.classList.toggle('on',x===b);});['Fv','Te','Se'].forEach(function(t){$('#iePane'+t).hidden=t!==b.dataset.t;});});});
-   function vista(){var d=leggi(te);$('#teDati').style.display=d.esistente==='no'?'none':'';$('#teSol').hidden=(d.acs||[]).indexOf('solare')<0;$('#teCli').hidden=!(d.clima&&d.clima.presenti==='si');
+   function vista(){var d=leggi(te);$('#teDati').style.display=d.esistente==='no'?'none':'';$('#teSol').hidden=(d.acs||[]).indexOf('solare')<0;$$('[data-gen]',te).forEach(function(r){r.hidden=(d.generatori||[]).indexOf(r.dataset.gen)<0;});$('#teCli').hidden=!(d.clima&&d.clima.presenti==='si');
      $$('.card-percorso',te).forEach(function(c){var on=$('input[type=checkbox]',c).checked;c.classList.toggle('selected',on);var o=$('.ie-ops',c);if(o)o.hidden=!on;});
      $$('.card-percorso',se).forEach(function(c){c.classList.toggle('selected',$('input[type=checkbox]',c).checked);});classe();}
    window.__ieVista=vista;
