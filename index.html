@@ -2963,7 +2963,7 @@ document.addEventListener('DOMContentLoaded', function(){
  window.__ieDati=dati;
  window.__ieCarica=function(pid){if(!/^[0-9a-f-]{36}$/i.test(pid||''))return;
    fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico&prev='+pid,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
-     if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};
+     if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};try{if(window.__gnTermico)window.__gnTermico(!!(t.percorsi&&Object.keys(t.percorsi).length));}catch(e){}
      if($('#iePaneTe')){svuota($('#iePaneTe'));scrivi($('#iePaneTe'),t);svuota($('#iePaneSe'));scrivi($('#iePaneSe'),s);}
      var g=t.gas||{};if($('#gasSmc')){$('#gasSmc').value=g.smc?it(g.smc):'';$('#gasPrz').value=g.prezzo?it(g.prezzo,2):'';}
      gasAggiorna();if(window.__ieVista)window.__ieVista();}).catch(function(){});};
@@ -2979,5 +2979,58 @@ document.addEventListener('DOMContentLoaded', function(){
  document.addEventListener('reset',function(){setTimeout(function(){if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();},50);},true);
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',monta);else monta();
 })();
+</script><style>
+/* PORTALE NEXT-110 (Sante 01/11 04:23): Genera preventivo con «Cosa prepari» (Fotovoltaico, Termico, Serramenti) e una card per sezione */
+#gnCosa{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px}
+#gnCosa>b{font-size:13.5px;width:120px}
+#gnCosa label.gc{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text-dim);margin:0;text-transform:none;letter-spacing:0}
+#gnCosa label.gc input{width:15px;height:15px;margin:0;accent-color:var(--gc)}
+#gnCosa label.gc:has(input:checked){border-color:var(--gc);background:var(--gcw);color:var(--gc)}
+#gnCosa label.gc.off{border-style:dashed;color:var(--text-hint);cursor:not-allowed}
+#gnCosa i.d{width:9px;height:9px;border-radius:50%;display:inline-block}
+#gnCosa .nt{margin-left:auto;font-size:12px;color:var(--text-muted)}
+.gn-fv{border-top:3px solid #0891B2!important}
+.gn-te{border-top:3px solid #7A1F2B!important;margin-top:16px}
+.gn-te .gopt.on{border-color:#7A1F2B!important;background:#FBF3F2!important}
+.gn-te .gopt.on .rd{border-color:#7A1F2B!important;box-shadow:inset 0 0 0 3px #fff;background:#7A1F2B!important}
+.gn-nota{font-size:12px;color:#7A1F2B;background:#FBF3F2;border-radius:8px;padding:8px 12px;margin:10px 0 0;line-height:1.5}
+#pdfSalvatiList i.gd{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;background:#0891B2}
+#pdfSalvatiList i.gd.te{background:#7A1F2B}
+</style>
+<script>
+(function(){
+ var $=function(s,r){return (r||document).querySelector(s);},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+ function monta(){var G=$('#tabGenera');if(!G)return setTimeout(monta,300);
+   var cards=$$('section.pc',G),fv=cards.find(function(s){var h=$('.ph',s);return h&&/Genera report preventivo/.test(h.textContent);});
+   if(!fv)return setTimeout(monta,300);if($('#gnCosa'))return;
+   /* la card di oggi diventa la card del fotovoltaico, senza cambiarne il funzionamento */
+   fv.classList.add('gn-fv');var tb=$('.ph b',fv),ts=$('.ph small',fv);if(tb)tb.textContent='Fotovoltaico';if(ts)ts.textContent='Scegli il formato da generare';
+   var pi=$('.ph .pi',fv);if(pi){pi.style.background='#E0F4F9';pi.style.color='#0891B2';}
+   /* card del termico */
+   var te=document.createElement('section');te.className='pc gn-te';te.hidden=true;te.id='gnTe';
+   te.innerHTML='<div class="ph"><span class="pi" style="background:#FBEDEC;color:#7A1F2B"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-5.5 1.2 1.2 1.8 2.2 2 3.5 1-2 1.5-4.5 1-8z"/></svg></span><div><b>Termico</b><small>Riscaldamento, acqua calda e climatizzazione</small></div><span class="px"></span></div>'
+    +'<div class="pb"><div class="gopt on"><span class="rd"></span><div><b>Preventivo termico</b><small>La casa oggi e la bolletta del gas, la soluzione per il percorso scelto in Impianto esistente, convenienza, Conto Termico o detrazione e rientro.</small></div></div>'
+    +'<div class="gn-nota">Il generatore del preventivo termico è in costruzione: i dati della scheda Termico si salvano già, il PDF arriva con il prossimo passo.</div></div>'
+    +'<div class="pf"><button type="button" class="btn btn-primary" disabled style="margin-left:auto;background:#7A1F2B;border-color:#7A1F2B;opacity:.55;cursor:not-allowed">Genera PDF termico</button></div>';
+   fv.parentNode.insertBefore(te,fv.nextSibling);
+   /* riga «Cosa prepari» */
+   var c=document.createElement('section');c.className='pc';c.style.marginBottom='16px';
+   c.innerHTML='<div id="gnCosa"><b>Cosa prepari</b>'
+    +'<label class="gc" style="--gc:#0891B2;--gcw:#E0F4F9"><input type="checkbox" id="gnFv" form="ie-fuori" checked><i class="d" style="background:#0891B2"></i>Fotovoltaico</label>'
+    +'<label class="gc" style="--gc:#7A1F2B;--gcw:#FBF3F2"><input type="checkbox" id="gnTeC" form="ie-fuori"><i class="d" style="background:#7A1F2B"></i>Termico</label>'
+    +'<label class="gc off" title="In arrivo"><input type="checkbox" form="ie-fuori" disabled><i class="d" style="background:#D97706;opacity:.5"></i>Serramenti · in arrivo</label>'
+    +'<span class="nt">Se ne possono spuntare più di una</span></div>';
+   var g2=fv.closest('.g2')||fv.parentNode;g2.parentNode.insertBefore(c,g2);
+   function vista(){fv.hidden=!$('#gnFv').checked;te.hidden=!$('#gnTeC').checked;}
+   $('#gnFv').addEventListener('change',vista);$('#gnTeC').addEventListener('change',vista);
+   /* con dati termici salvati, Termico si spunta da solo */
+   window.__gnTermico=function(on){var k=$('#gnTeC');if(k){k.checked=!!on;vista();}};
+   vista();}
+ /* pallino del colore della sezione davanti a ogni PDF generato */
+ function pallini(){var L=$('#pdfSalvatiList');if(!L)return;$$(':scope>div',L).forEach(function(r){if($('i.gd',r))return;var i=document.createElement('i');i.className='gd'+(/termico/i.test(r.textContent)?' te':'');r.insertBefore(i,r.firstChild);});}
+ (function oss(){var L=$('#pdfSalvatiList');if(!L)return setTimeout(oss,500);new MutationObserver(pallini).observe(L,{childList:true});pallini();})();
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,300);});else setTimeout(monta,300);
+})();
 </script>
+
 </body>
