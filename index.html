@@ -592,7 +592,7 @@ function mostraPdfSalvati(dati) {
 
 /* PORTALE NEXT-110 (Sante 29/10 18:30): «PDF già generati» elenca TUTTI i PDF del preventivo presenti in archivio
    (solo offerta, ridotto, alternative A e B, revisioni), dal più recente; si aggiorna da solo dopo ogni generazione. */
-function pdfTipo(nome){var s=String(nome||'');if(/TERMICO/i.test(s)){var rt=(s.match(/\bRev\.?\s*(\d+)/i)||[])[1];return 'Preventivo termico'+(rt?' · rev. '+rt:'');}var v=(s.match(/-([AB])\s+(SP|PR|PE)\.pdf$/i)||[])[1];var f=(s.match(/\s(SP|PR|PE)\.pdf$/i)||[])[1]||'';f=f.toUpperCase();
+function pdfTipo(nome){var s=String(nome||'');if(/TERMICO/i.test(s)){var rt=(s.match(/\bRev\.?\s*(\d+)/i)||[])[1];return 'Preventivo termico'+(/\sSP\.pdf$/i.test(s)?' · solo preventivo':/\sPR\.pdf$/i.test(s)?' · completo':'')+(rt?' · rev. '+rt:'');}var v=(s.match(/-([AB])\s+(SP|PR|PE)\.pdf$/i)||[])[1];var f=(s.match(/\s(SP|PR|PE)\.pdf$/i)||[])[1]||'';f=f.toUpperCase();
  var t=f==='SP'?'Solo offerta':f==='PE'?'Preventivo esteso':'Preventivo ridotto';var rv=(s.match(/\bRev\.?\s*(\d+)/i)||[])[1];
  return (v?'Offerta alternativa '+v.toUpperCase()+' · ':'')+t+(/^OFFERTA FV AZIENDA/i.test(s)?' · azienda':'')+(rv?' · rev. '+rv:'');}
 window.__pdfArchivio=function(){var pid=(document.getElementById('last_saved_id')||{}).value||(document.getElementById('existing_prev_id')||{}).value||'';
@@ -3024,10 +3024,10 @@ document.addEventListener('DOMContentLoaded', function(){
    /* card del termico */
    var te=document.createElement('section');te.className='pc gn-te';te.hidden=true;te.id='gnTe';
    te.innerHTML='<div class="ph"><span class="pi" style="background:#FBEDEC;color:#7A1F2B"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-5.5 1.2 1.2 1.8 2.2 2 3.5 1-2 1.5-4.5 1-8z"/></svg></span><div><b>Termico</b><small>Riscaldamento, acqua calda e climatizzazione</small></div><span class="px"></span></div>'
-    +'<div class="pb"><div class="gopt on"><span class="rd"></span><div><b>Preventivo termico</b><small>La casa oggi e la bolletta del gas, la soluzione per il percorso scelto in Impianto esistente, convenienza, Conto Termico o detrazione e rientro.</small></div></div>'
+    +'<div class="pb"><div class="gopt" data-tipo="solo"><span class="rd"></span><div><b>Solo preventivo</b><small>Copertina, riepilogo dell\'offerta con note, pagamento e firme, condizioni generali e schede tecniche dei prodotti.</small></div></div><div class="gopt on" data-tipo="completo"><span class="rd"></span><div><b>Preventivo completo</b><small>Come il solo preventivo, più la casa oggi e la classe energetica, la soluzione, gli incentivi, l\'analisi economica e il piano anno per anno.</small></div></div>'
     +'<div class="gn-nota" id="gnTeNota">Prima salva il preventivo: il PDF usa i dati della scheda Termico e i prodotti scelti nei Prodotti.</div></div>'
     +'<div class="pf"><span id="gnTeSt" style="font-size:12px;color:var(--text-muted)"></span><button type="button" id="gnTeBtn" class="btn btn-primary" style="margin-left:auto;background:#7A1F2B;border-color:#7A1F2B">Genera PDF termico</button></div>';
-   fv.parentNode.insertBefore(te,fv.nextSibling);
+   fv.parentNode.insertBefore(te,fv.nextSibling);te.addEventListener('click',function(e){var o=e.target.closest('.gopt');if(!o)return;$$('.gopt',te).forEach(function(x){x.classList.toggle('on',x===o);});});
    /* riga «Cosa prepari» */
    var c=document.createElement('section');c.className='pc';c.style.marginBottom='16px';
    c.innerHTML='<div id="gnCosa"><b>Cosa prepari</b>'
@@ -3045,7 +3045,7 @@ document.addEventListener('DOMContentLoaded', function(){
    $('#gnTeBtn').addEventListener('click',function(){var b=this,st=$('#gnTeSt'),pid=(($('#last_saved_id')||{}).value)||(($('#existing_prev_id')||{}).value)||'';var pass='';try{pass=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}
     if(!/^[0-9a-f-]{36}$/i.test(pid)){st.style.color='#B91C1C';st.textContent='Salva prima il preventivo.';return;}
     b.disabled=true;st.style.color='var(--text-muted)';st.textContent='⏳ Genero il preventivo termico…';
-    fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/preventivo-termico',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass,prev_id:pid,azione:'pdf'})}).then(function(r){return r.json();}).then(function(j){b.disabled=false;
+    fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/preventivo-termico',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass,prev_id:pid,azione:'pdf',tipo:(($('#gnTe .gopt.on')||{dataset:{}}).dataset.tipo)||'completo'})}).then(function(r){return r.json();}).then(function(j){b.disabled=false;
      if(!j||!j.ok){st.style.color='#B91C1C';st.textContent='Non generato: '+((j&&j.errore)||'errore');return;}
      st.style.color='var(--success)';st.innerHTML='✅ Pronto — <a href="'+j.url+'?v='+Date.now()+'" target="_blank" style="color:#7A1F2B;font-weight:600">📄 Apri PDF</a>';try{window.__pdfArchivio&&window.__pdfArchivio();}catch(e){}}).catch(function(e){b.disabled=false;st.style.color='#B91C1C';st.textContent='Errore di rete.';});});}
  /* pallino del colore della sezione davanti a ogni PDF generato */
