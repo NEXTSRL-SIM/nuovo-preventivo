@@ -2806,6 +2806,8 @@ document.addEventListener('DOMContentLoaded', function(){
  function it(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
  var MARCHE=['Ariston','Argo','Baxi','Beretta','Biasi','Bosch','Buderus','Chaffoteaux','Cosmogas','Daikin','De Dietrich','Elco','Ferroli','Fondital','Hermann Saunier Duval','Immergas','Junkers','Lamborghini','LG','Mitsubishi Electric','Nova Florida','Panasonic','Radiant','Riello','Rossato','Samsung','Saunier Duval','Sime','Toshiba','Unical','Vaillant','Viessmann','Wolf'];
  var GEN=[['trad','Caldaia tradizionale a metano'],['cond','Caldaia a condensazione'],['gasolio','Caldaia a gasolio'],['gpl','Caldaia a GPL'],['pellet','Pellet o legna'],['pdc','Pompa di calore']];
+ var MARCHE_PELLET=['Anselmo Cola','Cadel','Caminetti Montegrappa','Clam','Ecoteck','Edilkamin','Eva Calòr','Extraflame','Freepoint','Italiana Camini','Jolly Mec','Kalor','Klover','La Nordica','Lincar','MCZ','Moretti Design','Palazzetti','Piazzetta','Ravelli','Red','Rika','Royal','Sergio Leoni','Superior','Thermorossi','Ungaro','Wodtke'];
+ var POT_PELLET=['6','7','8','9','10','12','14','16','18','24','28','34'];
  var POT=['12','18','20','24','25','26','28','30','32','35'];
  function anni(dal,sel,ultimo){var o='<option value="">—</option>';for(var y=new Date().getFullYear();y>=dal;y--)o+='<option'+(String(y)===String(sel)?' selected':'')+'>'+y+'</option>';o+='<option value="'+ultimo+'">'+ultimo+'</option>';return o;}
  function rad(k,v,t,on){return '<label class="opt"><input type="radio" data-k="'+k+'" name="ie_'+k.replace(/\./g,'_')+'" value="'+v+'"'+(on?' checked':'')+'><span>'+t+'</span></label>';}
@@ -2820,11 +2822,11 @@ document.addEventListener('DOMContentLoaded', function(){
  +'<div class="pb"><div class="fr"><span>Riscaldamento esistente</span><div class="options seg">'+rad('esistente','no','Nessun impianto (casa nuova)')+rad('esistente','si','Ha già un impianto',true)+'</div></div></div></section>'
  +'<div class="product-section" id="teDati" style="margin-top:14px"><div class="section-title">Dati impianto esistente</div>'
  +fld('Generatore · anche più di uno','<div class="ie-ops">'+GEN.map(function(x){return chk('generatori',x[0],x[1]);}).join('')+'</div>')
- +'<datalist id="ieMarche">'+MARCHE.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist><datalist id="iePotenze">'+POT.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>'
+ +'<datalist id="ieMarche">'+MARCHE.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist><datalist id="iePotenze">'+POT.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist><datalist id="ieMarcheP">'+MARCHE_PELLET.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist><datalist id="iePotenzeP">'+POT_PELLET.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>'
  +GEN.map(function(x){return '<div class="ie-sub" data-gen="'+x[0]+'" hidden><b>'+x[1]+'</b><div class="ie-g3">'
-   +fld('Marca','<input type="text" data-k="gen.'+x[0]+'.marca" list="ieMarche" placeholder="Scegli o scrivi">','Elenco precaricato · si sceglie o si scrive')
+   +fld('Marca','<input type="text" data-k="gen.'+x[0]+'.marca" list="'+(x[0]==='pellet'?'ieMarcheP':'ieMarche')+'" placeholder="Scegli o scrivi">','Elenco precaricato · si sceglie o si scrive')
    +fld('Anno installazione','<select data-k="gen.'+x[0]+'.anno">'+anni(1975,'','prima del 1975')+'</select>')
-   +fld('Potenza (kW)','<input type="text" data-k="gen.'+x[0]+'.potenza" list="iePotenze" placeholder="Es. 24">','Le più comuni nel menu · si può scrivere')
+   +fld('Potenza (kW)','<input type="text" data-k="gen.'+x[0]+'.potenza" list="'+(x[0]==='pellet'?'iePotenzeP':'iePotenze')+'" placeholder="'+(x[0]==='pellet'?'Es. 9':'Es. 24')+'">','Le più comuni nel menu · si può scrivere')
    +'</div></div>';}).join('')
  +fld('Terminali',sel('terminali',['Radiatori in ghisa','Radiatori in alluminio o acciaio','Termoarredi','Pavimento radiante','Ventilconvettori (fan coil)','Misto radiatori e pavimento']))
  +'<div class="ie-fs"><div class="lg">Acqua calda sanitaria · anche più di una</div><div class="ie-ops">'+[['caldaia','Dalla caldaia'],['boiler_el','Boiler elettrico'],['boiler_gas','Boiler a gas'],['boiler_pdc','Boiler in pompa di calore'],['solare','Solare termico']].map(function(x){return chk('acs',x[0],x[1]);}).join('')+'</div>'
