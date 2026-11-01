@@ -2762,7 +2762,7 @@ document.addEventListener('DOMContentLoaded', function(){
 .ie-tab.on{background:var(--surface);border-color:var(--border);border-top:3px solid var(--c)}
 .ie-pane{border-top:3px solid var(--c);border-radius:12px;padding-top:18px}
 .ie-te{--c:#7A1F2B;--accent:#7A1F2B;--acw:#FBEDEC;--accent-bg:rgba(122,31,43,.06);--teal:#7A1F2B;--teal-border:#E8D5D4}
-.ie-se{--c:#2F7D5B;--accent:#2F7D5B;--acw:#E6F2EC;--accent-bg:rgba(47,125,91,.07);--teal:#2F7D5B;--teal-border:#CFE5D9}
+.ie-se{--c:#D97706;--accent:#D97706;--acw:#FEF3E2;--accent-bg:rgba(217,119,6,.07);--teal:#D97706;--teal-border:#F8D9A8}
 .ie-fv{--c:#0891B2}
 .ie-pane .product-section{display:flex;flex-direction:column;gap:12px}
 .ie-pane .product-section .section-title{margin:0!important}
@@ -2855,7 +2855,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
  var HTML_SE=''
  +'<p class="intro">Bozza: la linguetta c\'è già, i campi si completano quando partono i serramenti.</p>'
- +'<section class="pc"><div class="ph"><span class="pi" style="background:#E6F2EC;color:#2F7D5B">'+ico('<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>')+'</span><div><b>Serramenti esistenti</b></div><span class="px"></span></div>'
+ +'<section class="pc"><div class="ph"><span class="pi" style="background:#FEF3E2;color:#D97706">'+ico('<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>')+'</span><div><b>Serramenti esistenti</b></div><span class="px"></span></div>'
  +'<div class="pb"><div class="fr"><span>Serramenti</span><div class="options seg">'+rad('valutare','no','Da non toccare',true)+rad('valutare','si','Da valutare')+'</div></div></div></section>'
  +'<div class="product-section" style="margin-top:14px"><div class="section-title">Dati serramenti esistenti</div><div class="ie-g4">'
  +fld('Materiale',sel('materiale',['Legno','PVC','Alluminio','Legno-alluminio','Ferro']))
@@ -2901,23 +2901,24 @@ document.addEventListener('DOMContentLoaded', function(){
 
  /* ---------- consumi gas nei Prodotti ---------- */
  var gasMano=false;
+ function fonteDC(){var b=document.querySelector('#az_cfonte button.on');return !!(b&&b.dataset.v==='manuale');}
  function gasBoll(){var B=window.__BOLL||[];return B.find(function(b){return b.tipo!=='elettrica'&&Number(b.quantita_anno)>0;});}
  function gas(){var s=$('#gasSmc'),p=$('#gasPrz');return {smc:s?num(s.value):0,prezzo:p?num(p.value):0,fonte:gasMano?'manuale':(gasBoll()?'bolletta':'')};}
  function gasAggiorna(){var bx=$('#gasBox');if(!bx)return;var b=gasBoll();
-   $$('#gasSeg .opt input').forEach(function(i){i.checked=(i.value==='manuale')===gasMano;});
+   gasMano=fonteDC();
    var s=$('#gasSmc'),p=$('#gasPrz');
    if(!gasMano&&b){s.value=it(Number(b.quantita_anno));var pr=Number(b.spesa_ivata_eur)>0?Number(b.spesa_ivata_eur)/Number(b.quantita_anno):0;p.value=pr?it(pr,2):'';s.readOnly=p.readOnly=true;}
    else{s.readOnly=p.readOnly=false;}
    var v=num(s.value);$('#gasKwh').textContent=v?'≈ '+it(v*10.69)+' kWh':'';
-   $('#gasSrc').innerHTML=gasMano?'<span class="tag mano">scritti a mano</span>Dichiarati dal cliente.':(b?'<span class="tag">da bolletta</span>Dalla bolletta del gas'+(b.fornitore?' '+b.fornitore:'')+(b.confermata_at?'':' · da confermare')+'.':'Nessuna bolletta del gas: passa a «Scritti a mano» per inserirli.');
+   $('#gasSrc').innerHTML=gasMano?'<span class="tag mano">scritti a mano</span>Scelto «Scritti a mano» in Dati Contatto: si scrivono qui.':(b?'<span class="tag">da bolletta</span>Dalla bolletta del gas'+(b.fornitore?' '+b.fornitore:'')+(b.confermata_at?'':' · da confermare')+'.':'Nessuna bolletta del gas: si scrivono qui.');
    classe();}
  function montaGas(){var hb=$('#acc-heat-body');if(!hb||$('#gasBox'))return;
    var d=document.createElement('div');d.id='gasBox';
-   d.innerHTML='<div class="tt"><b>Consumi di gas</b><div class="options seg" id="gasSeg"><label class="opt"><input type="radio" name="ie_gas_fonte" value="bolletta" checked><span>Bolletta</span></label><label class="opt"><input type="radio" name="ie_gas_fonte" value="manuale"><span>Scritti a mano</span></label></div></div>'
+   d.innerHTML='<div class="tt"><b>Consumi di gas</b></div>'
     +'<div class="g2"><div><label>Consumo gas annuo (Sm³)</label><input type="text" id="gasSmc" placeholder="Es. 1.500"><div class="src" id="gasKwh" style="margin-top:4px"></div></div><div><label>Prezzo del gas (€/Sm³)</label><input type="text" id="gasPrz" placeholder="Es. 1,05"><div class="src" style="margin-top:4px">IVA inclusa, dalla spesa totale della bolletta</div></div></div><div class="src" id="gasSrc"></div>';
    hb.insertBefore(d,hb.firstChild);$$('input',d).forEach(function(e){e.setAttribute('form','ie-fuori');});
-   $$('#gasSeg input').forEach(function(i){i.addEventListener('change',function(){gasMano=this.value==='manuale';gasAggiorna();});});
-   ['#gasSmc','#gasPrz'].forEach(function(s){$(s).addEventListener('input',function(){if(!gasMano)return;var v=num($('#gasSmc').value);$('#gasKwh').textContent=v?'≈ '+it(v*10.69)+' kWh':'';classe();});});
+   document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#az_cfonte'))setTimeout(gasAggiorna,60);},true);
+   ['#gasSmc','#gasPrz'].forEach(function(s){$(s).addEventListener('input',function(){if(this.readOnly)return;var v=num($('#gasSmc').value);$('#gasKwh').textContent=v?'≈ '+it(v*10.69)+' kWh':'';classe();});});
    gasAggiorna();}
 
  /* ---------- le tre linguette in Impianto esistente ---------- */
@@ -2925,7 +2926,7 @@ document.addEventListener('DOMContentLoaded', function(){
    var fv=document.createElement('div');fv.className='ie-pane ie-fv';fv.id='iePaneFv';
    while(Im.firstChild)fv.appendChild(Im.firstChild);
    var tabs=document.createElement('div');tabs.className='ie-tabs';tabs.id='ieTabs';
-   tabs.innerHTML='<button type="button" class="ie-tab on" data-t="Fv" style="--c:#0891B2"><i style="background:#0891B2"></i>Fotovoltaico</button><button type="button" class="ie-tab" data-t="Te" style="--c:#7A1F2B"><i style="background:#7A1F2B"></i>Termico</button><button type="button" class="ie-tab" data-t="Se" style="--c:#2F7D5B"><i style="background:#2F7D5B"></i>Serramenti</button>';
+   tabs.innerHTML='<button type="button" class="ie-tab on" data-t="Fv" style="--c:#0891B2"><i style="background:#0891B2"></i>Fotovoltaico</button><button type="button" class="ie-tab" data-t="Te" style="--c:#7A1F2B"><i style="background:#7A1F2B"></i>Termico</button><button type="button" class="ie-tab" data-t="Se" style="--c:#D97706"><i style="background:#D97706"></i>Serramenti</button>';
    var te=document.createElement('div');te.className='ie-pane ie-te';te.id='iePaneTe';te.hidden=true;te.innerHTML=HTML_TE;
    var se=document.createElement('div');se.className='ie-pane ie-se';se.id='iePaneSe';se.hidden=true;se.innerHTML=HTML_SE;
    Im.appendChild(tabs);Im.appendChild(fv);Im.appendChild(te);Im.appendChild(se);
@@ -2947,7 +2948,7 @@ document.addEventListener('DOMContentLoaded', function(){
    fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico&prev='+pid,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
      if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};
      if($('#iePaneTe')){svuota($('#iePaneTe'));scrivi($('#iePaneTe'),t);svuota($('#iePaneSe'));scrivi($('#iePaneSe'),s);}
-     var g=t.gas||{};gasMano=g.fonte==='manuale';if(gasMano&&$('#gasSmc')){$('#gasSmc').value=g.smc?it(g.smc):'';$('#gasPrz').value=g.prezzo?it(g.prezzo,2):'';}
+     var g=t.gas||{};if($('#gasSmc')){$('#gasSmc').value=g.smc?it(g.smc):'';$('#gasPrz').value=g.prezzo?it(g.prezzo,2):'';}
      gasAggiorna();if(window.__ieVista)window.__ieVista();}).catch(function(){});};
  var F1=window.fetch;
  window.fetch=function(u,o){var p=F1.apply(this,arguments);
