@@ -2974,11 +2974,11 @@ document.addEventListener('DOMContentLoaded', function(){
    vista();montaGas();}
 
  /* ---------- salvataggio e rientro ---------- */
- function dati(){var te=$('#iePaneTe'),se=$('#iePaneSe');if(!te)return null;var t=leggi(te);t.classe=classe();t.gas=gas();return {termico:t,serramenti:leggi(se)};}
+ function dati(){var te=$('#iePaneTe'),se=$('#iePaneSe');if(!te)return null;var t=leggi(te);t.classe=classe();t.gas=gas();try{t.ct=window.__ctDati?window.__ctDati():null;}catch(e){}return {termico:t,serramenti:leggi(se)};}
  window.__ieDati=dati;
  window.__ieCarica=function(pid){if(!/^[0-9a-f-]{36}$/i.test(pid||''))return;
    fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico&prev='+pid,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
-     if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};try{if(window.__gnTermico)window.__gnTermico(!!(t.percorsi&&Object.keys(t.percorsi).length));}catch(e){}
+     if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};try{if(window.__ctCarica)window.__ctCarica(t.ct||null);}catch(e){}try{if(window.__gnTermico)window.__gnTermico(!!(t.percorsi&&Object.keys(t.percorsi).length));}catch(e){}
      if($('#iePaneTe')){svuota($('#iePaneTe'));scrivi($('#iePaneTe'),t);svuota($('#iePaneSe'));scrivi($('#iePaneSe'),s);}
      var g=t.gas||{};if($('#gasSmc')){$('#gasSmc').value=g.smc?it(g.smc):'';$('#gasPrz').value=g.prezzo?it(g.prezzo,2):'';}
      gasAggiorna();if(window.__ieVista)window.__ieVista();}).catch(function(){});};
@@ -2988,7 +2988,7 @@ document.addEventListener('DOMContentLoaded', function(){
      if(!j||!(j.success||j.id))return;var pid=j.id||($('#existing_prev_id')||{}).value;if(!/^[0-9a-f-]{36}$/i.test(pid||''))return;var d=dati();if(!d)return;
      F1(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'dati_termico',prev_id:pid,termico:d.termico,serramenti:d.serramenti})}).catch(function(){});}).catch(function(){});}
    return p;};
- function ieSvuota(){if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();}
+ function ieSvuota(){try{if(window.__ctCarica)window.__ctCarica(null);}catch(e){}if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();}
  (function avvolgi(){if(typeof window.clearProducts!=='function')return setTimeout(avvolgi,300);var cp=window.clearProducts;window.clearProducts=function(){var r=cp.apply(this,arguments);try{ieSvuota();}catch(e){}return r;};})();
  document.addEventListener('np:bollette',function(){gasAggiorna();});
  document.addEventListener('reset',function(){setTimeout(function(){if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();},50);},true);
@@ -3102,6 +3102,123 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!$('#az_comune')||!$('#city'))setTimeout(prova,500);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(prova,400);});else setTimeout(prova,400);
  setTimeout(comuni,1500);
+})();
+</script>
+<style>
+/* PORTALE NEXT-110 (Sante 01/11 13:30): prodotti termici dal catalogo con schede tecniche e calcolo del Conto Termico 3.0 (stile Termico Facile, colori Next) */
+#ctBox{margin:4px 0 14px;border:1px solid #E8D5D4;border-radius:12px;background:#fff;overflow:hidden}
+#ctBox .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#FBF7F7;border-bottom:1px solid #F0E2E1}
+#ctBox .hd b{font-size:13px;color:#7A1F2B}
+#ctBox .hd small{font-size:11.5px;color:var(--text-muted)}
+#ctBox .bd{padding:12px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.ct-fam{display:flex;flex-wrap:wrap;gap:6px}
+.ct-fam button{font:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:6px}
+.ct-fam button i{font-style:normal;font-size:10.5px;background:#F2F4F7;border-radius:999px;padding:1px 6px;color:var(--text-muted)}
+.ct-fam button.on{border-color:#7A1F2B;background:#7A1F2B;color:#fff}
+.ct-fam button.on i{background:rgba(255,255,255,.2);color:#fff}
+.ct-fam button[disabled]{opacity:.45;cursor:not-allowed}
+.ct-mod{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.ct-card{border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.ct-card.sel{border-color:#7A1F2B;background:#FBF7F7}
+.ct-card .tt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.ct-card .tt b{font-size:12.5px;line-height:1.3}
+.ct-card .tt label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#7A1F2B;margin:0;text-transform:none;letter-spacing:0;white-space:nowrap;cursor:pointer}
+.ct-chips{display:flex;flex-wrap:wrap;gap:4px}
+.ct-chips span{font-size:10.5px;padding:2px 7px;border-radius:6px;background:#F2F4F7;color:var(--text-dim)}
+.ct-chips span.ok{background:#DCFCE7;color:#15803D}.ct-chips span.no{background:#FEE2E2;color:#B91C1C}.ct-chips span.pr{background:#FEF3C7;color:#B45309}
+.ct-card a{font-size:11.5px;color:#7A1F2B;font-weight:600;text-decoration:none}
+.ct-card .rg{display:none;gap:8px;align-items:center}
+.ct-card.sel .rg{display:flex}
+.ct-card .rg input{width:auto;flex:1;min-width:0;padding:6px 9px;font-size:12px}
+.ct-card .rg .q{flex:0 0 58px}
+.ct-ris{border-radius:12px;background:linear-gradient(135deg,#7A1F2B,#A3394A);color:#fff;padding:14px 16px;display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
+.ct-ris .big{font-size:28px;font-weight:800;line-height:1.1}
+.ct-ris .lb{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+.ct-ris .kv{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.ct-ris .kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.15);padding-bottom:3px}
+.ct-ris .bar{grid-column:1/-1;height:8px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
+.ct-ris .bar i{display:block;height:100%;background:#FCD34D;border-radius:99px}
+.ct-righe{font-size:12px;display:flex;flex-direction:column;gap:4px}
+.ct-righe div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--border)}
+.ct-av{background:#FEF3C7;border-radius:8px;padding:8px 12px;font-size:12px;color:#78350F;line-height:1.5}
+.ct-nota{font-size:11px;color:var(--text-muted);line-height:1.5}
+.ct-par{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--text-dim)}
+.ct-par span{background:#F2F4F7;border-radius:6px;padding:3px 8px}
+.ct-par select{width:auto;padding:2px 6px;font-size:11.5px;border-radius:6px}
+</style>
+<script>
+(function(){
+ var $=function(s,r){return (r||document).querySelector(s);},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+ var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
+ function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
+ function num(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
+ function eur(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})+' €';}
+ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+ function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
+ var FAM=[['ibrido','Ibrido'],['pompa_di_calore','Pompa di calore'],['scaldacqua_pdc','Boiler a pompa di calore'],['solare_termico','Solare termico'],['climatizzatore','Climatizzatori'],['caldaia','Caldaia'],['biomassa','Pellet']];
+ var P=[],R={},SEL={},FAMON='ibrido',ZONA=null,ZMANO='';
+ /* ---------- motore Conto Termico 3.0 (collaudato con eco-bonus.it e Termico Facile, 01/11/2026) ---------- */
+ function temp(){var t='';try{t=((window.__ieDati&&window.__ieDati())||{}).termico||{};t=t.terminali||'';}catch(e){}return /pavimento|fan coil|ventilconvettori/i.test(t)?'bassa':'media';}
+ function chiudi(lordo,spesa){var G=R.ct3_generali||{},m=G.massimale_pct||.65,tot=lordo,taglio=false;if(spesa>0&&tot>m*spesa){tot=m*spesa;taglio=true;}return {teorico:lordo,lordo:tot,taglio:taglio,spesa_min:lordo/m};}
+ function calcola(p,s){var Q=R.ct3_quf||{},z=ZMANO||ZONA||'E',q=Q[z]||1700,CI=R.ct3_ci_pdc||{},EM=R.ct3_etas_min||{},K=R.ct3_k_ibrido||{},n=Math.max(1,s.qta||1),spesa=s.spesa||0;
+  var f=p.famiglia_termico,t=temp();
+  if(f==='ibrido'||f==='pompa_di_calore'){var bassa=t==='bassa',scop=bassa?(p.scop_35||p.scop_55):(p.scop_55||p.scop_35),et=bassa?(p.etas_35_pct||p.etas_55_pct):(p.etas_55_pct||p.etas_35_pct),emin=bassa?(EM.aria_acqua_bassa||125):(EM.aria_acqua_media||110),pr=p.prated_kw;
+   if(!pr||!scop||!et)return {err:'dati tecnici incompleti'};
+   var ei=pr*q*(1-1/scop)*(et/emin),ci=pr<=35?(CI.aria_acqua_35||.15):(CI.aria_acqua_oltre||.06),k=f==='ibrido'?(K.factory||1.25):1,anni=pr<=35?2:5;
+   var r=chiudi(k*ei*ci*anni*n,spesa);r.dett=(f==='ibrido'?'ibrido factory made, k '+String(k).replace('.',',')+' · ':'')+(bassa?'bassa':'media')+' temperatura, ηs '+et+'% / '+emin+'%, SCOP '+String(scop).replace('.',',')+', zona '+z;return r;}
+  if(f==='climatizzatore'){var sc=p.scop_35,e2=p.etas_35_pct,pr2=p.prated_kw;if(!sc||!e2||!pr2)return {err:'dati tecnici incompleti'};var em2=(p.gwp&&p.gwp<150)?(EM.split_gwp_basso||134):(EM.split||149);
+   if(e2<em2)return {err:'ηs '+e2+'% sotto il minimo '+em2+'%: niente Conto Termico'};
+   var ei2=pr2*q*(1-1/sc)*(e2/em2);var r2=chiudi((CI.split_12||.07)*ei2*2*n,spesa);r2.dett='split, ηs '+e2+'% / '+em2+'%, zona '+z+(n>1?', '+n+' unità':'');return r2;}
+  if(f==='scaldacqua_pdc'){var S=R.ct3_scaldacqua||{},cl=/A\+/.test(p.classe_energetica||'')?(S['A+']||{}):(S.A||{}),mx=((p.capacita_l||0)<=150?cl.fino150:cl.oltre)||0;if(!spesa)return {err:'scrivi la spesa'};
+   var l=Math.min((S.pct||.4)*spesa/n,mx)*n;return {teorico:mx*n,lordo:l,taglio:l<mx*n,motivo:'è il 40% della spesa',spesa_min:mx/(S.pct||.4)*n,dett:'40% della spesa, massimo '+eur(mx,0)+' (classe '+(/A\+/.test(p.classe_energetica||'')?'A+':'A')+', '+(p.capacita_l||'?')+' l)'};}
+  if(f==='solare_termico'){return {err:'serve il certificato Solar Keymark (producibilità a Würzburg) per calcolarlo'};}
+  return {err:'non incentivato dal Conto Termico'};}
+ function ricalcola(){var box=$('#ctRis');if(!box)return;var righe=[],tot=0,teo=0,spesa=0,tagli=[];
+  Object.keys(SEL).forEach(function(id){var p=P.find(function(x){return String(x.id)===id;});if(!p)return;var s=SEL[id],r=calcola(p,s);
+   righe.push('<div><span>'+esc(p.modello)+(s.qta>1?' × '+s.qta:'')+'<br><small style="color:var(--text-muted)">'+esc(r.err||r.dett)+'</small></span><b>'+(r.err?'—':eur(r.lordo))+'</b></div>');
+   if(!r.err){tot+=r.lordo;teo+=r.teorico;spesa+=s.spesa||0;if(r.taglio)tagli.push({m:p.modello,teo:r.teorico,min:r.spesa_min,mot:r.motivo||'è tagliato dal tetto del 65% della spesa'});}});
+  var G=R.ct3_generali||{},tr=Math.min(tot*(G.trattenuta_pct||.01),G.trattenuta_max||250)*(1+(G.trattenuta_iva||.22)),netto=tot-tr,cop=spesa>0?Math.min(100,tot/spesa*100):0;
+  if(!righe.length){box.innerHTML='<div class="ct-nota">Scegli i prodotti qui sopra: il contributo si calcola mentre compili.</div>';window.__ctRisultato=null;return;}
+  var av=tagli.map(function(t){return '<div class="ct-av"><b>'+esc(t.m)+':</b> il contributo '+t.mot+'. Il massimo ottenibile è <b>'+eur(t.teo)+'</b> lordi con una spesa di almeno <b>'+eur(t.min)+'</b>.</div>';}).join('');
+  box.innerHTML='<div class="ct-ris"><div><div class="lb">Contributo Conto Termico · netto</div><div class="big">'+eur(netto)+'</div><div style="font-size:12px;opacity:.9;margin-top:4px">'+(tot<=(G.rata_unica_max||15000)?'in rata unica':'in rate annuali')+' · '+Math.round(cop)+'% della spesa</div></div>'
+   +'<div class="kv"><div><span>Lordo</span><b>'+eur(tot)+'</b></div><div><span>Trattenuta GSE (1% + IVA)</span><b>'+eur(tr)+'</b></div><div><span>Spesa ammissibile</span><b>'+(spesa?eur(spesa):'—')+'</b></div><div><span>Con il mandato all\'incasso il cliente paga</span><b>'+(spesa?eur(spesa-netto):'—')+'</b></div></div>'
+   +'<div class="bar"><i style="width:'+Math.round(cop)+'%"></i></div></div><div class="ct-righe">'+righe.join('')+'</div>'+av
+   +'<div class="ct-nota">Stima secondo il DM 7/8/2025 (Conto Termico 3.0) con le regole della tabella termico_regole: l\'importo vincolante lo determina il GSE in istruttoria. Per lo stesso intervento non si somma con la detrazione.</div>';
+  window.__ctRisultato={lordo:+tot.toFixed(2),netto:+netto.toFixed(2),trattenuta:+tr.toFixed(2),spesa:spesa,zona:ZMANO||ZONA||'E',temperatura:temp()};}
+ function modelli(){var M=$('#ctMod');if(!M)return;var L=P.filter(function(p){return p.famiglia_termico===FAMON;});
+  if(!L.length){M.innerHTML='<div class="ct-nota">Nessun prodotto di questa famiglia nel catalogo.</div>';return;}
+  M.innerHTML=L.map(function(p){var s=SEL[p.id],c=[];
+   if(p.prated_kw)c.push('<span>'+String(p.prated_kw).replace('.',',')+' kW</span>');if(p.caldaia_kw)c.push('<span>caldaia '+String(p.caldaia_kw).replace('.',',')+' kW</span>');
+   if(p.scop_35)c.push('<span>SCOP '+String(p.scop_35).replace('.',',')+(p.scop_55?' / '+String(p.scop_55).replace('.',','):'')+'</span>');
+   if(p.etas_35_pct)c.push('<span>ηs '+p.etas_35_pct+'%'+(p.etas_55_pct?' / '+p.etas_55_pct+'%':'')+'</span>');
+   if(p.capacita_l)c.push('<span>'+p.capacita_l+' l</span>');if(p.classe_energetica)c.push('<span>'+esc(String(p.classe_energetica).split(' ')[0])+'</span>');
+   c.push(p.attivo?'<span class="ok">a listino</span>':'<span class="pr">proposta</span>');
+   return '<div class="ct-card'+(s?' sel':'')+'" data-id="'+p.id+'"><div class="tt"><b>'+esc(p.brand)+' · '+esc(p.modello)+'</b><label><input type="checkbox" form="ie-fuori" '+(s?'checked':'')+'>Nel preventivo</label></div>'
+    +'<div class="ct-chips">'+c.join('')+'</div>'+(p.datasheet_url?'<a href="'+esc(p.datasheet_url)+'" target="_blank" rel="noopener">Scheda tecnica ↗</a>':'')
+    +'<div class="rg"><input class="q" type="number" min="1" form="ie-fuori" value="'+((s&&s.qta)||1)+'" title="Quantità"><input class="sp" type="text" form="ie-fuori" placeholder="Spesa IVA inclusa €" value="'+((s&&s.spesa)?s.spesa:'')+'"></div></div>';}).join('');}
+ function famiglie(){var F=$('#ctFam');if(!F)return;F.innerHTML=FAM.map(function(f){var n=P.filter(function(p){return p.famiglia_termico===f[0];}).length,k=Object.keys(SEL).filter(function(id){var p=P.find(function(x){return String(x.id)===id;});return p&&p.famiglia_termico===f[0];}).length;
+  return '<button type="button" data-f="'+f[0]+'" class="'+(FAMON===f[0]?'on':'')+'"'+(n?'':' disabled title="Nessun prodotto in catalogo"')+'>'+f[1]+' <i>'+(k?'✓ '+k:n)+'</i></button>';}).join('');}
+ function zona(){var c=($('#city')||{}).value||'';if(!c){ZONA=null;return Promise.resolve();}
+  return fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=comuni').then(function(r){return r.json();}).then(function(j){var n=norm(c),pv=(($('#province')||{}).value||'').toUpperCase(),t=(j.c||[]).filter(function(x){return norm(x[0])===n&&(!pv||x[1]===pv);})[0];ZONA=t&&t[3]?t[3]:null;}).catch(function(){});}
+ function parametri(){var e=$('#ctPar');if(!e)return;e.innerHTML='<span>Zona climatica: <select id="ctZona" form="ie-fuori">'+['','A','B','C','D','E','F'].map(function(z){return '<option value="'+z+'"'+(z===ZMANO?' selected':'')+'>'+(z?z:(ZONA?ZONA+' (dal comune)':'E (comune non trovato)'))+'</option>';}).join('')+'</select></span><span>Temperatura: '+(temp()==='bassa'?'bassa (pavimento / fan coil)':'media (radiatori)')+' · dai terminali in Impianto esistente</span>';
+  $('#ctZona').onchange=function(){ZMANO=this.value;ricalcola();};}
+ function aggiorna(){famiglie();modelli();parametri();ricalcola();}
+ function monta(){var hb=$('#acc-heat-body');if(!hb||!$('#gasBox'))return setTimeout(monta,400);if($('#ctBox'))return;
+  var d=document.createElement('div');d.id='ctBox';
+  d.innerHTML='<div class="hd"><div><b>Prodotti termici · schede tecniche e Conto Termico</b><br><small>Scegli famiglia e modello: il contributo si calcola mentre compili</small></div></div><div class="bd"><div class="ct-fam" id="ctFam"></div><div class="ct-mod" id="ctMod"></div><div class="ct-par" id="ctPar"></div><div id="ctRis"></div></div>';
+  var g=$('#gasBox');g.parentNode.insertBefore(d,g.nextSibling);
+  d.addEventListener('click',function(e){var b=e.target.closest('.ct-fam button');if(b&&!b.disabled){FAMON=b.dataset.f;aggiorna();}});
+  d.addEventListener('change',function(e){var c=e.target.closest('.ct-card');if(!c)return;var id=c.dataset.id;
+   if(e.target.type==='checkbox'){if(e.target.checked)SEL[id]={qta:1,spesa:0};else delete SEL[id];aggiorna();return;}
+   if(SEL[id]){SEL[id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[id].spesa=num($('.sp',c).value);ricalcola();famiglie();}});
+  d.addEventListener('input',function(e){var c=e.target.closest('.ct-card');if(!c||!SEL[c.dataset.id])return;SEL[c.dataset.id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[c.dataset.id].spesa=num($('.sp',c).value);ricalcola();});
+  fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico_catalogo',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){P=j.prodotti||[];R=j.regole||{};return zona();}).then(aggiorna).catch(function(){$('#ctRis').innerHTML='<div class="ct-av">Catalogo termico non raggiungibile adesso.</div>';});
+  ['#city','#province'].forEach(function(s){var el=$(s);if(el)el.addEventListener('change',function(){zona().then(aggiorna);});});
+  document.addEventListener('change',function(e){if(e.target.closest&&e.target.closest('#iePaneTe'))setTimeout(aggiorna,50);});}
+ /* salvataggio e rientro: i prodotti scelti viaggiano con i dati termici (termico_dati.ct) */
+ window.__ctDati=function(){return {prodotti:Object.keys(SEL).map(function(id){var p=P.find(function(x){return String(x.id)===id;})||{};return {id:+id,codice:p.codice,modello:p.modello,qta:SEL[id].qta,spesa:SEL[id].spesa};}),zona_manuale:ZMANO||null,risultato:window.__ctRisultato||null};};
+ window.__ctCarica=function(ct){SEL={};ZMANO='';if(ct&&Array.isArray(ct.prodotti))ct.prodotti.forEach(function(x){SEL[String(x.id)]={qta:x.qta||1,spesa:x.spesa||0};});if(ct&&ct.zona_manuale)ZMANO=ct.zona_manuale;var f=(ct&&ct.prodotti&&ct.prodotti[0])?(P.find(function(p){return p.id===ct.prodotti[0].id;})||{}).famiglia_termico:null;if(f)FAMON=f;zona().then(aggiorna);};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,600);});else setTimeout(monta,600);
 })();
 </script>
 </body>
