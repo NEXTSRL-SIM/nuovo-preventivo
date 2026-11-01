@@ -1180,7 +1180,7 @@ window.ripristinaTestoStandard=async function(){
   /* ═══════════════════════════════════════════════════════════════════
      MODIFICA 3 — fillProducts carica catalogo poi seleziona inverter
      ═══════════════════════════════════════════════════════════════════ */
-  function fillProducts(pid){var p=prevData.find(function(x){return x.id===pid;});if(!p)return;clearProducts();setField('map_lat',p.map_lat);setField('map_lon',p.map_lon);setField('map_screenshot_url',p.map_screenshot_url);if(p.map_lat&&p.map_lon){window.mostraVincoli(p.map_lat,p.map_lon);var _pb=document.getElementById('pvgisMapResult');if(_pb&&p.pvgis_e_y_kwh){_pb.style.display='block';document.getElementById('mr_kwh').textContent=Math.round(p.pvgis_e_y_kwh).toLocaleString('it-IT');document.getElementById('mr_payback').textContent=p.pvgis_payback_anni?p.pvgis_payback_anni+' anni':'—';document.getElementById('mr_roi').textContent=p.pvgis_roi_pct?Math.round(p.pvgis_roi_pct)+'%':'—';document.getElementById('mr_status').textContent='Dati salvati con il preventivo';}if(p.map_screenshot_url){var _sp=document.getElementById('screenshotPreview');var _si=document.getElementById('screenshotImg');if(_sp&&_si){_si.src=p.map_screenshot_url;_sp.style.display='block';}}}if(_mapInited&&_map&&p.map_lat&&p.map_lon){_map.setView([parseFloat(p.map_lat),parseFloat(p.map_lon)],19);}setField('fv_consumi_kwh',p.fv_consumi_kwh);setField('fv_kwp',p.fv_kwp);setField('fv_pannello',p.fv_pannello||'LONGI_410');setRadio('fv_fornitura',p.fv_fornitura||'monofase');setCheckbox('fv_inv_ibrido',p.fv_inv_ibrido);setCheckbox('fv_inv_tradizionale',p.fv_inv_tradizionale);
+  function fillProducts(pid){var p=prevData.find(function(x){return x.id===pid;});if(!p)return;clearProducts();try{if(window.__ieCarica)window.__ieCarica(pid);}catch(e){}setField('map_lat',p.map_lat);setField('map_lon',p.map_lon);setField('map_screenshot_url',p.map_screenshot_url);if(p.map_lat&&p.map_lon){window.mostraVincoli(p.map_lat,p.map_lon);var _pb=document.getElementById('pvgisMapResult');if(_pb&&p.pvgis_e_y_kwh){_pb.style.display='block';document.getElementById('mr_kwh').textContent=Math.round(p.pvgis_e_y_kwh).toLocaleString('it-IT');document.getElementById('mr_payback').textContent=p.pvgis_payback_anni?p.pvgis_payback_anni+' anni':'—';document.getElementById('mr_roi').textContent=p.pvgis_roi_pct?Math.round(p.pvgis_roi_pct)+'%':'—';document.getElementById('mr_status').textContent='Dati salvati con il preventivo';}if(p.map_screenshot_url){var _sp=document.getElementById('screenshotPreview');var _si=document.getElementById('screenshotImg');if(_sp&&_si){_si.src=p.map_screenshot_url;_sp.style.display='block';}}}if(_mapInited&&_map&&p.map_lat&&p.map_lon){_map.setView([parseFloat(p.map_lat),parseFloat(p.map_lon)],19);}setField('fv_consumi_kwh',p.fv_consumi_kwh);setField('fv_kwp',p.fv_kwp);setField('fv_pannello',p.fv_pannello||'LONGI_410');setRadio('fv_fornitura',p.fv_fornitura||'monofase');setCheckbox('fv_inv_ibrido',p.fv_inv_ibrido);setCheckbox('fv_inv_tradizionale',p.fv_inv_tradizionale);
     setField('fv_inv_brand', p.fv_inv_brand || 'WECO');
     window.caricaCatalogoInverter().then(function(){
       updateInverterOptions();
@@ -2485,7 +2485,7 @@ document.addEventListener('DOMContentLoaded', function(){
    function riga(tipo,b){if(!b)return '<div class="r"><span class="d no"></span>'+tipo+' · non arrivata<small><button type="button" class="btn btn-secondary" disabled title="La richiesta su WhatsApp arriva con il prossimo passo" style="font-size:12px;padding:4px 10px">Chiedi al cliente</button></small></div>';
     var det=b.tipo==='elettrica'?(b.kwh_anno?it(b.kwh_anno)+' kWh':'')+(b.kwh_f1&&b.kwh_anno?' · F1 '+Math.round(100*b.kwh_f1/b.kwh_anno)+'%':''):(b.quantita_anno?it(b.quantita_anno)+' Sm³':'');
     return '<div class="r"><span class="d ok"></span>'+tipo+(b.fornitore?' · '+b.fornitore:'')+(b.confermata_at?'':' · da confermare')+'<small>'+det+'</small></div>';}
-   function mostra(){var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});box.innerHTML=riga('Elettrica',el)+riga('Termico (gas)',te);ricalcola();}
+   function mostra(){var el=BOLL.find(function(b){return b.tipo==='elettrica';}),te=BOLL.find(function(b){return b.tipo!=='elettrica';});box.innerHTML=riga('Elettrica',el)+riga('Termico (gas)',te);ricalcola();window.__BOLL=BOLL;try{document.dispatchEvent(new Event('np:bollette'));}catch(e){}}
    BOLL=[];if(!/^[0-9a-f-]{36}$/i.test(lid))return mostra();
    chiama('cosa=bollette&lead='+lid).then(function(j){BOLL=j.bollette||[];mostra();}).catch(mostra);}
   bollette();var sl=$('#existing_lead');if(sl)sl.addEventListener('change',function(){setTimeout(bollette,300);});
@@ -2754,4 +2754,212 @@ document.addEventListener('DOMContentLoaded', function(){
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(via,50);});else setTimeout(via,50);
 })();
 </script>
-<style id="mapbar-css">/* PORTALE NEXT-110: tasti della mappa piu piccoli, tutti su una riga con Vista satellite */div:has(> #btnStreetView){flex-wrap:nowrap!important;gap:6px!important;align-items:center!important}div:has(> #btnStreetView) > .btn{padding:6px 11px!important;font-size:12.5px!important;min-height:0!important;height:32px!important;line-height:1!important;white-space:nowrap!important}div:has(> #btnStreetView) > div{white-space:nowrap;margin-left:6px!important}div:has(> #btnStreetView) .swl,div:has(> #btnStreetView) label{font-size:12px!important;white-space:nowrap}</style></body>
+<style id="mapbar-css">/* PORTALE NEXT-110: tasti della mappa piu piccoli, tutti su una riga con Vista satellite */div:has(> #btnStreetView){flex-wrap:nowrap!important;gap:6px!important;align-items:center!important}div:has(> #btnStreetView) > .btn{padding:6px 11px!important;font-size:12.5px!important;min-height:0!important;height:32px!important;line-height:1!important;white-space:nowrap!important}div:has(> #btnStreetView) > div{white-space:nowrap;margin-left:6px!important}div:has(> #btnStreetView) .swl,div:has(> #btnStreetView) label{font-size:12px!important;white-space:nowrap}</style><style>
+/* PORTALE NEXT-110 (Sante 01/11 03:34): Impianto esistente con tre linguette (Fotovoltaico, Termico, Serramenti) e consumi gas nei Prodotti */
+.ie-tabs{display:flex;gap:4px;padding-left:12px;margin:0 0 -1px;position:relative;z-index:1}
+.ie-tab{padding:10px 18px 11px;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;border:1px solid transparent;border-bottom:none;color:var(--text-muted);background:transparent;font-family:inherit}
+.ie-tab i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ie-tab.on{background:var(--surface);border-color:var(--border);border-top:3px solid var(--c)}
+.ie-pane{border-top:3px solid var(--c);border-radius:12px;padding-top:18px}
+.ie-te{--c:#7A1F2B;--accent:#7A1F2B;--acw:#FBEDEC;--accent-bg:rgba(122,31,43,.06);--teal:#7A1F2B;--teal-border:#E8D5D4}
+.ie-se{--c:#2F7D5B;--accent:#2F7D5B;--acw:#E6F2EC;--accent-bg:rgba(47,125,91,.07);--teal:#2F7D5B;--teal-border:#CFE5D9}
+.ie-fv{--c:#0891B2}
+.ie-pane .product-section{display:flex;flex-direction:column;gap:12px}
+.ie-pane .product-section .section-title{margin:0!important}
+.ie-g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ie-g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.ie-g3,.ie-g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ie-pane label.ie-l{display:block;font-size:12px;font-weight:500;color:var(--text-dim);margin:0 0 5px;text-transform:none;letter-spacing:0}
+.ie-hint{font-size:11.5px;color:var(--text-muted);margin-top:4px}
+.ie-ops{display:flex;flex-wrap:wrap;gap:6px}
+.ie-ops .opt{position:relative}
+.ie-ops .opt:has(input:checked){border-color:var(--accent);background:var(--acw);color:var(--accent);font-weight:600}
+.ie-sub{background:var(--accent-bg);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.ie-sub b{font-size:12px;color:var(--accent)}
+.ie-fs{border:1px solid var(--border);border-radius:12px;padding:10px 14px 12px;display:flex;flex-direction:column;gap:10px}
+.ie-fs>.lg{font-size:11px;font-weight:500;color:var(--text-dim)}
+.ie-fs .fr{padding:6px 0}
+.ie-cl{display:flex;gap:14px;align-items:center}
+.ie-cl .bd{width:56px;height:56px;flex:none;border-radius:12px;color:#fff;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;background:#94A3B8}
+.ie-cl .fo{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;color:#fff;background:#6B7686}
+.ie-cl .tx{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:4px}
+.ie-av{background:#FEF3C7;border-radius:8px;padding:9px 12px;font-size:12px;color:#78350F;line-height:1.5}
+.ie-pane .card-percorso .ie-ops{margin-top:10px}
+.ie-pane .card-percorso.selected{border-color:var(--accent);background:var(--accent-bg)}
+.ie-pane .card-percorso input[type=checkbox]{margin-top:2px;accent-color:var(--accent);flex-shrink:0}
+#gasBox{margin:4px 0 14px;border:1.5px solid #7A1F2B;border-radius:12px;padding:14px 16px;background:#FBF7F7;display:flex;flex-direction:column;gap:10px;--accent:#7A1F2B;--acw:#FBEDEC}
+#gasBox .tt{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#gasBox .tt b{font-size:13px;color:#7A1F2B}
+#gasBox .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#gasBox label{display:block;font-size:12px;font-weight:500;color:var(--text-dim);margin:0 0 5px;text-transform:none;letter-spacing:0}
+#gasBox .src{font-size:11.5px;color:var(--text-muted)}
+#gasBox .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;color:#fff;background:#7A1F2B;margin-right:6px}
+#gasBox .tag.mano{background:#6B7686}
+</style>
+<script>
+(function(){
+ var $=function(s,r){return (r||document).querySelector(s);},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+ var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
+ function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
+ function num(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
+ function it(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+ var MARCHE=['Ariston','Argo','Baxi','Beretta','Biasi','Bosch','Buderus','Chaffoteaux','Cosmogas','Daikin','De Dietrich','Elco','Ferroli','Fondital','Hermann Saunier Duval','Immergas','Junkers','Lamborghini','LG','Mitsubishi Electric','Nova Florida','Panasonic','Radiant','Riello','Rossato','Samsung','Saunier Duval','Sime','Toshiba','Unical','Vaillant','Viessmann','Wolf'];
+ var POT=['12','18','20','24','25','26','28','30','32','35'];
+ function anni(dal,sel,ultimo){var o='<option value="">—</option>';for(var y=new Date().getFullYear();y>=dal;y--)o+='<option'+(String(y)===String(sel)?' selected':'')+'>'+y+'</option>';o+='<option value="'+ultimo+'">'+ultimo+'</option>';return o;}
+ function rad(k,v,t,on){return '<label class="opt"><input type="radio" data-k="'+k+'" name="ie_'+k.replace(/\./g,'_')+'" value="'+v+'"'+(on?' checked':'')+'><span>'+t+'</span></label>';}
+ function chk(k,v,t){return '<label class="opt"><input type="checkbox" data-k="'+k+'" value="'+v+'"><span>'+t+'</span></label>';}
+ function sel(k,ops,ph){return '<select data-k="'+k+'"><option value="">'+(ph||'—')+'</option>'+ops.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>';}
+ function fld(lab,ctrl,hint){return '<div><label class="ie-l">'+lab+'</label>'+ctrl+(hint?'<div class="ie-hint">'+hint+'</div>':'')+'</div>';}
+ function ico(p){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+
+ var HTML_TE=''
+ +'<p class="intro">Indica com\'è oggi il riscaldamento del cliente, com\'è la casa e il percorso commerciale da proporre.</p>'
+ +'<section class="pc"><div class="ph"><span class="pi" style="background:#FBEDEC;color:#7A1F2B">'+ico('<path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-3.5 2-5.5 1.2 1.2 1.8 2.2 2 3.5 1-2 1.5-4.5 1-8z"/>')+'</span><div><b>Impianto termico esistente</b></div><span class="px"></span></div>'
+ +'<div class="pb"><div class="fr"><span>Riscaldamento esistente</span><div class="options seg">'+rad('esistente','no','Nessun impianto (casa nuova)')+rad('esistente','si','Ha già un impianto',true)+'</div></div></div></section>'
+ +'<div class="product-section" id="teDati" style="margin-top:14px"><div class="section-title">Dati impianto esistente</div>'
+ +fld('Generatore','<div class="ie-ops">'+[['trad','Caldaia tradizionale a metano'],['cond','Caldaia a condensazione'],['gasolio','Caldaia a gasolio'],['gpl','Caldaia a GPL'],['pellet','Pellet o legna'],['pdc','Pompa di calore']].map(function(x){return rad('generatore',x[0],x[1]);}).join('')+'</div>')
+ +'<div class="ie-g3">'
+ +fld('Marca','<input type="text" data-k="marca" list="ieMarche" placeholder="Scegli o scrivi"><datalist id="ieMarche">'+MARCHE.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>','Elenco precaricato · si sceglie o si scrive')
+ +fld('Anno installazione','<select data-k="anno">'+anni(1975,'','prima del 1975')+'</select>')
+ +fld('Potenza (kW)','<input type="text" data-k="potenza" list="iePotenze" placeholder="Es. 24"><datalist id="iePotenze">'+POT.map(function(m){return '<option value="'+m+'">';}).join('')+'</datalist>','Le più comuni nel menu · si può scrivere')
+ +'</div>'
+ +fld('Terminali',sel('terminali',['Radiatori in ghisa','Radiatori in alluminio o acciaio','Termoarredi','Pavimento radiante','Ventilconvettori (fan coil)','Misto radiatori e pavimento']))
+ +'<div class="ie-fs"><div class="lg">Acqua calda sanitaria · anche più di una</div><div class="ie-ops">'+[['caldaia','Dalla caldaia'],['boiler_el','Boiler elettrico'],['boiler_gas','Boiler a gas'],['boiler_pdc','Boiler in pompa di calore'],['solare','Solare termico']].map(function(x){return chk('acs',x[0],x[1]);}).join('')+'</div>'
+ +'<div class="ie-sub" id="teSol" hidden><b>Solare termico esistente</b><div class="ie-g3">'+fld('Superficie collettori (m²)','<input type="text" data-k="solare.m2" placeholder="Es. 4">')+fld('Anno installazione','<select data-k="solare.anno">'+anni(1980,'','prima del 1980')+'</select>')+fld('Stato',sel('solare.stato',['Funzionante','Da sostituire','Non funzionante']))+'</div></div></div>'
+ +'<div class="ie-fs"><div class="lg">Climatizzatori</div><div class="ie-ops">'+rad('clima.presenti','no','Non presenti',true)+rad('clima.presenti','si','Presenti')+'</div>'
+ +'<div class="ie-sub" id="teCli" hidden><div class="ie-g3">'+fld('Tipo',sel('clima.tipo',['Mono split','Dual split','Trial split o più']))+fld('Unità interne',sel('clima.unita',['1','2','3','4','5 o più']))+fld('Anno installazione','<select data-k="clima.anno">'+anni(1990,'','prima del 1990')+'</select>')+'</div></div></div>'
+ +'</div>'
+ +'<div class="product-section" style="margin-top:14px"><div class="section-title">La casa</div><div class="ie-g4">'
+ +fld('Tipo di edificio',sel('casa.tipo',['Villetta singola','Bifamiliare','Casa a schiera','Appartamento']))
+ +fld('Superficie riscaldata (m²)','<input type="text" data-k="casa.mq" placeholder="Es. 140">')
+ +fld('Anno di costruzione','<select data-k="casa.anno">'+anni(1900,'','prima del 1900')+'</select>')
+ +fld('Persone in casa',sel('casa.persone',['1','2','3','4','5','6 o più']))
+ +'</div><div class="ie-fs"><div class="lg">Interventi già fatti sull\'involucro</div>'
+ +'<div class="fr"><span>Cappotto</span><div class="options seg">'+rad('casa.cappotto','no','No')+rad('casa.cappotto','parziale','Parziale')+rad('casa.cappotto','si','Sì')+'</div></div>'
+ +'<div class="fr"><span>Infissi</span><div class="options seg">'+rad('casa.infissi','singolo','Vetro singolo')+rad('casa.infissi','doppio','Doppio vetro')+rad('casa.infissi','triplo','Triplo vetro')+'</div></div>'
+ +'<div class="fr"><span>Tetto o sottotetto isolato</span><div class="options seg">'+rad('casa.tetto','no','No')+rad('casa.tetto','si','Sì')+'</div></div></div>'
+ +'<div class="ie-fs"><div class="lg">Classe energetica</div>'
+ +'<div class="ie-g3">'+fld('Classe da APE',sel('casa.ape_classe',['A4','A3','A2','A1','B','C','D','E','F','G'],'APE non disponibile'))+fld('Indice dell\'APE (kWh/m² anno)','<input type="text" data-k="casa.ape_indice" placeholder="EP gl,nren">')+'<div></div></div>'
+ +'<div class="ie-cl"><div class="bd" id="teClB">–</div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span class="fo" id="teClF">da calcolare</span><b style="font-size:13px" id="teClI"></b></div><div class="tx" id="teClT">Si calcola da sola: dall\'APE se c\'è, altrimenti dalla bolletta del gas, altrimenti dall\'anno di costruzione.</div></div></div>'
+ +'<div class="ie-av" id="teClA" hidden></div></div></div>'
+ +'<div class="product-section" style="margin-top:14px"><div class="section-title">Percorso commerciale</div><div style="font-size:12px;color:var(--text-muted);margin-top:-6px">Seleziona cosa proporre al cliente · si possono combinare</div>'
+ +[['rif','Rifacimento','Si sostituisce il generatore esistente',['Caldaia a condensazione','Sistema ibrido','Pompa di calore']],
+   ['acs','Acqua calda','Boiler in pompa di calore; la caldaia resta',null],
+   ['cli','Climatizzazione','Nuovo climatizzatore o sostituzione di uno vecchio',['Mono split','Dual split','Trial split o più']],
+   ['int','Integrazione','Pompa di calore affiancata alla caldaia esistente',null],
+   ['sol','Solare termico','Impianto nuovo o sostituzione di quello esistente',['Nuovo impianto','Sostituzione']]].map(function(p){
+     return '<div class="card-percorso" data-p="'+p[0]+'"><input type="checkbox" data-k="percorsi.'+p[0]+'" value="1"><div style="width:100%"><div class="cp-title">'+p[1]+'</div><div class="cp-desc">'+p[2]+'</div>'
+       +(p[3]?'<div class="ie-ops" hidden>'+p[3].map(function(s,i){return rad('percorsi.'+p[0]+'_tipo',s,s);}).join('')+'</div>':'')+'</div></div>';}).join('')
+ +'</div>'
+ +'<div style="margin-top:14px"><label class="ie-l">Note impianto termico esistente</label><textarea data-k="note" rows="2" placeholder="Es. caldaia in lavanderia, canna fumaria condominiale…"></textarea></div>';
+
+ var HTML_SE=''
+ +'<p class="intro">Bozza: la linguetta c\'è già, i campi si completano quando partono i serramenti.</p>'
+ +'<section class="pc"><div class="ph"><span class="pi" style="background:#E6F2EC;color:#2F7D5B">'+ico('<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M12 3v18M4 12h16"/>')+'</span><div><b>Serramenti esistenti</b></div><span class="px"></span></div>'
+ +'<div class="pb"><div class="fr"><span>Serramenti</span><div class="options seg">'+rad('valutare','no','Da non toccare',true)+rad('valutare','si','Da valutare')+'</div></div></div></section>'
+ +'<div class="product-section" style="margin-top:14px"><div class="section-title">Dati serramenti esistenti</div><div class="ie-g4">'
+ +fld('Materiale',sel('materiale',['Legno','PVC','Alluminio','Legno-alluminio','Ferro']))
+ +fld('Vetro',sel('vetro',['Vetro singolo','Doppio vetro','Triplo vetro']))
+ +fld('Anno','<select data-k="anno">'+anni(1950,'','prima del 1950')+'</select>')
+ +fld('Superficie (m²)','<input type="text" data-k="mq" placeholder="Es. 18">')
+ +'</div><div class="ie-fs"><div class="lg">Schermature</div><div class="ie-ops">'+rad('schermature','tapparelle','Tapparelle')+rad('schermature','scuri','Scuri')+rad('schermature','nessuna','Nessuna')+'</div></div></div>'
+ +'<div class="product-section" style="margin-top:14px"><div class="section-title">Percorso commerciale</div>'
+ +[['completa','Sostituzione completa','Tutti i serramenti, con le schermature'],['parziale','Sostituzione parziale','Solo alcune stanze o un piano'],['schermature','Solo schermature','Tapparelle o oscuranti nuovi']].map(function(p){
+     return '<div class="card-percorso" data-p="'+p[0]+'"><input type="checkbox" data-k="percorsi.'+p[0]+'" value="1"><div><div class="cp-title">'+p[1]+'</div><div class="cp-desc">'+p[2]+'</div></div></div>';}).join('')
+ +'</div>';
+
+ /* ---------- lettura e scrittura dei campi (senza name: non finiscono nel salvataggio n8n) ---------- */
+ function leggi(root){var o={};$$('[data-k]',root).forEach(function(e){var k=e.dataset.k,v;
+   if(e.type==='radio'){if(!e.checked)return;v=e.value;}
+   else if(e.type==='checkbox'){if(k==='acs'){(o.acs=o.acs||[]);if(e.checked)o.acs.push(e.value);return;}v=e.checked;if(!v)return;}
+   else{v=e.value.trim();if(v==='')return;}
+   var p=k.split('.'),t=o;for(var i=0;i<p.length-1;i++)t=t[p[i]]=t[p[i]]||{};t[p[p.length-1]]=v;});return o;}
+ function scrivi(root,o){$$('[data-k]',root).forEach(function(e){var k=e.dataset.k,p=k.split('.'),v=o;for(var i=0;i<p.length&&v!=null;i++)v=v[p[i]];
+   if(e.type==='radio')e.checked=(v!=null&&String(v)===e.value);
+   else if(e.type==='checkbox')e.checked=k==='acs'?((o.acs||[]).indexOf(e.value)>=0):!!v;
+   else e.value=v==null?'':v;});}
+ function svuota(root){$$('[data-k]',root).forEach(function(e){if(e.type==='radio'||e.type==='checkbox')e.checked=e.defaultChecked;else e.value='';});}
+
+ /* ---------- classe energetica: APE, poi consumi gas, poi anno ---------- */
+ var SCALA=[[30,'A'],[50,'B'],[70,'C'],[90,'D'],[120,'E'],[160,'F'],[1e9,'G']];
+ var COL={A4:'#15803D',A3:'#15803D',A2:'#16A34A',A1:'#16A34A',A:'#16A34A',B:'#65A30D',C:'#CA8A04',D:'#D97706',E:'#EA580C',F:'#C2410C',G:'#B91C1C'};
+ function daIndice(x){for(var i=0;i<SCALA.length;i++)if(x<=SCALA[i][0])return SCALA[i][1];return 'G';}
+ function perAnno(a){a=a==='prima del 1900'?1890:Number(a);if(!a)return 0;return a<1946?210:a<1976?190:a<1992?150:a<2006?115:a<2016?70:35;}
+ function classe(){var d=leggi($('#iePaneTe')),c=d.casa||{},mq=num(c.mq),g=gas();
+   var B=$('#teClB'),F=$('#teClF'),I=$('#teClI'),T=$('#teClT'),A=$('#teClA');if(!B)return;A.hidden=true;
+   var stimaC=null;
+   if(mq>0&&g.smc>0){var kwh=g.smc*10.69,acs=((d.acs||[]).indexOf('caldaia')>=0||(d.acs||[]).indexOf('boiler_gas')>=0)?num(c.persone||3)*600:0;
+     var ix=Math.max(0,(kwh-acs-250)/mq);stimaC={ix:ix,cl:daIndice(ix),kwh:kwh,acs:acs};}
+   var r;
+   if(c.ape_classe){r={cl:c.ape_classe,fo:'da APE',bg:'#111827',ix:c.ape_indice?it(num(c.ape_indice))+' kWh/m² anno':'',tx:'Classe dell\'APE. Il campo non si calcola.'};
+     if(stimaC){var o='ABCDEFG',a=o.indexOf(c.ape_classe.charAt(0)),b=o.indexOf(stimaC.cl);if(Math.abs(a-b)>=2){A.hidden=false;A.innerHTML='<b>Scostamento.</b> L\'APE dice classe '+c.ape_classe+', ma dalla bolletta del gas la casa consuma come una classe '+stimaC.cl+' ('+it(stimaC.ix)+' kWh/m² anno). Vale l\'APE; nel preventivo lo scostamento si può citare.';}}}
+   else if(stimaC){r={cl:stimaC.cl,fo:'stimata dai consumi',bg:'#7A1F2B',ix:it(stimaC.ix)+' kWh/m² anno',tx:it(g.smc)+' Sm³ di gas ('+it(stimaC.kwh)+' kWh), tolti '+(stimaC.acs?'acqua calda e ':'')+'cucina, divisi per '+it(mq)+' m². Nel preventivo: «stima Next sui consumi, non sostituisce l\'APE».'};}
+   else if(c.anno){var ix=perAnno(c.anno);ix*=c.cappotto==='si'?.7:c.cappotto==='parziale'?.85:1;ix*=c.infissi==='triplo'?.85:c.infissi==='doppio'?.9:1;ix*=c.tetto==='si'?.9:1;
+     r={cl:daIndice(ix),fo:'stimata dall\'anno',bg:'#6B7686',ix:'circa '+it(ix)+' kWh/m² anno',tx:'Classe tipica delle case di quell\'anno, corretta con cappotto, infissi e tetto. Con la bolletta del gas e la superficie si ricalcola sui consumi.'};}
+   else{B.textContent='–';B.style.background='#94A3B8';F.textContent='da calcolare';F.style.background='#6B7686';I.textContent='';T.textContent='Si calcola da sola: dall\'APE se c\'è, altrimenti dalla bolletta del gas con la superficie, altrimenti dall\'anno di costruzione.';return null;}
+   B.textContent=r.cl;B.style.background=COL[r.cl]||'#6B7686';F.textContent=r.fo;F.style.background=r.bg;I.textContent=r.ix;T.textContent=r.tx;return {valore:r.cl,fonte:r.fo,indice:r.ix};}
+
+ /* ---------- consumi gas nei Prodotti ---------- */
+ var gasMano=false;
+ function gasBoll(){var B=window.__BOLL||[];return B.find(function(b){return b.tipo!=='elettrica'&&Number(b.quantita_anno)>0;});}
+ function gas(){var s=$('#gasSmc'),p=$('#gasPrz');return {smc:s?num(s.value):0,prezzo:p?num(p.value):0,fonte:gasMano?'manuale':(gasBoll()?'bolletta':'')};}
+ function gasAggiorna(){var bx=$('#gasBox');if(!bx)return;var b=gasBoll();
+   $$('#gasSeg .opt input').forEach(function(i){i.checked=(i.value==='manuale')===gasMano;});
+   var s=$('#gasSmc'),p=$('#gasPrz');
+   if(!gasMano&&b){s.value=it(Number(b.quantita_anno));var pr=Number(b.spesa_ivata_eur)>0?Number(b.spesa_ivata_eur)/Number(b.quantita_anno):0;p.value=pr?it(pr,2):'';s.readOnly=p.readOnly=true;}
+   else{s.readOnly=p.readOnly=false;}
+   var v=num(s.value);$('#gasKwh').textContent=v?'≈ '+it(v*10.69)+' kWh':'';
+   $('#gasSrc').innerHTML=gasMano?'<span class="tag mano">scritti a mano</span>Dichiarati dal cliente.':(b?'<span class="tag">da bolletta</span>Dalla bolletta del gas'+(b.fornitore?' '+b.fornitore:'')+(b.confermata_at?'':' · da confermare')+'.':'Nessuna bolletta del gas: passa a «Scritti a mano» per inserirli.');
+   classe();}
+ function montaGas(){var hb=$('#acc-heat-body');if(!hb||$('#gasBox'))return;
+   var d=document.createElement('div');d.id='gasBox';
+   d.innerHTML='<div class="tt"><b>Consumi di gas</b><div class="options seg" id="gasSeg"><label class="opt"><input type="radio" name="ie_gas_fonte" value="bolletta" checked><span>Bolletta</span></label><label class="opt"><input type="radio" name="ie_gas_fonte" value="manuale"><span>Scritti a mano</span></label></div></div>'
+    +'<div class="g2"><div><label>Consumo gas annuo (Sm³)</label><input type="text" id="gasSmc" placeholder="Es. 1.500"><div class="src" id="gasKwh" style="margin-top:4px"></div></div><div><label>Prezzo del gas (€/Sm³)</label><input type="text" id="gasPrz" placeholder="Es. 1,05"><div class="src" style="margin-top:4px">IVA inclusa, dalla spesa totale della bolletta</div></div></div><div class="src" id="gasSrc"></div>';
+   hb.insertBefore(d,hb.firstChild);$$('input',d).forEach(function(e){e.setAttribute('form','ie-fuori');});
+   $$('#gasSeg input').forEach(function(i){i.addEventListener('change',function(){gasMano=this.value==='manuale';gasAggiorna();});});
+   ['#gasSmc','#gasPrz'].forEach(function(s){$(s).addEventListener('input',function(){if(!gasMano)return;var v=num($('#gasSmc').value);$('#gasKwh').textContent=v?'≈ '+it(v*10.69)+' kWh':'';classe();});});
+   gasAggiorna();}
+
+ /* ---------- le tre linguette in Impianto esistente ---------- */
+ function monta(){var Im=$('#tabImpianto');if(!Im||!$('.pc',Im))return setTimeout(monta,250);if($('#ieTabs'))return;
+   var fv=document.createElement('div');fv.className='ie-pane ie-fv';fv.id='iePaneFv';
+   while(Im.firstChild)fv.appendChild(Im.firstChild);
+   var tabs=document.createElement('div');tabs.className='ie-tabs';tabs.id='ieTabs';
+   tabs.innerHTML='<button type="button" class="ie-tab on" data-t="Fv" style="--c:#0891B2"><i style="background:#0891B2"></i>Fotovoltaico</button><button type="button" class="ie-tab" data-t="Te" style="--c:#7A1F2B"><i style="background:#7A1F2B"></i>Termico</button><button type="button" class="ie-tab" data-t="Se" style="--c:#2F7D5B"><i style="background:#2F7D5B"></i>Serramenti</button>';
+   var te=document.createElement('div');te.className='ie-pane ie-te';te.id='iePaneTe';te.hidden=true;te.innerHTML=HTML_TE;
+   var se=document.createElement('div');se.className='ie-pane ie-se';se.id='iePaneSe';se.hidden=true;se.innerHTML=HTML_SE;
+   Im.appendChild(tabs);Im.appendChild(fv);Im.appendChild(te);Im.appendChild(se);
+   /* i campi nuovi restano fuori dal modulo: non entrano nel salvataggio di n8n, si salvano a parte */
+   $$('input,select,textarea',te).concat($$('input,select,textarea',se)).forEach(function(e){e.setAttribute('form','ie-fuori');});
+   $$('.ie-tab',tabs).forEach(function(b){b.addEventListener('click',function(){$$('.ie-tab',tabs).forEach(function(x){x.classList.toggle('on',x===b);});['Fv','Te','Se'].forEach(function(t){$('#iePane'+t).hidden=t!==b.dataset.t;});});});
+   function vista(){var d=leggi(te);$('#teDati').style.display=d.esistente==='no'?'none':'';$('#teSol').hidden=(d.acs||[]).indexOf('solare')<0;$('#teCli').hidden=!(d.clima&&d.clima.presenti==='si');
+     $$('.card-percorso',te).forEach(function(c){var on=$('input[type=checkbox]',c).checked;c.classList.toggle('selected',on);var o=$('.ie-ops',c);if(o)o.hidden=!on;});
+     $$('.card-percorso',se).forEach(function(c){c.classList.toggle('selected',$('input[type=checkbox]',c).checked);});classe();}
+   window.__ieVista=vista;
+   [te,se].forEach(function(p){p.addEventListener('change',vista);p.addEventListener('input',function(e){if(/casa\./.test(e.target.dataset.k||''))classe();});
+     p.addEventListener('click',function(e){var c=e.target.closest('.card-percorso');if(!c||e.target.closest('input,label,select'))return;var i=$('input[type=checkbox]',c);i.checked=!i.checked;vista();});});
+   vista();montaGas();}
+
+ /* ---------- salvataggio e rientro ---------- */
+ function dati(){var te=$('#iePaneTe'),se=$('#iePaneSe');if(!te)return null;var t=leggi(te);t.classe=classe();t.gas=gas();return {termico:t,serramenti:leggi(se)};}
+ window.__ieDati=dati;
+ window.__ieCarica=function(pid){if(!/^[0-9a-f-]{36}$/i.test(pid||''))return;
+   fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico&prev='+pid,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+     if(!j||!j.ok)return;var t=j.termico||{},s=j.serramenti||{};
+     if($('#iePaneTe')){svuota($('#iePaneTe'));scrivi($('#iePaneTe'),t);svuota($('#iePaneSe'));scrivi($('#iePaneSe'),s);}
+     var g=t.gas||{};gasMano=g.fonte==='manuale';if(gasMano&&$('#gasSmc')){$('#gasSmc').value=g.smc?it(g.smc):'';$('#gasPrz').value=g.prezzo?it(g.prezzo,2):'';}
+     gasAggiorna();if(window.__ieVista)window.__ieVista();}).catch(function(){});};
+ var F1=window.fetch;
+ window.fetch=function(u,o){var p=F1.apply(this,arguments);
+   if(typeof u==='string'&&u.indexOf('/webhook/preventivo-submit')>=0){p.then(function(r){return r.clone().json();}).then(function(j){
+     if(!j||!(j.success||j.id))return;var pid=j.id||($('#existing_prev_id')||{}).value;if(!/^[0-9a-f-]{36}$/i.test(pid||''))return;var d=dati();if(!d)return;
+     F1(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pass(),azione:'dati_termico',prev_id:pid,termico:d.termico,serramenti:d.serramenti})}).catch(function(){});}).catch(function(){});}
+   return p;};
+ function ieSvuota(){if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();}
+ (function avvolgi(){if(typeof window.clearProducts!=='function')return setTimeout(avvolgi,300);var cp=window.clearProducts;window.clearProducts=function(){var r=cp.apply(this,arguments);try{ieSvuota();}catch(e){}return r;};})();
+ document.addEventListener('np:bollette',function(){gasAggiorna();});
+ document.addEventListener('reset',function(){setTimeout(function(){if($('#iePaneTe')){svuota($('#iePaneTe'));svuota($('#iePaneSe'));}gasMano=false;if($('#gasSmc')){$('#gasSmc').value='';$('#gasPrz').value='';}gasAggiorna();if(window.__ieVista)window.__ieVista();},50);},true);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',monta);else monta();
+})();
+</script>
+</body>
