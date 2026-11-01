@@ -3155,6 +3155,7 @@ document.addEventListener('DOMContentLoaded', function(){
 /* NEXT-110 (Sante 01/11 18:30): una sola sezione prodotti termici: linguette per marca, interruttori come nel resto della maschera,
    accessori (valvole, kit WiFi, altro), totale da listino e prezzo finale con lo sconto automatico; riempie anche i campi del contratto */
 #tabProdotti .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Sante 01/11 19:37: in Prodotti la pagina si allarga, così crescono tutte e due le colonne */body:has(#tabProdotti:not([style*="none"])) .container{max-width:1720px!important}
 /* Dati contatto: le quattro agevolazioni fiscali tutte visibili, su due righe sotto il titolo (Sante 01/11 18:34) */
 .fr:has(input[name="tipo_agevolazione"]){grid-template-columns:1fr;row-gap:8px}
 .options.seg:has(input[name="tipo_agevolazione"]){display:grid!important;grid-template-columns:1fr 1fr!important;overflow:visible!important;gap:6px!important;border:0!important;background:none!important;padding:0!important}
@@ -3268,11 +3269,12 @@ document.addEventListener('DOMContentLoaded', function(){
   var nt=f('note_termico');if(nt){var vecchio=String(nt.value||'').split('\n').filter(function(r){return r.indexOf('In deroga a quanto indicato sopra (Pigma Advance')!==0;});var nuovo=vecchio.concat(mira).filter(function(r,i,a){return r||i<a.length-1;}).join('\n').replace(/^\n+/,'');if(nt.value!==nuovo){nt.value=nuovo;nt.dispatchEvent(new Event('change',{bubbles:true}));}}
   var p50=pig(50),p80=pig(80);spunta('heat_pigma50_enabled',p50!=null);val('heat_pigma50_taglia',p50||'');spunta('heat_pigma80_enabled',p80!=null);val('heat_pigma80_taglia',p80||'');
   var cl=function(re){return scelti.some(function(x){return x.famiglia_termico==='climatizzatore'&&re.test(x.modello);});};
-  spunta('clima_alys25',cl(/ALYS R32 25/));spunta('clima_alys35',cl(/ALYS R32 35/));spunta('clima_alys50',cl(/ALYS R32 50/));spunta('clima_prios70',cl(/PRIOS/));spunta('clima_dual50',cl(/DUAL 50/));
-  scelti.forEach(function(x){var noto=(x.famiglia_termico==='ibrido'&&/(PIGMA|MIRA) ADVANCE/.test(x.modello)&&/HYBRID (50|80)/.test(x.modello))||(x.famiglia_termico==='climatizzatore'&&/ALYS R32 (25|35|50)|PRIOS|DUAL 50/.test(x.modello));if(!noto)extra.push(x.brand+' '+x.modello+(SEL[String(x.id)].qta>1?' × '+SEL[String(x.id)].qta:''));});
+  spunta('clima_alys25',cl(/ALYS R32 25/));spunta('clima_alys35',cl(/ALYS R32 35/));spunta('clima_alys50',cl(/ALYS R32 50/));spunta('clima_prios70',false);spunta('clima_dual50',cl(/DUAL 50/));
+  scelti.forEach(function(x){var noto=(x.famiglia_termico==='ibrido'&&/(PIGMA|MIRA) ADVANCE/.test(x.modello)&&/HYBRID (50|80)/.test(x.modello))||(x.famiglia_termico==='climatizzatore'&&/ALYS R32 (25|35|50)/.test(x.modello));if(!noto)extra.push(x.brand+' '+x.modello+(SEL[String(x.id)].qta>1?' × '+SEL[String(x.id)].qta:''));});
   spunta('heat_valvole_enabled',ACC.valvole.on);val('heat_valvole_num',ACC.valvole.on?(ACC.valvole.n||''):'');spunta('heat_kit_wifi',ACC.wifi.on);
-  if(ACC.altro.on&&ACC.altro.desc)extra.push(ACC.altro.desc);spunta('heat_altro_enabled',extra.length>0);val('heat_altro_desc',extra.join(' · '));
-  var fi=finale();val('heat_totale_eur',fi>0?fi.toFixed(2):'');}
+  /* PORTALE NEXT-110 (Sante 01/11 19:30): senza Pigma il totale si appoggia alla riga «Altro» di WF5, quindi «Altro» si accende con l'elenco dei prodotti */if(p50==null&&p80==null&&scelti.length)extra=scelti.map(function(x){return x.brand+' '+x.modello+(SEL[String(x.id)].qta>1?' × '+SEL[String(x.id)].qta:'');});if(ACC.altro.on&&ACC.altro.desc)extra.push(ACC.altro.desc);spunta('heat_altro_enabled',extra.length>0);val('heat_altro_desc',extra.join(' · '));
+  var fi=finale();val('heat_totale_eur',fi>0?fi.toFixed(2):'');
+  /* un preventivo per prodotto (Sante 01/11 19:36): con i prodotti termici e senza totale FV il preventivo è «Termico» */var fvt=f('fv_totale_eur'),rt=document.querySelector('input[name="product_type"][value="termico"]');if(rt&&scelti.length&&!(fvt&&Number(fvt.value)>0)&&!rt.checked){rt.checked=true;rt.dispatchEvent(new Event('change',{bubbles:true}));}}
  function aggiorna(){marche();famiglie();modelli();parametri();accessori();totali();ricalcola();}
  function monta(){var hb=$('#acc-heat-body');if(!hb||!$('#gasBox'))return setTimeout(monta,400);if($('#ctBox'))return;
   var d=document.createElement('div');d.id='ctBox';
@@ -3287,7 +3289,7 @@ document.addEventListener('DOMContentLoaded', function(){
    if(e.target.type==='checkbox'){if(e.target.checked)SEL[id]={qta:1,spesa:0};else delete SEL[id];aggiorna();return;}
    if(SEL[id]){SEL[id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[id].spesa=num($('.sp',c).value);totali();ricalcola();famiglie();marche();}});
   d.addEventListener('input',function(e){if(e.target.id==='ctSc'){SCM=num(e.target.value)||0;totali();return;}if(e.target.id==='ctPF'){PF=num(e.target.value)||null;totali();ricalcola();return;}var c=e.target.closest('.ct-card');if(!c||!SEL[c.dataset.id])return;SEL[c.dataset.id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[c.dataset.id].spesa=num($('.sp',c).value);ricalcola();});
-  fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico_catalogo',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){P=j.prodotti||[];R=j.regole||{};return zona();}).then(aggiorna).catch(function(){$('#ctRis').innerHTML='<div class="ct-av">Catalogo termico non raggiungibile adesso.</div>';});
+  fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico_catalogo',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){P=(j.prodotti||[]).filter(function(p){return !/PRIOS/.test(p.modello);});R=j.regole||{};return zona();}).then(aggiorna).catch(function(){$('#ctRis').innerHTML='<div class="ct-av">Catalogo termico non raggiungibile adesso.</div>';});
   document.addEventListener('change',function(e){if(e.target&&e.target.name==='tipo_agevolazione')ricalcola();});
   ['#city','#province'].forEach(function(s){var el=$(s);if(el)el.addEventListener('change',function(){zona().then(aggiorna);});});
   document.addEventListener('change',function(e){if(e.target.closest&&e.target.closest('#iePaneTe'))setTimeout(aggiorna,50);});}
