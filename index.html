@@ -414,11 +414,11 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 </style>
 <div class="accordion-section" id="acc-fv">
   <div class="accordion-header" id="acc-fv-hdr" onclick="toggleAccordion('fv')">
-    <input type="checkbox" name="section_fv" id="section_fv" onchange="toggleAccordionCheck('fv',this.checked)" onclick="event.stopPropagation()" checked />
+    <input type="checkbox" name="section_fv" id="section_fv" onchange="toggleAccordionCheck('fv',this.checked)" onclick="event.stopPropagation()" />
     <span class="acc-label">☀️ Impianto Fotovoltaico</span>
     <span class="acc-arrow" id="acc-fv-arrow">▼</span>
   </div>
-  <div class="accordion-body open" id="acc-fv-body">
+  <div class="accordion-body" id="acc-fv-body">
     <div class="product-section" style="border:none;padding:0;background:transparent;margin-top:0">
       <div class="row" style="margin-top:0;align-items:flex-start"><div style="flex:2"><label for="fv_consumi_kwh" style="margin-top:0">Consumi annui (kWh)</label><input type="number" name="fv_consumi_kwh" id="fv_consumi_kwh" step="1" min="0" placeholder="Es. 4500" oninput="suggerisciKwp()" /><div id="hintKwp" style="font-size:11px;color:var(--teal);background:var(--teal-bg);padding:3px 8px;border-radius:20px;margin-top:3px;display:none"></div></div><div><label for="fv_kwp" style="margin-top:0">Potenza (kWp)</label><input type="number" name="fv_kwp" id="fv_kwp" step="0.01" min="0" placeholder="Es. 6.0" oninput="calcolaAutoconsumo()" /></div></div>
       <label>Modulo fotovoltaico</label><select name="fv_pannello" id="fv_pannello"><option value="">— Caricamento... —</option><option value="AIKO_485">AIKO 485 Wp — Neostar 3S+54</option><option value="AIKO_485">AIKO 485 Wp — Neostar 3S+54</option><option value="LONGI_410">LONGi 410 Wp— LR5-54HIH-410M</option><option value="LONGI_490">LONGi 490 Wp</option><option value="FU400M">FuturaSun Silk Nova Orange 400W</option></select>
