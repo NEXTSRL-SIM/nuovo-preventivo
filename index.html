@@ -3152,6 +3152,32 @@ document.addEventListener('DOMContentLoaded', function(){
 .ct-par{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--text-dim)}
 .ct-par span{background:#F2F4F7;border-radius:6px;padding:3px 8px}
 .ct-par select{width:auto;padding:2px 6px;font-size:11.5px;border-radius:6px}
+/* NEXT-110 (Sante 01/11 18:30): una sola sezione prodotti termici: linguette per marca, interruttori come nel resto della maschera,
+   accessori (valvole, kit WiFi, altro), totale da listino e prezzo finale con lo sconto automatico; riempie anche i campi del contratto */
+#tabProdotti .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Dati contatto: le quattro agevolazioni fiscali tutte visibili, su due righe sotto il titolo (Sante 01/11 18:34) */
+.fr:has(input[name="tipo_agevolazione"]){grid-template-columns:1fr;row-gap:8px}
+.options.seg:has(input[name="tipo_agevolazione"]){display:grid!important;grid-template-columns:1fr 1fr!important;overflow:visible!important;gap:6px!important;border:0!important;background:none!important;padding:0!important}
+.options.seg:has(input[name="tipo_agevolazione"]) .opt{border:1px solid var(--border)!important;border-radius:8px!important;justify-content:center;text-align:center;white-space:normal;padding:8px 10px!important}
+#acc-heat-body>.product-row,#acc-heat-body>#heat_altro_area,#acc-heat-body>.totale-row{display:none!important}
+.ct-brand{display:flex;gap:2px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.ct-brand button{font:inherit;font-size:12.5px;font-weight:700;padding:8px 14px;border:0;background:none;color:var(--text-dim);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.ct-brand button.on{color:#7A1F2B;border-bottom-color:#7A1F2B}
+.ct-brand button[disabled]{opacity:.4;cursor:not-allowed;font-weight:500}
+.ct-brand button i{font-style:normal;font-size:10px;background:#7A1F2B;color:#fff;border-radius:999px;padding:0 6px}
+.ct-card .tt label{gap:7px}.ct-card{cursor:pointer}.ct-card .rg,.ct-card a{cursor:auto}
+.ct-card .rg{flex-wrap:wrap}.ct-card .rg small{font-size:10.5px;color:var(--text-muted);width:100%}
+.ct-acc{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ct-acc .h{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:8px 12px;background:#FAFBFC;border-bottom:1px solid var(--border)}
+.ct-acc .r{display:grid;grid-template-columns:30px 1fr 70px 130px;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid #F1F3F5;font-size:13px}
+.ct-acc .r:last-child{border-bottom:0}
+.ct-acc .r input[type=text],.ct-acc .r input[type=number]{padding:6px 9px;font-size:12px;width:100%;min-width:0}
+.ct-acc .r .ds{grid-column:2/5;display:none}.ct-acc .r.on .ds{display:block}
+.ct-tot{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:#FBF7F7;border:1px solid #E8D5D4;border-radius:10px;padding:10px 12px}
+.ct-tot label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin:0 0 3px}
+.ct-tot .v{font-size:18px;font-weight:800;color:#2B1A1C}.ct-tot .pp{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding-top:6px}.ct-tot .pt{grid-column:1/-1;font-size:11.5px;color:#7A1F2B}
+.ct-tot input{font-size:16px;font-weight:800;padding:6px 9px;text-align:right}
+@media(max-width:700px){.ct-tot{grid-template-columns:1fr}.ct-acc .r{grid-template-columns:30px 1fr 90px}.ct-acc .r .sp{grid-column:2/4}}
 </style>
 <script>
 (function(){
@@ -3159,11 +3185,19 @@ document.addEventListener('DOMContentLoaded', function(){
  var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo';
  function pass(){var p='';try{p=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}return p;}
  function num(x){var s=String(x==null?'':x).trim().replace(/[€\s]/g,'');if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return Number(s)||0;}
- function eur(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})+' €';}
+ function eur(x,d){return Number(x).toLocaleString('it-IT',{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d,useGrouping:'always'})+' €';}
  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
  function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
  var FAM=[['ibrido','Ibrido'],['pompa_di_calore','Pompa di calore'],['scaldacqua_pdc','Boiler a pompa di calore'],['solare_termico','Solare termico'],['climatizzatore','Climatizzatori'],['caldaia','Caldaia'],['biomassa','Pellet']];
- var P=[],R={},SEL={},FAMON='ibrido',ZONA=null,ZMANO='';
+ var P=[],R={},SEL={},FAMON='ibrido',ZONA=null,ZMANO='',BRAND='Chaffoteaux',ACC={valvole:{on:false,n:0,spesa:0},wifi:{on:false,spesa:0},altro:{on:false,desc:'',spesa:0}},PF=null;
+ var PROMO=null,SOGLIA=8000,SCONTO=1000,SCM=null;
+ var MARCHE=['Chaffoteaux','Ariston','Daikin','Immergas','Baxi','Vaillant'];
+ function listino(){var t=0;Object.keys(SEL).forEach(function(id){t+=SEL[id].spesa||0;});['valvole','wifi','altro'].forEach(function(k){if(ACC[k].on)t+=ACC[k].spesa||0;});return t;}
+ function finale(){var l=listino();return PF!=null&&PF>0?PF:l;}
+ function fatt(){var l=listino(),f=finale();return l>0?Math.min(1,f/l):1;}
+ function incentivati(){return Object.keys(SEL).filter(function(id){var p=P.find(function(x){return String(x.id)===id;});return p&&/ibrido|pompa_di_calore|scaldacqua_pdc|climatizzatore|solare_termico/.test(p.famiglia_termico);});}
+ function spesaCt(id){var s0=SEL[id]||{};if(s0.spesa>0)return s0.spesa*fatt();var inc=incentivati();return inc.length===1&&inc[0]===id?finale():0;}
+ function promo(){var g=(R.promo_next||{});SCONTO=SCM!=null?SCM:(Number(g.sconto)||1000);SOGLIA=Number(g.soglia_eur)||8000;return PROMO!=null?PROMO:finale()>=SOGLIA;}
  /* ---------- motore Conto Termico 3.0 (collaudato con eco-bonus.it e Termico Facile, 01/11/2026) ---------- */
  function temp(){var t='';try{t=((window.__ieDati&&window.__ieDati())||{}).termico||{};t=t.terminali||'';}catch(e){}return /pavimento|fan coil|ventilconvettori/i.test(t)?'bassa':'media';}
  function chiudi(lordo,spesa){var G=R.ct3_generali||{},m=G.massimale_pct||.65,tot=lordo,taglio=false;if(spesa>0&&tot>m*spesa){tot=m*spesa;taglio=true;}return {teorico:lordo,lordo:tot,taglio:taglio,spesa_min:lordo/m};}
@@ -3181,18 +3215,25 @@ document.addEventListener('DOMContentLoaded', function(){
   if(f==='solare_termico'){return {err:'serve il certificato Solar Keymark (producibilità a Würzburg) per calcolarlo'};}
   return {err:'non incentivato dal Conto Termico'};}
  function ricalcola(){var box=$('#ctRis');if(!box)return;var righe=[],tot=0,teo=0,spesa=0,tagli=[];
-  Object.keys(SEL).forEach(function(id){var p=P.find(function(x){return String(x.id)===id;});if(!p)return;var s=SEL[id],r=calcola(p,s);
+  Object.keys(SEL).forEach(function(id){var p=P.find(function(x){return String(x.id)===id;});if(!p)return;var s0=SEL[id],s={qta:s0.qta,spesa:spesaCt(id)},r=calcola(p,s);
    righe.push('<div><span>'+esc(p.modello)+(s.qta>1?' × '+s.qta:'')+'<br><small style="color:var(--text-muted)">'+esc(r.err||r.dett)+'</small></span><b>'+(r.err?'—':eur(r.lordo))+'</b></div>');
    if(!r.err){tot+=r.lordo;teo+=r.teorico;spesa+=s.spesa||0;if(r.taglio)tagli.push({m:p.modello,teo:r.teorico,min:r.spesa_min,mot:r.motivo||'è tagliato dal tetto del 65% della spesa'});}});
+  var manca=incentivati().filter(function(id){return !(SEL[id].spesa>0);});if(incentivati().length>1&&manca.length)righe.push('<div class="ct-av" style="border:0">Con più prodotti incentivati scrivi il prezzo di ciascuno: il GSE li calcola separati. Il totale offerta resta quello che scrivi tu.</div>');
   var G=R.ct3_generali||{},tr=Math.min(tot*(G.trattenuta_pct||.01),G.trattenuta_max||250)*(1+(G.trattenuta_iva||.22)),netto=tot-tr,cop=spesa>0?Math.min(100,tot/spesa*100):0;
   if(!righe.length){box.innerHTML='<div class="ct-nota">Scegli i prodotti qui sopra: il contributo si calcola mentre compili.</div>';window.__ctRisultato=null;return;}
+  /* agevolazione scelta in Dati contatto: con la detrazione il riquadro mostra la detrazione, il Conto Termico resta come confronto */
+  var ag=(document.querySelector('input[name="tipo_agevolazione"]:checked')||{}).value||'',pd=ag==='detrazione'?.5:ag==='detrazione_36'?.36:0;
+  if(pd){var fi=finale(),dt=fi*pd;box.innerHTML='<div class="ct-ris" style="background:linear-gradient(135deg,#475569,#64748B)"><div><div class="lb">Detrazione fiscale '+Math.round(pd*100)+'% · '+(pd===.5?'prima casa':'seconda casa')+'</div><div class="big">'+eur(dt)+'</div><div style="font-size:12px;opacity:.9;margin-top:4px">in 10 rate annuali da '+eur(dt/10)+' con la dichiarazione dei redditi</div></div>'
+   +'<div class="kv"><div><span>Prezzo finale</span><b>'+(fi?eur(fi):'—')+'</b></div><div><span>Costo al netto della detrazione</span><b>'+(fi?eur(fi-dt):'—')+'</b></div><div><span>Con il Conto Termico sarebbe</span><b>'+eur(netto)+' subito</b></div></div></div>'
+   +'<div class="ct-av">Hai scelto la detrazione in Dati contatto. '+(netto>dt*0.8?'Il Conto Termico qui renderebbe <b>'+eur(netto)+'</b> subito, senza bisogno di IRPEF: valuta se proporlo.':'Il Conto Termico renderebbe '+eur(netto)+'.')+' Per lo stesso intervento non si sommano.</div><div class="ct-righe">'+righe.join('')+'</div>';
+   window.__ctRisultato={lordo:+tot.toFixed(2),netto:+netto.toFixed(2),trattenuta:+tr.toFixed(2),spesa:spesa,zona:ZMANO||ZONA||'E',temperatura:temp(),detrazione:+dt.toFixed(2)};return;}
   var av=tagli.map(function(t){return '<div class="ct-av"><b>'+esc(t.m)+':</b> il contributo '+t.mot+'. Il massimo ottenibile è <b>'+eur(t.teo)+'</b> lordi con una spesa di almeno <b>'+eur(t.min)+'</b>.</div>';}).join('');
   box.innerHTML='<div class="ct-ris"><div><div class="lb">Contributo Conto Termico · netto</div><div class="big">'+eur(netto)+'</div><div style="font-size:12px;opacity:.9;margin-top:4px">'+(tot<=(G.rata_unica_max||15000)?'in rata unica':'in rate annuali')+' · '+Math.round(cop)+'% della spesa</div></div>'
    +'<div class="kv"><div><span>Lordo</span><b>'+eur(tot)+'</b></div><div><span>Trattenuta GSE (1% + IVA)</span><b>'+eur(tr)+'</b></div><div><span>Spesa ammissibile</span><b>'+(spesa?eur(spesa):'—')+'</b></div><div><span>Con il mandato all\'incasso il cliente paga</span><b>'+(spesa?eur(spesa-netto):'—')+'</b></div></div>'
    +'<div class="bar"><i style="width:'+Math.round(cop)+'%"></i></div></div><div class="ct-righe">'+righe.join('')+'</div>'+av
    +'<div class="ct-nota">Stima secondo il DM 7/8/2025 (Conto Termico 3.0) con le regole della tabella termico_regole: l\'importo vincolante lo determina il GSE in istruttoria. Per lo stesso intervento non si somma con la detrazione.</div>';
   window.__ctRisultato={lordo:+tot.toFixed(2),netto:+netto.toFixed(2),trattenuta:+tr.toFixed(2),spesa:spesa,zona:ZMANO||ZONA||'E',temperatura:temp()};}
- function modelli(){var M=$('#ctMod');if(!M)return;var L=P.filter(function(p){return p.famiglia_termico===FAMON;});
+ function modelli(){var M=$('#ctMod');if(!M)return;var L=P.filter(function(p){return p.famiglia_termico===FAMON&&p.brand===BRAND;});
   if(!L.length){M.innerHTML='<div class="ct-nota">Nessun prodotto di questa famiglia nel catalogo.</div>';return;}
   M.innerHTML=L.map(function(p){var s=SEL[p.id],c=[];
    if(p.prated_kw)c.push('<span>'+String(p.prated_kw).replace('.',',')+' kW</span>');if(p.caldaia_kw)c.push('<span>caldaia '+String(p.caldaia_kw).replace('.',',')+' kW</span>');
@@ -3200,31 +3241,59 @@ document.addEventListener('DOMContentLoaded', function(){
    if(p.etas_35_pct)c.push('<span>ηs '+p.etas_35_pct+'%'+(p.etas_55_pct?' / '+p.etas_55_pct+'%':'')+'</span>');
    if(p.capacita_l)c.push('<span>'+p.capacita_l+' l</span>');if(p.classe_energetica)c.push('<span>'+esc(String(p.classe_energetica).split(' ')[0])+'</span>');
    c.push(p.attivo?'<span class="ok">a listino</span>':'<span class="pr">proposta</span>');
-   return '<div class="ct-card'+(s?' sel':'')+'" data-id="'+p.id+'"><div class="tt"><b>'+esc(p.brand)+' · '+esc(p.modello)+'</b><label><input type="checkbox" form="ie-fuori" '+(s?'checked':'')+'>Nel preventivo</label></div>'
+   return '<div class="ct-card'+(s?' sel':'')+'" data-id="'+p.id+'"><div class="tt"><b>'+esc(p.brand)+' · '+esc(p.modello)+'</b><label title="Nel preventivo"><input type="checkbox" class="sw-in" form="ie-fuori" '+(s?'checked':'')+'></label></div>'
     +'<div class="ct-chips">'+c.join('')+'</div>'+(p.datasheet_url?'<a href="'+esc(p.datasheet_url)+'" target="_blank" rel="noopener">Scheda tecnica ↗</a>':'')
-    +'<div class="rg"><input class="q" type="number" min="1" form="ie-fuori" value="'+((s&&s.qta)||1)+'" title="Quantità"><input class="sp" type="text" form="ie-fuori" placeholder="Spesa IVA inclusa €" value="'+((s&&s.spesa)?s.spesa:'')+'"></div></div>';}).join('');}
- function famiglie(){var F=$('#ctFam');if(!F)return;F.innerHTML=FAM.map(function(f){var n=P.filter(function(p){return p.famiglia_termico===f[0];}).length,k=Object.keys(SEL).filter(function(id){var p=P.find(function(x){return String(x.id)===id;});return p&&p.famiglia_termico===f[0];}).length;
+    +'<div class="rg"><input class="q" type="number" min="1" form="ie-fuori" value="'+((s&&s.qta)||1)+'" title="Quantità"><input class="sp" type="text" form="ie-fuori" placeholder="Prezzo IVA inclusa € (facoltativo)" value="'+((s&&s.spesa)?s.spesa:'')+'"><small>quantità · prezzo della riga, facoltativo: con un solo prodotto incentivato vale il totale offerta</small></div></div>';}).join('');}
+ function famiglie(){var F=$('#ctFam');if(!F)return;F.innerHTML=FAM.map(function(f){var n=P.filter(function(p){return p.famiglia_termico===f[0]&&p.brand===BRAND;}).length,k=Object.keys(SEL).filter(function(id){var p=P.find(function(x){return String(x.id)===id;});return p&&p.famiglia_termico===f[0]&&p.brand===BRAND;}).length;
   return '<button type="button" data-f="'+f[0]+'" class="'+(FAMON===f[0]?'on':'')+'"'+(n?'':' disabled title="Nessun prodotto in catalogo"')+'>'+f[1]+' <i>'+(k?'✓ '+k:n)+'</i></button>';}).join('');}
  function zona(){var c=($('#city')||{}).value||'';if(!c){ZONA=null;return Promise.resolve();}
   return fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=comuni').then(function(r){return r.json();}).then(function(j){var n=norm(c),pv=(($('#province')||{}).value||'').toUpperCase(),t=(j.c||[]).filter(function(x){return norm(x[0])===n&&(!pv||x[1]===pv);})[0];ZONA=t&&t[3]?t[3]:null;}).catch(function(){});}
  function parametri(){var e=$('#ctPar');if(!e)return;e.innerHTML='<span>Zona climatica: <select id="ctZona" form="ie-fuori">'+['','A','B','C','D','E','F'].map(function(z){return '<option value="'+z+'"'+(z===ZMANO?' selected':'')+'>'+(z?z:(ZONA?ZONA+' (dal comune)':'E (comune non trovato)'))+'</option>';}).join('')+'</select></span><span>Temperatura: '+(temp()==='bassa'?'bassa (pavimento / fan coil)':'media (radiatori)')+' · dai terminali in Impianto esistente</span>';
   $('#ctZona').onchange=function(){ZMANO=this.value;ricalcola();};}
- function aggiorna(){famiglie();modelli();parametri();ricalcola();}
+ function marche(){var B=$('#ctBrand');if(!B)return;B.innerHTML=MARCHE.map(function(m){var n=P.filter(function(p){return p.brand===m;}).length,k=Object.keys(SEL).filter(function(id){var p=P.find(function(x){return String(x.id)===id;});return p&&p.brand===m;}).length;
+  return '<button type="button" data-b="'+m+'" class="'+(BRAND===m?'on':'')+'"'+(n?'':' disabled title="Listino da caricare"')+'>'+m+(k?' <i>'+k+'</i>':'')+'</button>';}).join('');}
+ function accessori(){var A=$('#ctAcc');if(!A)return;var riga=function(k,t,extra){var a=ACC[k];return '<div class="r'+(a.on?' on':'')+'" data-k="'+k+'"><input type="checkbox" class="sw-in" form="ie-fuori" '+(a.on?'checked':'')+'><span>'+t+'</span>'+(extra||'<span></span>')+'<input class="sp" type="text" form="ie-fuori" placeholder="Prezzo €" value="'+(a.spesa||'')+'">'+(k==='altro'?'<input class="ds" type="text" form="ie-fuori" placeholder="Descrizione (va anche nel contratto)" value="'+esc(a.desc||'')+'">':'')+'</div>';};
+  A.innerHTML='<div class="h">Accessori e altro</div>'+riga('valvole','Valvole termostatiche','<input class="n" type="number" min="0" form="ie-fuori" placeholder="N." value="'+(ACC.valvole.n||'')+'">')+riga('wifi','Kit WiFi')+riga('altro','Altro');}
+ function totali(){var T=$('#ctTot');if(!T)return;var l=listino(),f=finale(),pr=promo();
+  var txt=pr&&f?'Nel preventivo: listino '+eur(f+SCONTO,0)+', sconto '+eur(SCONTO,0)+', prezzo '+eur(f,0)+' · con il servizio bollette':'Nel preventivo il prezzo è il totale, senza promozione';
+  /* se il riquadro c'è già si aggiornano solo i numeri: così il campo del totale non perde il cursore */
+  if($('#ctPF',T)){$('.v',T).textContent=eur(l,0);$('#ctPF',T).placeholder=l?Math.round(l):'';$('#ctPr',T).checked=pr;var sc=$('#ctSc',T);if(sc){sc.disabled=!pr;sc.style.opacity=pr?'':'.45';if(document.activeElement!==sc)sc.value=SCONTO;}$('.pt',T).textContent=txt;contratto();return;}
+  T.innerHTML='<div><label>Somma dei prezzi</label><div class="v">'+eur(l,0)+'</div></div><div><label for="ctPF">Totale offerta</label><input id="ctPF" type="text" form="ie-fuori" value="'+(PF!=null&&PF>0?PF:'')+'" placeholder="'+(l?Math.round(l):'')+'"></div><div><label>Sconto (Promozione Next)</label><div class="pp"><input id="ctPr" type="checkbox" class="sw-in" form="ie-fuori" '+(pr?'checked':'')+'><span>sconto</span></div><input id="ctSc" type="text" form="ie-fuori" value="'+SCONTO+'" style="margin-top:6px;font-size:14px;font-weight:700;text-align:right'+(pr?'':';opacity:.45')+'" '+(pr?'':'disabled')+'></div><div class="pt">'+txt+'</div>';
+  contratto();}
+ /* i campi del contratto (WF5 - ODOO, area riservata, installatore, studio) si riempiono da soli dalla scelta qui sopra */
+ function contratto(){var f=function(n){return document.querySelector('[name="'+n+'"]');},spunta=function(n,v){var e=f(n);if(e&&e.checked!==!!v){e.checked=!!v;e.dispatchEvent(new Event('change',{bubbles:true}));}},val=function(n,v){var e=f(n);if(e&&String(e.value)!==String(v)){e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}};
+  var scelti=Object.keys(SEL).map(function(id){return P.find(function(x){return String(x.id)===id;});}).filter(Boolean),extra=[];
+  var pig=function(h){var p=scelti.find(function(x){return x.famiglia_termico==='ibrido'&&new RegExp('HYBRID '+h).test(x.modello);});return p?((p.modello.match(/(?:PIGMA|MIRA) ADVANCE (\d+)/)||[])[1]||''):null;};
+  var mira=scelti.filter(function(x){return /MIRA ADVANCE/.test(x.modello);}).map(function(x){var t=(x.modello.match(/MIRA ADVANCE (\d+)/)||[])[1]||'',h=(x.modello.match(/HYBRID (\d+)/)||[])[1]||'';return 'In deroga a quanto indicato sopra (Pigma Advance '+t+' con Aria Next M Hybrid '+h+'), verrà installata la caldaia Chaffoteaux Mira Advance '+t+' al posto della Pigma Advance.';});
+  var nt=f('note_termico');if(nt){var vecchio=String(nt.value||'').split('\n').filter(function(r){return r.indexOf('In deroga a quanto indicato sopra (Pigma Advance')!==0;});var nuovo=vecchio.concat(mira).filter(function(r,i,a){return r||i<a.length-1;}).join('\n').replace(/^\n+/,'');if(nt.value!==nuovo){nt.value=nuovo;nt.dispatchEvent(new Event('change',{bubbles:true}));}}
+  var p50=pig(50),p80=pig(80);spunta('heat_pigma50_enabled',p50!=null);val('heat_pigma50_taglia',p50||'');spunta('heat_pigma80_enabled',p80!=null);val('heat_pigma80_taglia',p80||'');
+  var cl=function(re){return scelti.some(function(x){return x.famiglia_termico==='climatizzatore'&&re.test(x.modello);});};
+  spunta('clima_alys25',cl(/ALYS R32 25/));spunta('clima_alys35',cl(/ALYS R32 35/));spunta('clima_alys50',cl(/ALYS R32 50/));spunta('clima_prios70',cl(/PRIOS/));spunta('clima_dual50',cl(/DUAL 50/));
+  scelti.forEach(function(x){var noto=(x.famiglia_termico==='ibrido'&&/(PIGMA|MIRA) ADVANCE/.test(x.modello)&&/HYBRID (50|80)/.test(x.modello))||(x.famiglia_termico==='climatizzatore'&&/ALYS R32 (25|35|50)|PRIOS|DUAL 50/.test(x.modello));if(!noto)extra.push(x.brand+' '+x.modello+(SEL[String(x.id)].qta>1?' × '+SEL[String(x.id)].qta:''));});
+  spunta('heat_valvole_enabled',ACC.valvole.on);val('heat_valvole_num',ACC.valvole.on?(ACC.valvole.n||''):'');spunta('heat_kit_wifi',ACC.wifi.on);
+  if(ACC.altro.on&&ACC.altro.desc)extra.push(ACC.altro.desc);spunta('heat_altro_enabled',extra.length>0);val('heat_altro_desc',extra.join(' · '));
+  var fi=finale();val('heat_totale_eur',fi>0?fi.toFixed(2):'');}
+ function aggiorna(){marche();famiglie();modelli();parametri();accessori();totali();ricalcola();}
  function monta(){var hb=$('#acc-heat-body');if(!hb||!$('#gasBox'))return setTimeout(monta,400);if($('#ctBox'))return;
   var d=document.createElement('div');d.id='ctBox';
-  d.innerHTML='<div class="hd"><div><b>Prodotti termici · schede tecniche e Conto Termico</b><br><small>Scegli famiglia e modello: il contributo si calcola mentre compili</small></div></div><div class="bd"><div class="ct-fam" id="ctFam"></div><div class="ct-mod" id="ctMod"></div><div class="ct-par" id="ctPar"></div><div id="ctRis"></div></div>';
+  d.innerHTML='<div class="hd"><div><b>Prodotti termici</b><br><small>Marca, famiglia e modello · accessori · prezzo finale · il Conto Termico si calcola mentre compili</small></div></div><div class="bd"><div class="ct-brand" id="ctBrand"></div><div class="ct-fam" id="ctFam"></div><div class="ct-mod" id="ctMod"></div><div class="ct-acc" id="ctAcc"></div><div class="ct-tot" id="ctTot"></div><div class="ct-par" id="ctPar"></div><div id="ctRis"></div></div>';
   var g=$('#gasBox');g.parentNode.insertBefore(d,g.nextSibling);
-  d.addEventListener('click',function(e){var b=e.target.closest('.ct-fam button');if(b&&!b.disabled){FAMON=b.dataset.f;aggiorna();}});
-  d.addEventListener('change',function(e){var c=e.target.closest('.ct-card');if(!c)return;var id=c.dataset.id;
+  d.addEventListener('click',function(e){var cc=e.target.closest('.ct-card');if(cc&&!e.target.closest('input,a,.rg,label')){var sw=$('input.sw-in',cc);if(sw){sw.checked=!sw.checked;sw.dispatchEvent(new Event('change',{bubbles:true}));}return;}var b=e.target.closest('.ct-fam button');if(b&&!b.disabled){FAMON=b.dataset.f;aggiorna();}var m=e.target.closest('.ct-brand button');if(m&&!m.disabled){BRAND=m.dataset.b;var fs=FAM.filter(function(f){return P.some(function(p){return p.brand===BRAND&&p.famiglia_termico===f[0];});});if(fs.length&&!fs.some(function(f){return f[0]===FAMON;}))FAMON=fs[0][0];aggiorna();}});
+  d.addEventListener('change',function(e){var ar=e.target.closest('.ct-acc .r');if(ar){var k=ar.dataset.k,a=ACC[k];if(e.target.type==='checkbox'){a.on=e.target.checked;accessori();}else{a.spesa=num(($('.sp',ar)||{}).value);if(k==='valvole')a.n=parseInt(($('.n',ar)||{}).value)||0;if(k==='altro')a.desc=(($('.ds',ar)||{}).value||'').trim();}totali();ricalcola();return;}
+   if(e.target.id==='ctPF'){PF=num(e.target.value)||null;totali();ricalcola();return;}
+   if(e.target.id==='ctPr'){PROMO=e.target.checked;totali();return;}
+   if(e.target.id==='ctSc'){SCM=num(e.target.value)||0;totali();return;}
+   var c=e.target.closest('.ct-card');if(!c)return;var id=c.dataset.id;
    if(e.target.type==='checkbox'){if(e.target.checked)SEL[id]={qta:1,spesa:0};else delete SEL[id];aggiorna();return;}
-   if(SEL[id]){SEL[id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[id].spesa=num($('.sp',c).value);ricalcola();famiglie();}});
-  d.addEventListener('input',function(e){var c=e.target.closest('.ct-card');if(!c||!SEL[c.dataset.id])return;SEL[c.dataset.id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[c.dataset.id].spesa=num($('.sp',c).value);ricalcola();});
+   if(SEL[id]){SEL[id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[id].spesa=num($('.sp',c).value);totali();ricalcola();famiglie();marche();}});
+  d.addEventListener('input',function(e){if(e.target.id==='ctSc'){SCM=num(e.target.value)||0;totali();return;}if(e.target.id==='ctPF'){PF=num(e.target.value)||null;totali();ricalcola();return;}var c=e.target.closest('.ct-card');if(!c||!SEL[c.dataset.id])return;SEL[c.dataset.id].qta=Math.max(1,parseInt($('.q',c).value)||1);SEL[c.dataset.id].spesa=num($('.sp',c).value);ricalcola();});
   fetch(FN+'?t='+encodeURIComponent(pass())+'&cosa=termico_catalogo',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){P=j.prodotti||[];R=j.regole||{};return zona();}).then(aggiorna).catch(function(){$('#ctRis').innerHTML='<div class="ct-av">Catalogo termico non raggiungibile adesso.</div>';});
+  document.addEventListener('change',function(e){if(e.target&&e.target.name==='tipo_agevolazione')ricalcola();});
   ['#city','#province'].forEach(function(s){var el=$(s);if(el)el.addEventListener('change',function(){zona().then(aggiorna);});});
   document.addEventListener('change',function(e){if(e.target.closest&&e.target.closest('#iePaneTe'))setTimeout(aggiorna,50);});}
  /* salvataggio e rientro: i prodotti scelti viaggiano con i dati termici (termico_dati.ct) */
- window.__ctDati=function(){return {prodotti:Object.keys(SEL).map(function(id){var p=P.find(function(x){return String(x.id)===id;})||{};return {id:+id,codice:p.codice,modello:p.modello,qta:SEL[id].qta,spesa:SEL[id].spesa};}),zona_manuale:ZMANO||null,risultato:window.__ctRisultato||null};};
- window.__ctCarica=function(ct){SEL={};ZMANO='';if(ct&&Array.isArray(ct.prodotti))ct.prodotti.forEach(function(x){SEL[String(x.id)]={qta:x.qta||1,spesa:x.spesa||0};});if(ct&&ct.zona_manuale)ZMANO=ct.zona_manuale;var f=(ct&&ct.prodotti&&ct.prodotti[0])?(P.find(function(p){return p.id===ct.prodotti[0].id;})||{}).famiglia_termico:null;if(f)FAMON=f;zona().then(aggiorna);};
+ window.__ctDati=function(){return {prodotti:Object.keys(SEL).map(function(id){var p=P.find(function(x){return String(x.id)===id;})||{};return {id:+id,codice:p.codice,modello:p.modello,qta:SEL[id].qta,spesa:+spesaCt(id).toFixed(2),listino:SEL[id].spesa};}),accessori:ACC,listino:listino(),prezzo_finale:finale(),promo:promo(),sconto_promo:promo()?SCONTO:0,zona_manuale:ZMANO||null,risultato:window.__ctRisultato||null};};
+ window.__ctCarica=function(ct){SEL={};ZMANO='';PF=null;PROMO=null;SCM=null;ACC={valvole:{on:false,n:0,spesa:0},wifi:{on:false,spesa:0},altro:{on:false,desc:'',spesa:0}};if(ct&&Array.isArray(ct.prodotti))ct.prodotti.forEach(function(x){SEL[String(x.id)]={qta:x.qta||1,spesa:x.listino!=null?x.listino:(x.spesa||0)};});if(ct&&ct.accessori)['valvole','wifi','altro'].forEach(function(k){if(ct.accessori[k])ACC[k]=Object.assign(ACC[k],ct.accessori[k]);});if(ct&&ct.prezzo_finale&&ct.listino&&Math.abs(ct.prezzo_finale-ct.listino)>0.5)PF=ct.prezzo_finale;PROMO=ct&&typeof ct.promo==='boolean'?ct.promo:null;SCM=ct&&ct.sconto_promo>0?ct.sconto_promo:null;if(ct&&ct.zona_manuale)ZMANO=ct.zona_manuale;var f=(ct&&ct.prodotti&&ct.prodotti[0])?(P.find(function(p){return p.id===ct.prodotti[0].id;})||{}).famiglia_termico:null;if(f){FAMON=f;var bb=(P.find(function(p){return p.id===ct.prodotti[0].id;})||{}).brand;if(bb)BRAND=bb;}zona().then(aggiorna);};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,600);});else setTimeout(monta,600);
 })();
 </script>
