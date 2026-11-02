@@ -515,7 +515,7 @@ function cfgFetch(url,opts){opts=opts||{};
  return fetch(CFG+'?t='+encodeURIComponent(PASS)+'&chiave='+encodeURIComponent(ch));}
 window.addEventListener('message',function(e){var d=e.data||{};
  if(d.tipo==='tema'&&(d.tema==='chiaro'||d.tema==='scuro'))document.documentElement.setAttribute('data-tema',d.tema);
- if(d.tipo==='pass'&&d.pass&&!PASS){PASS=d.pass;try{sessionStorage.setItem('regia_pass',PASS)}catch(x){}}});
+ if(d.tipo==='pass'&&d.pass&&!PASS){PASS=d.pass;try{sessionStorage.setItem('regia_pass',PASS)}catch(x){}var te=document.getElementById('testoEmailEl');if(te&&te.dataset.fallback==='1'&&window._compilaEmail&&te.value===window._compilaEmail(window._modelloEmail||'')){te.dataset.loaded='';window._caricaTestoEmail();}}});
 try{var t0=window.parent.document.documentElement.getAttribute('data-tema');if(t0)document.documentElement.setAttribute('data-tema',t0);}catch(e){}
 if(!PASS){try{window.parent.postMessage({tipo:'chiedi_pass'},'*');}catch(e){}}
 
@@ -928,6 +928,8 @@ async function inviaMailPdf(url, nome) {
     return testo.replace(/\n{3,}/g,'\n\n').trim();
   };
 
+  /* PORTALE NEXT-110 (02/11): se la password della regia non e ancora arrivata il testo standard non si legge: si mette questa copia del testo originale e si ricarica appena arriva la password (prima usciva un testo di due righe) */
+  window._TESTO_MAIL_ORIG='Gentile {{nome}},\n\nLe inviamo il preventivo per il Suo impianto fotovoltaico, elaborato dal nostro team tecnico sulla base delle caratteristiche del Suo immobile.\n\nIl documento include l\'offerta economica dettagliata con le caratteristiche tecniche dei componenti selezionati:\n\n- **Potenza dell\'impianto:** {{potenza}} kWp\n- **Batteria d\'accumulo:** {{accumulo}} kWh\n- **Sistema di backup:** {{backup}}\n- **Servizi inclusi:** gestione della pratica GSE, pratica per la detrazione fiscale{{friuli}}\n\nNel documento troverà anche una stima della produzione annua, calcolata su dati satellitari PVGIS, e il piano finanziario a 20 anni.\n\nCi sarebbe inoltre l\'opportunità di inserire il Suo profilo all\'interno di una Comunità Energetica Rinnovabile (CER): una possibilità che consente di ottenere un ulteriore guadagno economico, sotto forma di incentivo sull\'energia condivisa in rete, massimizzando il rientro dell\'investimento.\n\nRimaniamo a disposizione per qualsiasi chiarimento o per concordare un appuntamento tecnico senza impegno.\n\nCordiali saluti,\n{{venditore}}\nNext S.r.l.';
   window._caricaTestoEmail=function(){
     var testoEl=document.getElementById('testoEmailEl');
     if(!testoEl||testoEl.dataset.loaded)return;
@@ -942,11 +944,11 @@ async function inviaMailPdf(url, nome) {
       headers:{'apikey':SK_CONF,'Authorization':'Bearer '+SK_CONF}
     }).then(function(r){return r.json();})
       .then(function(d){
-        if(d&&d.length&&d[0].valore)metti(d[0].valore);
-        else metti('Le inviamo il preventivo per il Suo impianto fotovoltaico.\n\nCordiali saluti,\n\nNext S.r.l.');
+        if(d&&d.length&&d[0].valore){testoEl.dataset.fallback='';metti(d[0].valore);}
+        else{testoEl.dataset.fallback='1';metti(window._TESTO_MAIL_ORIG);}
       })
       .catch(function(){
-        metti('Le inviamo il preventivo per il Suo impianto fotovoltaico.\n\nCordiali saluti,\nNext S.r.l.');
+        testoEl.dataset.fallback='1';metti(window._TESTO_MAIL_ORIG);
       });
   };
 
