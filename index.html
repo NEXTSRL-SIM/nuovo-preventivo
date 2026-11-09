@@ -533,6 +533,44 @@ function avvisa(tipo,titolo,testoHtml){return fApri(tipo,titolo,testoHtml,[['Chi
 function attendi(testo){fApri('attesa',testo||'Un momento…','<span class="gira"></span>'+fEsc(testo||'Sto lavorando…'),[]);}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){var v=document.getElementById('fVelo');if(v&&!v.querySelector('.gira'))v.click();}});
 
+/* 150696 (PORTALE NEXT 2.0-141): elenco clienti e pratiche dalla funzione portale-elenchi, dietro l'accesso personale al portale.
+   Prima la pagina chiamava i webhook n8n client-list (e, in Nuovo cliente, client-practices) senza alcun accesso. Ora manda il gettone del portale
+   (portale_token) nell'intestazione X-Portale-Token. Il gettone si prende come fa Provvigioni: dalla memoria del browser
+   o dal messaggio {tipo:'pass',token} che il portale manda alla pagina quando lei chiede {tipo:'chiedi_pass'}.
+   Solo a un 401 (accesso scaduto o non valido) la pagina toglie il gettone, lo dice a video e chiede al portale di riaprire l'accesso.
+   A un 503 (o a un altro errore del servizio o della rete) il gettone resta e la tendina dice di riprovare. */
+var ELENCHI_EP='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/portale-elenchi';
+var ORIGINI_NEXT=/^https:\/\/(nextsrl-sim\.github\.io|portale\.next-srl\.net)$/;
+var GETTONE='';try{GETTONE=sessionStorage.getItem('portale_token')||localStorage.getItem('portale_token')||'';}catch(e){}
+var ATTESE_GETTONE=[];
+window.addEventListener('message',function(e){var d=e.data||{};
+ if(d.tipo!=='pass'||!d.token||!ORIGINI_NEXT.test(e.origin)||e.source!==window.parent)return;
+ GETTONE=String(d.token);var a=ATTESE_GETTONE;ATTESE_GETTONE=[];a.forEach(function(f){f(GETTONE);});});
+if(!GETTONE&&window.parent!==window){try{window.parent.postMessage({tipo:'chiedi_pass'},'*');}catch(e){}}
+function attendiGettone(){if(GETTONE)return Promise.resolve(GETTONE);
+ return new Promise(function(ok){ATTESE_GETTONE.push(ok);setTimeout(function(){ok(GETTONE);},3000);});}
+var _accessoAvvisato=false;
+function accessoMancante(stato){
+ if(stato===401){GETTONE='';try{sessionStorage.removeItem('portale_token');localStorage.removeItem('portale_token');}catch(e){}}
+ if(_accessoAvvisato)return;_accessoAvvisato=true;setTimeout(function(){_accessoAvvisato=false;},8000);
+ var nelPortale=window.parent!==window;
+ var tit=stato===403?'Elenco non permesso':(stato===401?'Accesso al portale scaduto':'Serve l\'accesso al portale');
+ var txt=stato===403?'Il tuo utente del portale non può leggere l\'elenco dei clienti. Chiedi a Next.'
+  :(nelPortale?'Per vedere clienti e pratiche serve il tuo accesso personale al portale.<br><br>Se non si apre da sola la finestra per entrare: menu in alto a destra, <b>Esci</b>, poi rientra con la tua mail e la tua password.'
+             :'Apri questa pagina dal portale Next, dopo essere entrato con la tua mail e la tua password.');
+ avvisa('attenzione',tit,txt).then(function(){_accessoAvvisato=false;
+  if(nelPortale&&stato!==403){try{window.parent.postMessage({tipo:'serve_accesso'},'*');}catch(e){}}});}
+var RIPROVA_TXT='Servizio momentaneamente non disponibile, riprova';
+/* tipo: 'clienti' oppure 'pratiche'; par: gli stessi parametri di prima (per le pratiche client_id=...) */
+function elenchi(tipo,par){
+ return attendiGettone().then(function(g){
+  if(!g)return {__accesso:0};
+  return fetch(ELENCHI_EP+'?tipo='+encodeURIComponent(tipo)+(par?'&'+par:''),{headers:{'X-Portale-Token':g},cache:'no-store'})
+   .then(function(r){if(r.status===401||r.status===403)return {__accesso:r.status};
+    if(!r.ok){var es=new Error('portale-elenchi: errore '+r.status);es.riprova=r.status>=500;throw es;}return r.json();},
+    function(x){var en=new Error('portale-elenchi: rete non raggiungibile');en.riprova=true;throw en;});
+ }).then(function(d){if(d&&d.__accesso!==undefined){accessoMancante(d.__accesso);var er=new Error('accesso');er.accesso=d.__accesso;throw er;}return d;});}
+
 function chiediTesto(titolo,etichetta,segnaposto){return new Promise(function(ok){
  fApri('chiedi',titolo,'<label style="display:block;margin:0 0 6px;font-size:12px;font-weight:600">'+fEsc(etichetta)+'</label><input id="fTesto" type="email" placeholder="'+fEsc(segnaposto||'')+'" style="width:100%">',[['Annulla','',null],['Invia','si','__testo__']])
  .then(function(r){ok(r==='__testo__'?(window.__fTesto||'').trim()||null:null);});
@@ -721,7 +759,7 @@ async function inviaMailPdf(url, nome) {
 (function(){
   var SUBMIT_EP='https://n8n.srv1030489.hstgr.cloud/webhook/preventivo-submit';
   var LEAD_LIST_EP='https://n8n.srv1030489.hstgr.cloud/webhook/prev-lead-list';
-  var CLIENT_EP='https://n8n.srv1030489.hstgr.cloud/webhook/client-list';
+  /* 150696: client-list non si chiama piu su n8n: si passa da elenchi('clienti') */
   var LEAD_PREV_EP='https://n8n.srv1030489.hstgr.cloud/webhook/lead-preventivi';
   var VENDOR_EP='https://n8n.srv1030489.hstgr.cloud/webhook/vendor-list';
   var REINVIA_EP='https://n8n.srv1030489.hstgr.cloud/webhook/reinvia-preventivo';
@@ -1173,7 +1211,7 @@ window.ripristinaTestoStandard=async function(){
   function loadVendors(){fetch(VENDOR_EP).then(function(r){return r.json();}).then(function(d){var vv=Array.isArray(d.vendors)?d.vendors:[];vendorSel.innerHTML='<option value="">Seleziona agente...</option>';vv.forEach(function(v){var o=document.createElement('option');o.value=v.name;o.textContent=v.name;vendorSel.appendChild(o);});}).catch(function(){});}
   function buildLeadOption(l,aF,cF,zF,pF){var o=document.createElement('option');o.value=l.id;o.setAttribute('data-last',l.last_name||'');o.setAttribute('data-first',l.first_name||'');o.setAttribute('data-email',(l.email||'').trim());o.setAttribute('data-phone',(l.phone||'').trim());o.setAttribute('data-phone2',(l.phone_2||'').trim());o.setAttribute('data-address',(l[aF]||'').trim());o.setAttribute('data-city',(l[cF]||'').trim());o.setAttribute('data-zip',(l[zF]||'').trim());o.setAttribute('data-province',(l[pF]||'').trim());var lbl=l.full_name;if(l.phone)lbl+=' \u2014 '+l.phone;if(l[cF])lbl+=' \u2014 '+l[cF];o.textContent=lbl;return o;}
   function loadLeads(){fetch(LEAD_LIST_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.leads)?d.leads:(Array.isArray(d)?d:[]);existingLead.innerHTML='<option value="">&#10133; Nuovo lead</option>';items.forEach(function(l){if(!l.full_name||l.full_name.trim().length<2)return;existingLead.appendChild(buildLeadOption(l,'address','city','zip','province'));});}).catch(function(){});}
-  function loadClientList(){fetch(CLIENT_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.clients)?d.clients:(Array.isArray(d)?d:[]);existingLead.innerHTML='<option value="">&#10133; Nuovo preventivo</option>';items.forEach(function(c){if(!c.full_name||c.full_name.trim().length<2)return;existingLead.appendChild(buildLeadOption(c,'res_address','res_city','res_zip','res_province'));});}).catch(function(){});}
+  function loadClientList(){elenchi('clienti').then(function(d){var items=Array.isArray(d.clients)?d.clients:(Array.isArray(d)?d:[]);existingLead.innerHTML='<option value="">&#10133; Nuovo preventivo</option>';items.forEach(function(c){if(!c.full_name||c.full_name.trim().length<2)return;existingLead.appendChild(buildLeadOption(c,'res_address','res_city','res_zip','res_province'));});}).catch(function(e){existingLead.innerHTML='<option value="">'+(e&&e.accesso!==undefined?'Elenco clienti chiuso: serve l\'accesso al portale':(e&&e.riprova?RIPROVA_TXT:'Elenco clienti non disponibile'))+'</option>';console.warn('Errore clienti:',e);});}
   function loadPreventivi(lid){prevData=[];prevSelect.innerHTML='<option value="">Caricamento...</option>';fetch(LEAD_PREV_EP+'?lead_id='+encodeURIComponent(lid)).then(function(r){return r.json();}).then(function(d){var pp=Array.isArray(d.preventivi)?d.preventivi:(Array.isArray(d)?d:[]);prevData=pp;prevSelect.innerHTML='<option value="">— Seleziona preventivo —</option>';if(!pp.length){prevSelect.innerHTML='<option value="">Nessun preventivo trovato</option>';return;}pp.forEach(function(p){var o=document.createElement('option');o.value=p.id;var dt=p.created_at?new Date(p.created_at).toLocaleDateString('it-IT'):'';o.textContent=dt+(p.product_type?' \u2014 '+p.product_type:'')+(p.fv_totale_eur?' \u2014 \u20ac'+p.fv_totale_eur:'');prevSelect.appendChild(o);});/* PORTALE NEXT-110 (Sante 28/10): niente doppioni. Se il contatto ha già un preventivo, si apre l'ultimo in modifica: il Salva lo aggiorna. Per farne un altro si sceglie apposta «Nuovo preventivo». */var ult=pp.slice().sort(function(x,y){return String(y.updated_at||y.created_at||'').localeCompare(String(x.updated_at||x.created_at||''));})[0];var rN=document.querySelector('input[name="prev_mode"][value="new_prev"]'),rE=document.querySelector('input[name="prev_mode"][value="edit_prev"]');if(ult&&rE&&rN&&rN.checked&&!lastSavedId.value){rE.checked=true;prevSelectWrap.style.display='block';prevSelect.value=ult.id;prevSelect.dispatchEvent(new Event('change'));var st=document.getElementById('status');if(st){st.className='';st.textContent='Aperto l\'ultimo preventivo di questo contatto: Salva lo aggiorna. Per uno nuovo scegli «Nuovo preventivo».';}}}).catch(function(){prevSelect.innerHTML='<option value="">Errore caricamento</option>';});}
   function loadModuli(){fetch(MODULI_EP).then(function(r){return r.json();}).then(function(d){var items=Array.isArray(d.moduli)?d.moduli:(Array.isArray(d)?d:[]);if(!items.length)return;var sel=document.getElementById('fv_pannello');var cur=sel.value;sel.innerHTML='<option value="">— Seleziona —</option>';items.forEach(function(m){var o=document.createElement('option');o.value=m.code||m.id||m.default_code;o.textContent=m.name||m.display_name;sel.appendChild(o);});if(cur)sel.value=cur;}).catch(function(){});}
   function clearAnag(){['last_name','first_name','email','phone','phone_2','address','city','zip','province'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});}
