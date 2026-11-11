@@ -1261,7 +1261,7 @@ window.ripristinaTestoStandard=async function(){
     /* PORTALE NEXT-110 (01/11): fonte dei consumi del preventivo (bolletta o scritti a mano), anche per i privati */
     try{if(window.__segCf)window.__segCf(p.consumi_fonte==='manuale'?'manuale':'bolletta');}catch(e){}
     (function(){var kwpVal=parseFloat(p.fv_kwp)||0;var kwhAnno=parseFloat(p.pvgis_e_y_kwh)||0;var resaEl=document.getElementById('display_resa_kwh_kwp');var pvgisKwhEl=document.getElementById('display_pvgis_kwh');if(kwhAnno>0&&resaEl){if(pvgisKwhEl)pvgisKwhEl.textContent=Math.round(kwhAnno).toLocaleString('it-IT')+' kWh/anno totali';if(kwpVal>0){resaEl.textContent=Math.round(kwhAnno/kwpVal).toLocaleString('it-IT');}else{resaEl.textContent=Math.round(kwhAnno).toLocaleString('it-IT');if(pvgisKwhEl)pvgisKwhEl.textContent+=' (kWp non inserito)';}}})();
-    if(p.vendor)vendorSel.value=p.vendor;setRadio('product_type',p.product_type||'fotovoltaico');setRadio('tipo_agevolazione',p.tipo_agevolazione||'nessuna');if(p.imp_esistente==='si'){document.getElementById('imp_si').checked=true;toggleImpEsistente(true);setField('imp_kwp',p.imp_kwp);setField('imp_anno',p.imp_anno);setField('imp_conto_energia',p.imp_conto_energia||'nessuno');setRadio('imp_ha_accumulo',p.imp_ha_accumulo||'no');if(p.imp_ha_accumulo==='si')document.getElementById('impAccumuloBox').style.display='flex';setField('imp_accumulo_kwh',p.imp_accumulo_kwh);if(p.imp_percorso)selectPercorso(p.imp_percorso);setRadio('imp_accumulo_tipo',p.imp_accumulo_tipo||'retrofit');setField('imp_note',p.imp_note);}if(p.id){lastSavedId.value=p.id;document.getElementById('generaBox').style.display='block';if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(p);}}
+    if(p.vendor)vendorSel.value=p.vendor;setRadio('product_type',p.product_type||'fotovoltaico');setRadio('tipo_agevolazione',p.tipo_agevolazione||'nessuna');if(p.imp_esistente==='si'){document.getElementById('imp_si').checked=true;toggleImpEsistente(true);setField('imp_kwp',p.imp_kwp);setField('imp_anno',p.imp_anno);setField('imp_conto_energia',p.imp_conto_energia||'nessuno');setRadio('imp_ha_accumulo',p.imp_ha_accumulo||'no');if(p.imp_ha_accumulo==='si')document.getElementById('impAccumuloBox').style.display='flex';setField('imp_accumulo_kwh',p.imp_accumulo_kwh);if(p.imp_percorso)selectPercorso(p.imp_percorso);setRadio('imp_accumulo_tipo',p.imp_accumulo_tipo||'retrofit');setField('imp_note',p.imp_note);}if(p.id){lastSavedId.value=p.id;document.getElementById('generaBox').style.display='block';if(window.vincoliStato)window.vincoliStato(p.id);if(typeof mostraPdfSalvati==='function')mostraPdfSalvati(p);}}
   /* ═══════════════════════════════════════════════════════════════════
      FINE MODIFICA 3
      ═══════════════════════════════════════════════════════════════════ */
@@ -1289,7 +1289,7 @@ window.ripristinaTestoStandard=async function(){
     /* ═══════════════════════════════════════════════════════════════
        FINE MODIFICA 2
        ═══════════════════════════════════════════════════════════════ */
-    fv_bat_tipo:r('fv_bat_tipo')||'nessuna',fv_kwh:v('fv_kwh')||null,fv_ottimizzatori:c('fv_ottimizzatori'),fv_staz_auto:c('fv_staz_auto'),fv_altro_enabled:c('fv_altro_enabled'),fv_altro_desc:v('fv_altro_desc'),fv_totale_eur:v('fv_totale_eur')||null,note_fv:v('note_fv'),heat_pigma50_enabled:c('heat_pigma50_enabled'),heat_pigma50_taglia:v('heat_pigma50_taglia'),heat_pigma80_enabled:c('heat_pigma80_enabled'),heat_pigma80_taglia:v('heat_pigma80_taglia'),heat_valvole_enabled:c('heat_valvole_enabled'),heat_valvole_num:v('heat_valvole_num')||null,clima_alys25:c('clima_alys25'),clima_alys35:c('clima_alys35'),clima_alys50:c('clima_alys50'),clima_prios70:c('clima_prios70'),clima_dual50:c('clima_dual50'),heat_kit_wifi:c('heat_kit_wifi'),heat_altro_enabled:c('heat_altro_enabled'),heat_altro_desc:v('heat_altro_desc'),heat_totale_eur:v('heat_totale_eur')||null,note_termico:v('note_termico'),note_generali:v('note_generali'),map_lat:document.getElementById('map_lat').value||null,map_lon:document.getElementById('map_lon').value||null,map_screenshot_url:document.getElementById('map_screenshot_url').value||null,imp_esistente:r('imp_esistente')||'no',imp_kwp:v('imp_kwp')||null,imp_anno:v('imp_anno')||null,imp_conto_energia:v('imp_conto_energia')||'nessuno',imp_ha_accumulo:r('imp_ha_accumulo')||'no',imp_accumulo_kwh:v('imp_accumulo_kwh')||null,imp_percorso:r('imp_percorso')||null,imp_accumulo_tipo:r('imp_accumulo_tipo')||null,imp_note:v('imp_note'),pagamento_tipo:r('pagamento_tipo')||'standard',manut_eur:parseFloat(v('manut_eur'))||0,note_manut:v('note_manut'),tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.14,tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.08,tariffa_cer_eur:parseFloat(v('tariffa_cer_eur'))||0.06,quota_energia_condivisa:parseFloat(v('quota_energia_condivisa'))||50,incremento_costo_pct:parseFloat(v('incremento_costo_pct'))||3.0,degrado_moduli_pct:parseFloat(v('degrado_moduli_pct'))||0.5,autoconsumo_pct:parseFloat(v('autoconsumo_pct'))||40};fetch(SUBMIT_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){if(j&&(j.success||j.id)){statusEl.className='success';statusEl.textContent='\u2705 Preventivo salvato con successo!';if(j.id){lastSavedId.value=j.id;existingPrevId.value=j.id;document.getElementById('generaBox').style.display='block';document.getElementById('generaStatus').textContent='';setTimeout(function(){document.getElementById('generaBox').scrollIntoView({behavior:'smooth',block:'center'});},300);}if(j.lead_id){existingLeadId.value=j.lead_id;modeInput.value='existing';updateMode();}if(j.id){/* PORTALE NEXT-110: dopo il primo salvataggio si resta sullo stesso preventivo: i salvataggi dopo lo aggiornano, non ne creano un altro */var rr=document.querySelector('input[name="prev_mode"][value="edit_prev"]');if(rr)rr.checked=true;if(!prevSelect.querySelector('option[value="'+j.id+'"]')){var oo=document.createElement('option');oo.value=j.id;oo.textContent='Preventivo appena salvato';prevSelect.appendChild(oo);}prevSelect.value=j.id;prevSelectWrap.style.display='block';updateMode();}if(fonteInput.value==='leads')loadLeads();}else{statusEl.className='error';statusEl.textContent='\u274C Errore: '+(j&&j.message?j.message:'risposta inattesa dal server');}}).catch(function(e){statusEl.className='error';statusEl.textContent='\u274C Errore di rete: '+e.message;});});
+    fv_bat_tipo:r('fv_bat_tipo')||'nessuna',fv_kwh:v('fv_kwh')||null,fv_ottimizzatori:c('fv_ottimizzatori'),fv_staz_auto:c('fv_staz_auto'),fv_altro_enabled:c('fv_altro_enabled'),fv_altro_desc:v('fv_altro_desc'),fv_totale_eur:v('fv_totale_eur')||null,note_fv:v('note_fv'),heat_pigma50_enabled:c('heat_pigma50_enabled'),heat_pigma50_taglia:v('heat_pigma50_taglia'),heat_pigma80_enabled:c('heat_pigma80_enabled'),heat_pigma80_taglia:v('heat_pigma80_taglia'),heat_valvole_enabled:c('heat_valvole_enabled'),heat_valvole_num:v('heat_valvole_num')||null,clima_alys25:c('clima_alys25'),clima_alys35:c('clima_alys35'),clima_alys50:c('clima_alys50'),clima_prios70:c('clima_prios70'),clima_dual50:c('clima_dual50'),heat_kit_wifi:c('heat_kit_wifi'),heat_altro_enabled:c('heat_altro_enabled'),heat_altro_desc:v('heat_altro_desc'),heat_totale_eur:v('heat_totale_eur')||null,note_termico:v('note_termico'),note_generali:v('note_generali'),map_lat:document.getElementById('map_lat').value||null,map_lon:document.getElementById('map_lon').value||null,map_screenshot_url:document.getElementById('map_screenshot_url').value||null,imp_esistente:r('imp_esistente')||'no',imp_kwp:v('imp_kwp')||null,imp_anno:v('imp_anno')||null,imp_conto_energia:v('imp_conto_energia')||'nessuno',imp_ha_accumulo:r('imp_ha_accumulo')||'no',imp_accumulo_kwh:v('imp_accumulo_kwh')||null,imp_percorso:r('imp_percorso')||null,imp_accumulo_tipo:r('imp_accumulo_tipo')||null,imp_note:v('imp_note'),pagamento_tipo:r('pagamento_tipo')||'standard',manut_eur:parseFloat(v('manut_eur'))||0,note_manut:v('note_manut'),tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.14,tariffa_rid_eur:parseFloat(v('tariffa_rid_eur'))||0.08,tariffa_cer_eur:parseFloat(v('tariffa_cer_eur'))||0.06,quota_energia_condivisa:parseFloat(v('quota_energia_condivisa'))||50,incremento_costo_pct:parseFloat(v('incremento_costo_pct'))||3.0,degrado_moduli_pct:parseFloat(v('degrado_moduli_pct'))||0.5,autoconsumo_pct:parseFloat(v('autoconsumo_pct'))||40};fetch(SUBMIT_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){if(j&&(j.success||j.id)){statusEl.className='success';statusEl.textContent='\u2705 Preventivo salvato con successo!';if(j.id){lastSavedId.value=j.id;existingPrevId.value=j.id;if(window.vincoliDopoSalva)window.vincoliDopoSalva(j.id);document.getElementById('generaBox').style.display='block';document.getElementById('generaStatus').textContent='';setTimeout(function(){document.getElementById('generaBox').scrollIntoView({behavior:'smooth',block:'center'});},300);}if(j.lead_id){existingLeadId.value=j.lead_id;modeInput.value='existing';updateMode();}if(j.id){/* PORTALE NEXT-110: dopo il primo salvataggio si resta sullo stesso preventivo: i salvataggi dopo lo aggiornano, non ne creano un altro */var rr=document.querySelector('input[name="prev_mode"][value="edit_prev"]');if(rr)rr.checked=true;if(!prevSelect.querySelector('option[value="'+j.id+'"]')){var oo=document.createElement('option');oo.value=j.id;oo.textContent='Preventivo appena salvato';prevSelect.appendChild(oo);}prevSelect.value=j.id;prevSelectWrap.style.display='block';updateMode();}if(fonteInput.value==='leads')loadLeads();}else{statusEl.className='error';statusEl.textContent='\u274C Errore: '+(j&&j.message?j.message:'risposta inattesa dal server');}}).catch(function(e){statusEl.className='error';statusEl.textContent='\u274C Errore di rete: '+e.message;});});
   btnReinvia.addEventListener('click',async function(){var pid=existingPrevId.value||prevSelect.value||'';if(!pid){reinviaStatus.style.color='var(--error)';reinviaStatus.textContent='Seleziona prima un preventivo.';return;}if(!await chiedi('Reinvia il preventivo','Rimando il preventivo al cliente?','Reinvia'))return;reinviaStatus.style.color='var(--text-muted)';reinviaStatus.textContent='Invio...';fetch(REINVIA_EP+'?preventivo_id='+encodeURIComponent(pid)).then(function(r){reinviaStatus.style.color=r.ok?'var(--success)':'var(--error)';reinviaStatus.textContent=r.ok?'\u2713 Reinviato!':'Errore '+r.status;}).catch(function(){reinviaStatus.style.color='var(--error)';reinviaStatus.textContent='Errore di rete.';});});
   loadVendors();loadLeads();loadModuli();updateMode();
 })();
@@ -1377,7 +1377,7 @@ var coordBar=document.getElementById('mapCoordText');coordBar.textContent='⏳ S
   /* PORTALE NEXT-110 (28/10): la posizione si scrive subito nel preventivo, senza aspettare il Salva generale */
   if(pid){var pp='';try{pp=window.PASS||sessionStorage.getItem('regia_pass')||'';}catch(e){}
    fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/azienda-preventivo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:pp,azione:'posizione',prev_id:pid,lat:lat,lon:lon})})
-   .then(function(r){return r.json();}).then(function(j){window.__posSalvata=!!(j&&j.ok);var cb=document.getElementById('mapCoordText');if(cb&&j&&j.ok&&!/Posizione salvata nel preventivo/.test(cb.textContent))cb.textContent+=' · Posizione salvata nel preventivo';if(!(j&&j.ok)&&typeof avvisaBreve==='function')avvisaBreve('Posizione non salvata nel preventivo: premi Salva.');}).catch(function(){});}
+   .then(function(r){return r.json();}).then(function(j){window.__posSalvata=!!(j&&j.ok);if(j&&j.ok&&window.vincoliDopoSalva)window.vincoliDopoSalva(pid);var cb=document.getElementById('mapCoordText');if(cb&&j&&j.ok&&!/Posizione salvata nel preventivo/.test(cb.textContent))cb.textContent+=' · Posizione salvata nel preventivo';if(!(j&&j.ok)&&typeof avvisaBreve==='function')avvisaBreve('Posizione non salvata nel preventivo: premi Salva.');}).catch(function(){});}
   else if(typeof avvisaBreve==='function')avvisaBreve('La posizione resta in pagina: premi Salva per tenerla nel preventivo.');
   fetch('https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/salva-mappa-satellite',{
     method:'POST',headers:{'Content-Type':'application/json'},
@@ -3378,6 +3378,91 @@ document.addEventListener('DOMContentLoaded', function(){
   window.__ctDati=function(){var r=d0()||{};r.par=leggi();return r;};window.__ctDati.__econ=1;
   window.__ctCarica=function(ct){c0(ct);var t=function(){if(!$('#teEcon'))return setTimeout(t,300);scrivi(ct&&ct.par);};t();};}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(monta,900);aggancia();});else{setTimeout(monta,900);aggancia();}
+})();
+</script>
+<script>
+/* PORTALE NEXT 2.0-143 (Sante 11/11 17:37): ANALISI DEI VINCOLI APPROFONDITA.
+   Quando il preventivo si salva con la croce nuova o spostata, il database (trigger trg_vincoli_preventivi) fa partire da solo
+   l'analisi completa (vincoli-invio azione 'preventivo', analisi-vincoli v4.3): dopo qualche minuto ci sono esito, documento al
+   cliente e scheda interna in PDF. Croce uguale: non si rifa' niente. Questa parte mostra lo stato, sotto la mappa e nel riquadro Genera:
+   dopo il salvataggio «Analisi approfondita in corso…», poi l'esito con i tasti «Documento cliente» e «Scheda interna»;
+   all'apertura di un preventivo esistente, lo stato. Si legge con il gettone del portale (X-Portale-Token, come gli elenchi):
+   i PDF arrivano con un collegamento firmato a 10 minuti, chiesto di nuovo a ogni clic. Al cliente non parte niente. */
+(function(){
+ var EP='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/vincoli-invio';
+ var pidCorr='', timer=null, inizio=0, ultimo=null;
+ var ESITI={favorevole:['#f0fdf4','#16a34a','#166534','Favorevole'],condizionato:['#fffbeb','#d97706','#92400e','Condizionato'],ostativo:['#fef2f2','#dc2626','#991b1b','Ostativo']};
+ function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function ora(t){try{return new Date(t).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+ function scatole(){
+  var out=[];
+  var m=document.getElementById('tabMappa');
+  if(m){var a=document.getElementById('vaBoxM');if(!a){a=document.createElement('div');a.id='vaBoxM';a.style.marginTop='14px';m.appendChild(a);}out.push(a);}
+  var g=document.getElementById('generaStatus');
+  if(g){var b=document.getElementById('vaBoxG');if(!b){b=document.createElement('div');b.id='vaBoxG';b.style.marginTop='14px';g.parentNode.insertBefore(b,g.nextSibling);}out.push(b);}
+  return out;}
+ function mostra(html){scatole().forEach(function(x){x.innerHTML=html;});}
+ function cornice(sf,bd,corpo){return '<div style="border:1px solid '+bd+';background:'+sf+';border-radius:10px;padding:13px 15px;font-size:13px;line-height:1.5">'
+  +'<div style="font-weight:700;margin-bottom:4px">Analisi dei vincoli approfondita</div>'+corpo+'</div>';}
+ function tasto(t,az,extra){return '<button type="button" class="btn btn-secondary" style="font-size:13px;margin:8px 8px 0 0" onclick="'+az+'"'+(extra||'')+'>'+t+'</button>';}
+ function chiama(azione){
+  var pid=pidCorr;
+  var vai=function(tok){return fetch(EP,{method:'POST',headers:{'Content-Type':'application/json','X-Portale-Token':tok||''},body:JSON.stringify({azione:azione,preventivo:pid})})
+   .then(function(r){return r.json().catch(function(){return {};}).then(function(j){j.__s=r.status;return j;});});};
+  return (typeof attendiGettone==='function'?attendiGettone():Promise.resolve(typeof GETTONE!=='undefined'?GETTONE:'')).then(vai);}
+ function disegna(j){
+  ultimo=j;
+  if(j.__s===401){mostra(cornice('#fff','var(--border,#e2e7ee)','<span style="color:#b45309">Per vedere l’analisi serve l’accesso al portale (sessione scaduta): rientra dal portale.</span>'));return false;}
+  if(j.__s===403){mostra(cornice('#fff','var(--border,#e2e7ee)','Analisi non visibile con il tuo utente.'));return false;}
+  if(!j.ok){mostra(cornice('#fff','var(--border,#e2e7ee)','<span style="color:#b45309">Stato non disponibile ('+esc(j.errore||j.__s)+'). Riprovo tra poco.</span>'));return true;}
+  if(j.stato==='nessuna'){
+   mostra(cornice('#fff','var(--border,#e2e7ee)', j.croce_valida
+    ? 'Non ancora fatta per questo preventivo.<br>'+tasto('Avvia l’analisi approfondita','window.vincoliAvvia()')
+    : 'Parte da sola quando il preventivo si salva con la croce sul fabbricato (scheda Mappa tetto).'+(j.motivo?'<div style="color:var(--text-muted,#6b7686);margin-top:4px">'+esc(j.motivo)+'</div>':'')));
+   return false;}
+  if(j.stato==='in_coda'||j.stato==='in_lavorazione'){
+   mostra(cornice('#ecfeff','#0891b2','<span class="gira" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><b>Analisi approfondita in corso…</b>'
+    +'<div style="color:var(--text-muted,#6b7686);margin-top:4px">Comune, Regione, catasto e fonti nazionali: ci vuole qualche minuto. Puoi continuare a lavorare: l’esito compare qui.'
+    +(j.chiesta_at?' Chiesta alle '+esc(ora(j.chiesta_at))+'.':'')+'</div>'));
+   return true;}
+  if(j.stato==='errore'){
+   var fin=(j.tentativi||0)>=3;
+   mostra(cornice('#fef2f2','#dc2626','<b>Analisi non riuscita</b>'+(j.errore?'<div style="margin-top:4px">'+esc(j.errore)+'</div>':'')
+    +(fin?tasto('Riprova','window.vincoliAvvia()'):'<div style="color:var(--text-muted,#6b7686);margin-top:4px">Nuovo tentativo automatico entro un quarto d’ora.</div>')));
+   return !fin;}
+  if(j.stato==='pronta'){
+   var e=ESITI[j.esito]||['#f8fafc','#64748b','#334155',esc(j.esito||'')];
+   var vecchia=j.croce_uguale===false;
+   mostra(cornice(e[0],e[1],'<div style="color:'+e[2]+';font-weight:700">'+esc(e[3])+(j.titolo?' — '+esc(j.titolo):'')+'</div>'
+    +(j.testo?'<div style="margin-top:4px">'+esc(j.testo)+'</div>':'')
+    +'<div style="color:var(--text-muted,#6b7686);margin-top:6px">'+[j.zona?'Zona: '+esc(j.zona):'',j.catasto?'Catasto: '+esc(j.catasto):'',j.corsi?'Corsi d’acqua: '+esc(j.corsi):''].filter(Boolean).join(' · ')
+    +(j.pronta_at?'<br>Analisi del '+esc(ora(j.pronta_at)):'')+'</div>'
+    +(vecchia?'<div style="color:#b45309;margin-top:6px">La croce è stata spostata dopo questa analisi: salva il preventivo per rifarla sul punto nuovo.</div>':'')
+    +tasto('📄 Documento cliente','window.vincoliApri(\'cliente\')')+tasto('📋 Scheda interna','window.vincoliApri(\'azienda\')')));
+   return false;}
+  mostra(cornice('#fff','var(--border,#e2e7ee)','Stato: '+esc(j.stato)));return false;}
+ function giro(){
+  clearTimeout(timer);
+  if(!pidCorr)return;
+  chiama('stato_preventivo').then(function(j){
+   var ancora=disegna(j);
+   var passati=Date.now()-inizio;
+   if(ancora&&passati<25*60000)timer=setTimeout(giro,passati<5*60000?12000:45000);
+  }).catch(function(){timer=setTimeout(giro,30000);});}
+ window.vincoliStato=function(pid){if(!pid)return;pidCorr=String(pid);inizio=Date.now();giro();};
+ window.vincoliDopoSalva=function(pid){if(!pid)return;pidCorr=String(pid);inizio=Date.now();
+  mostra(cornice('#ecfeff','#0891b2','<span class="gira" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><b>Analisi approfondita in corso…</b>'));
+  clearTimeout(timer);timer=setTimeout(giro,2500);};
+ window.vincoliAvvia=function(){if(!pidCorr)return;
+  mostra(cornice('#ecfeff','#0891b2','<span class="gira" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><b>Analisi approfondita in corso…</b>'));
+  chiama('avvia_preventivo').then(function(j){inizio=Date.now();if(disegna(j))timer=setTimeout(giro,12000);}).catch(function(){timer=setTimeout(giro,15000);});};
+ window.vincoliApri=function(tipo){
+  var w=window.open('','_blank');
+  if(w)w.document.write('<p style="font:15px system-ui;padding:30px">Apro il documento&hellip;</p>');
+  chiama('stato_preventivo').then(function(j){disegna(j);var u=j&&j[tipo];
+   if(u){if(w)w.location.href=u;else window.open(u,'_blank');}
+   else{if(w)w.close();if(typeof avvisaBreve==='function')avvisaBreve('Documento non disponibile: '+(j.errore||j.stato||'riprova'));}})
+  .catch(function(e){if(w)w.close();if(typeof avvisaBreve==='function')avvisaBreve('Errore di rete: '+e.message);});};
 })();
 </script>
 </body>
