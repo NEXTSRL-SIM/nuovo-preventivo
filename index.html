@@ -812,10 +812,17 @@ async function inviaMailPdf(url, nome) {
     var label=TIPI_LABEL[tipo]||tipo;
     gs.style.color='var(--text-muted)';
     gs.innerHTML='⏳ Generazione '+label+'... <span id="gsTimer">60</span>s';
-    fetch(GENERA_EP+'?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo).catch(function(){});
     /* PORTALE NEXT-110 (Sante 28/10): il file ha sempre lo stesso nome, quindi l'indirizzo c'e' gia' prima che il nuovo sia pronto.
        Si aspetta che il file nello storage sia piu' recente della richiesta, poi lo si mette nei «PDF gia' generati». */
-    var t0=Date.now();
+    var t0=Date.now(), lm0;
+    /* PORTALE NEXT 2.0-143 (11/11): prima si legge la data del PDF che c'e' gia' (ora del server), poi si chiede quello nuovo.
+       Il nuovo e' pronto quando la data cambia. Prima si confrontava con l'orologio del PC: con il PC avanti di un minuto il PDF nuovo sembrava vecchio. */
+    var avviaGen=function(){fetch(GENERA_EP+'?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo).catch(function(){});};
+    fetch('https://n8n.srv1030489.hstgr.cloud/webhook/get-pdf-url?preventivo_id='+encodeURIComponent(pid)+'&tipo='+tipo,{cache:'no-store'})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(j){if(!j||!j.url){lm0=null;return;}return fetch(j.url,{method:'HEAD',cache:'no-store'}).then(function(h){var v=h.ok?Date.parse(h.headers.get('last-modified')||''):NaN;lm0=isNaN(v)?null:v;});})
+      .catch(function(){lm0=null;})
+      .then(function(){if(lm0===undefined)lm0=null;avviaGen();});
     var secs=90;
     var iv=setInterval(function(){secs--;var el=document.getElementById('gsTimer');if(el)el.textContent=secs;if(secs<=0)clearInterval(iv);},1000);
     var poll=function(){
@@ -824,8 +831,8 @@ async function inviaMailPdf(url, nome) {
         .then(function(j){
           if(j&&j.url){
             return fetch(j.url,{method:'HEAD',cache:'no-store'}).then(function(h){var lm=Date.parse(h.headers.get('last-modified')||'');
-              var nuovo=isNaN(lm)?(Date.now()-t0>25000):(lm>t0-3000);
-              if(!nuovo){if(secs>0)setTimeout(poll,3000);return;}
+              var nuovo=h.ok&&lm0!==undefined&&(isNaN(lm)?(Date.now()-t0>25000):(lm0===null||lm>lm0));
+              if(!nuovo){if(secs>0)setTimeout(poll,3000);else{gs.style.color='var(--error)';gs.textContent='PDF non pronto. Ripremi il tasto.';}return;}
               clearInterval(iv);
               var u=j.url.split('?')[0]+'?v='+Date.now();
               window._pdfUrls[tipo]=u;
