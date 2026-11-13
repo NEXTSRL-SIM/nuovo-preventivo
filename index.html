@@ -323,6 +323,7 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-tool{border:1px solid var(--border);background:var(--surface);color:var(--text-dim);border-radius:9px;padding:6px 11px;font:600 12.5px Manrope,sans-serif;cursor:pointer}
 .lv-tool.on{background:var(--acw);color:var(--accent);border-color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
 .lv-mapw{position:relative;flex:1;min-height:0}#lvMap{position:absolute;inset:0}
+.lv-met div{position:absolute;transform:translate(-50%,-135%);white-space:nowrap;background:#0F172A;color:#fff;font:700 12px Manrope,sans-serif;padding:3px 8px;border-radius:7px;border:1.5px solid #FF2D95;box-shadow:0 2px 6px rgba(0,0,0,.35)}.lv-met i{font-style:normal;font-weight:500;opacity:.8}.lv-met-tot div{transform:translate(8px,8px);background:#FF2D95;border-color:#fff}
 .lv-aiuto{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;background:rgba(15,23,42,.82);color:#fff;font-size:12.5px;border-radius:10px;padding:9px 12px;pointer-events:none}
 .lv-dx{overflow:auto;padding:14px 16px}
 .lv-k{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-kb{border:1px solid var(--border);border-radius:12px;padding:9px 11px;background:var(--sf2)}
@@ -1832,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', function(){
  /* PORTALE NEXT-110 (Sante 31/10 19:05): due schede, «Offerta A» e «Offerta B». La B nasce come copia delle falde della A, usa il modulo
     e i moduli dell'offerta B (riquadro «Confronto fra offerta A e offerta B») e si salva a parte (layout_veloce.variante). */
  var VAR='A';function modB(){try{return window.__offertaB?window.__offertaB():null;}catch(e){return null;}}
- var ST={F:[],O:[],S:[],A:[]},CORR=[],TOOL='falda',STORIA=[],ESITO=[],REV=[],APERTA=-1,MAP=null,LG=null,trasc=null,PID='';
+ var ST={F:[],O:[],S:[],A:[]},CORR=[],MET=[],TOOL='falda',STORIA=[],ESITO=[],REV=[],APERTA=-1,MAP=null,LG=null,trasc=null,PID='';
  function cop(){return JSON.parse(JSON.stringify(ST));}
  function memo(){STORIA.push(JSON.stringify(ST));if(STORIA.length>60)STORIA.shift();modificato(true);}
  var MOD=false;function modificato(x){MOD=x;var c=$('#lvChip');if(c)c.textContent=(APERTA>=0?'Rev. '+String(REV[APERTA].n).padStart(2,'0'):'Rev. —')+(x?' · modifiche non salvate':APERTA>=0?' · salvata':'');}
@@ -2080,10 +2081,24 @@ document.addEventListener('DOMContentLoaded', function(){
    if(o.t==='camino')L.polyline([[o.q[0],o.q[2]],[o.q[1],o.q[3]]],{color:'#DC2626',weight:1.5,interactive:false}).addTo(LG);
    p.on('click',function(){memo();ST.O.splice(oi,1);disegna();});});
   if(CORR.length){L.polyline(CORR,{color:'#FFD400',weight:2.4,interactive:false}).addTo(LG);CORR.forEach(function(ll,i){L.circleMarker(ll,{radius:i?4:7,color:'#0F172A',weight:1.2,fillColor:i?'#fff':'#FFD400',fillOpacity:1,interactive:false}).addTo(LG);});}
+  if(MET.length&&TOOL==='metro')disegnaMetro();
   if(trasc){L.rectangle([trasc.a,trasc.b],{color:'#DC2626',weight:2,dashArray:'6 3',fillOpacity:.25,interactive:false}).addTo(LG);}
   guide();riepilogo();aiuto();}
+ /* ---------- metro (Sante 13/11/2026): misura a clic sulla mappa. Dentro una falda la misura tiene conto della pendenza
+    (componente lungo la linea di massima pendenza divisa per il coseno dell'inclinazione), fuori dalle falde è in pianta.
+    Non si salva con la revisione. */
+ function nM(x){return x.toFixed(2).replace('.',',');}
+ function misura(a,b){var A=aM(a),B=aM(b),dx=B[0]-A[0],dy=B[1]-A[1],p=Math.hypot(dx,dy),fi=-1;
+  ESITO.forEach(function(e,i){if(fi<0&&dentro(A,e.R)&&dentro(B,e.R))fi=i;});if(fi<0)return {p:p,r:p,fi:-1};
+  var e=ESITO[fi],t=(+ST.F[fi].tilt||0)*Math.PI/180,s=dx*e.dir[0]+dy*e.dir[1],q=Math.sqrt(Math.max(0,p*p-s*s));return {p:p,r:Math.hypot(q,s/Math.cos(t)),fi:fi};}
+ function disegnaMetro(){L.polyline(MET,{color:'#FF2D95',weight:2.6,dashArray:'7 4',interactive:false}).addTo(LG);
+  MET.forEach(function(ll){L.circleMarker(ll,{radius:4.5,color:'#0F172A',weight:1.2,fillColor:'#FF2D95',fillOpacity:1,interactive:false}).addTo(LG);});
+  var tp=0,tr=0;for(var i=1;i<MET.length;i++){var r=misura(MET[i-1],MET[i]);tp+=r.p;tr+=r.r;var mid=[(MET[i-1][0]+MET[i][0])/2,(MET[i-1][1]+MET[i][1])/2];
+   var tx=r.fi<0?nM(r.p)+' m <i>in pianta</i>':nM(r.r)+' m <i>sul tetto · falda '+(r.fi+1)+(Math.abs(r.r-r.p)>.005?' · '+nM(r.p)+' in pianta':'')+'</i>';
+   L.marker(mid,{interactive:false,icon:L.divIcon({className:'lv-met',iconSize:[0,0],html:'<div>'+tx+'</div>'})}).addTo(LG);}
+  if(MET.length>2)L.marker(MET[MET.length-1],{interactive:false,icon:L.divIcon({className:'lv-met lv-met-tot',iconSize:[0,0],html:'<div>Totale '+nM(tr)+' m'+(Math.abs(tr-tp)>.005?' <i>· '+nM(tp)+' in pianta</i>':'')+'</div>'})}).addTo(LG);}
  function aiuto(){$('#lvAiuto').textContent={falda:CORR.length?(CORR.length<3?'Continua a cliccare gli angoli della falda.':'Clicca il primo angolo (quello giallo grande) per chiudere la falda.'):'Clicca gli angoli della falda uno dopo l\'altro. Trascina un angolo giallo per correggerlo; la mappa si sposta trascinando.',
-  camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',spegni:'Clicca un modulo per toglierlo o rimetterlo. Tienilo premuto e trascinalo per spostarlo: si aggancia ai margini e agli altri moduli.',aggiungi:'Clicca dove vuoi un modulo in più: si aggancia alla griglia, accostato agli altri. Tieni premuto un modulo e trascinalo: si aggancia al margine, agli altri moduli e ai loro allineamenti. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
+  camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',metro:MET.length?(MET.length<2?'Clicca il punto d\'arrivo. Puoi continuare a cliccare per misurare una spezzata.':'Clicca altri punti per continuare, o di nuovo l\'ultimo punto per ricominciare. Dentro una falda la misura tiene conto della pendenza.'):'Clicca il punto di partenza e poi quello d\'arrivo: vedi la distanza. Dentro una falda è misurata sul tetto, con la pendenza; fuori è in pianta.',spegni:'Clicca un modulo per toglierlo o rimetterlo. Tienilo premuto e trascinalo per spostarlo: si aggancia ai margini e agli altri moduli.',aggiungi:'Clicca dove vuoi un modulo in più: si aggancia alla griglia, accostato agli altri. Tieni premuto un modulo e trascinalo: si aggancia al margine, agli altri moduli e ai loro allineamenti. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
  function nomeEspo(az){var a=Math.abs(az),w=az>0;return a<=22.5?'sud':a<=67.5?(w?'sud-ovest':'sud-est'):a<=112.5?(w?'ovest':'est'):a<=157.5?(w?'nord-ovest':'nord-est'):'nord';}
  function nMod(){return ESITO.reduce(function(s,e){return s+e.on.length;},0);}
  function riepilogo(){var nm=nMod();$('#lvM').textContent=nm;$('#lvP').innerHTML=(nm*WP/1000).toFixed(2).replace('.',',')+' <small>kWp</small>';
@@ -2182,7 +2197,7 @@ document.addEventListener('DOMContentLoaded', function(){
  function costruisci(){OV=document.createElement('div');OV.className='lv-ov';OV.innerHTML=
   '<div class="lv-win"><div class="lv-top"><div><b>Layout veloce</b><small id="lvSub"></small></div><span class="lv-tabs" id="lvTabs"><button type="button" data-v="A" class="on">Offerta A</button><button type="button" data-v="B">Offerta B</button></span><span class="lv-chip" id="lvChip">Rev. —</span><span class="lv-modc" id="lvModC"></span><span style="flex:1"></span><button type="button" class="btn btn-secondary" id="lvChiudi">Chiudi</button></div>'
   +'<div class="lv-grid"><section class="lv-sx"><div class="lv-bar">'
-  +'<button type="button" class="lv-tool on" data-t="falda">Falda</button><button type="button" class="lv-tool" data-t="camino">Camino</button><button type="button" class="lv-tool" data-t="ostacolo">Ostacolo</button><button type="button" class="lv-tool" data-t="aggiungi">Aggiungi modulo</button><button type="button" class="lv-tool" data-t="spegni">Togli modulo</button>'
+  +'<button type="button" class="lv-tool on" data-t="falda">Falda</button><button type="button" class="lv-tool" data-t="camino">Camino</button><button type="button" class="lv-tool" data-t="ostacolo">Ostacolo</button><button type="button" class="lv-tool" data-t="aggiungi">Aggiungi modulo</button><button type="button" class="lv-tool" data-t="spegni">Togli modulo</button><button type="button" class="lv-tool" data-t="metro" title="Misura le distanze sulla mappa">📏 Metro</button>'
   +'<span style="flex:1"></span><label class="swl"><input type="checkbox" class="sw-in" id="lvRadd" checked>Raddrizza falde</label><button type="button" class="lv-tool" id="lvAnnulla">Annulla</button><button type="button" class="lv-tool" id="lvSvuota">Ricomincia</button></div>'
   +'<div class="lv-dock" id="lvDock"></div><div class="lv-mapw"><div id="lvMap"></div><div class="lv-nord" title="La mappa ha sempre il nord in alto"><svg width="44" height="54" viewBox="0 0 44 54"><circle cx="22" cy="32" r="19" fill="rgba(255,255,255,.92)" stroke="#0F172A" stroke-width="1.4"/><path d="M22 15 28 40 22 35 16 40z" fill="#0F172A"/><text x="22" y="11" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="800" font-size="12" fill="#fff" stroke="#0F172A" stroke-width="3" paint-order="stroke">N</text></svg></div><div class="lv-aiuto" id="lvAiuto"></div></div></section>'
   +'<aside class="lv-dx"><div class="lv-k"><div class="lv-kb big"><i>Moduli</i><b id="lvM">0</b></div><div class="lv-kb"><i>Potenza</i><b id="lvP">0</b></div><div class="lv-kb"><i>Camini</i><b id="lvC">0</b></div><div class="lv-kb"><i>Ostacoli</i><b id="lvO">0</b></div></div>'
@@ -2192,7 +2207,7 @@ document.addEventListener('DOMContentLoaded', function(){
   +'<div class="lv-sl">Revisioni</div><div id="lvRev"></div><p class="lv-nota">«Salva» aggiorna la revisione aperta; «Nuova revisione» ne crea un\'altra. Si salvano con il preventivo, con il PDF delle tavole.</p></aside></div></div>'
   +'<div class="lv-tavw" id="lvTavW"><div class="lv-win"><div class="lv-top"><div><b>Tavola · Posa dei moduli sulla copertura</b><small id="lvTavSub"></small></div><span style="flex:1"></span><span class="lv-modo" id="lvTavModo"><button type="button" data-m="tetto">Tutto il tetto</button><button type="button" data-m="tutte">Tetto + una tavola per falda</button></span><button type="button" class="btn btn-secondary" id="lvTavChiudi">Chiudi</button><button type="button" class="btn btn-secondary" id="lvStampa">Stampa</button><button type="button" class="btn btn-primary" id="lvScarica">Scarica PDF</button></div><div class="lv-foglio" id="lvFoglio"></div></div></div>';
   document.body.appendChild(OV);
-  OV.querySelectorAll('.lv-tool[data-t]').forEach(function(b){b.addEventListener('click',function(){TOOL=b.dataset.t;OV.querySelectorAll('.lv-tool[data-t]').forEach(function(x){x.classList.toggle('on',x===b);});CORR=[];if(MAP){if(TOOL==='ostacolo')MAP.dragging.disable();else MAP.dragging.enable();}disegna();});});
+  OV.querySelectorAll('.lv-tool[data-t]').forEach(function(b){b.addEventListener('click',function(){TOOL=b.dataset.t;OV.querySelectorAll('.lv-tool[data-t]').forEach(function(x){x.classList.toggle('on',x===b);});CORR=[];MET=[];if(MAP){if(TOOL==='ostacolo')MAP.dragging.disable();else MAP.dragging.enable();}disegna();});});
   $('#lvRadd').addEventListener('change',function(){modificato(true);disegna();});
   $('#lvAnnulla').addEventListener('click',function(){var s=STORIA.pop();if(!s)return;ST=JSON.parse(s);if(!ST.A)ST.A=[];CORR=[];disegna();});
   $('#lvSvuota').addEventListener('click',async function(){if(!await chiedi('Ricomincia','Tolgo tutte le falde, i camini e gli ostacoli disegnati?','Ricomincia',true))return;memo();ST={F:[],O:[],S:[],A:[]};CORR=[];disegna();});
@@ -2238,6 +2253,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!MAP){MAP=L.map('lvMap',{center:[la,lo],zoom:21,maxZoom:22,zoomControl:true,doubleClickZoom:false});
    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+TOK,{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1}).addTo(MAP);LG=L.layerGroup().addTo(MAP);window.__lvMap=MAP;costruisciPann();
    MAP.on('click',function(ev){var ll=[ev.latlng.lat,ev.latlng.lng];
+    if(TOOL==='metro'){if(MET.length){var pl=MAP.latLngToContainerPoint(MET[MET.length-1]);if(pl.distanceTo(ev.containerPoint)<10){MET=[];disegna();return;}}MET.push(ll);disegna();return;}
     if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push({pts:CORR,espo:'auto',tilt:22});CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
     if(TOOL==='aggiungi'){var m2=aM(ll),fi2=-1,dmin=1.2;ESITO.forEach(function(e,i){if(dentro(m2,e.R))fi2=i;});
      if(fi2<0)ESITO.forEach(function(e,i){var d=Math.min.apply(0,e.R.map(function(p,k){return dseg(m2,p,e.R[(k+1)%e.R.length]);}));if(d<dmin){dmin=d;fi2=i;}});
