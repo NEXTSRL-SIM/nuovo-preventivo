@@ -3489,4 +3489,210 @@ document.addEventListener('DOMContentLoaded', function(){
   .catch(function(e){if(w)w.close();if(typeof avvisaBreve==='function')avvisaBreve('Errore di rete: '+e.message);});};
 })();
 </script>
+<!-- PORTALE NEXT 2.0-145, versione 5 = v4 + correzioni D3, D4 della revisione del v4 (revisione: A2, M7, M9, B3; secondo passaggio: S2; regola #5187: niente link, immagini e video
+     solo col gettone del portale, conferma della bozza da Sante, invio su WhatsApp spento), NON PUBBLICATA. Pagina pagine_html chiave nuovo_preventivo.
+     Inserire SUBITO PRIMA di </body> (dopo tutti gli altri script, così trova le schede già impaginate).
+     Solo aggiunta: nessuna riga esistente cambia. Sostituisce la proposta precedente proposta_pagina_video_cliente.js
+     (card «Video al cliente» dentro Mappa tetto): ora è un passo a sé, «Media», tra Mappa tetto e Impianto esistente. -->
+<script id="media-js">
+/* PORTALE NEXT 2.0-145 (PROPOSTA): passo «Media» del Nuovo preventivo.
+   Dopo la croce in Mappa tetto il Mac calcola i punti di ripresa e prepara le MINIATURE in due strisce:
+   «Render emozionale dell'impianto» (3/4 dall'alto, Google 3D Tiles) e «Video istituzionale» (frontale, Street View).
+   Il commerciale spunta una miniatura per striscia (si può anche una sola; la linea del tetto la calcola il sistema),
+   lascia indicazioni scritte o dettate per chi fa il video e salva: i video si preparano da soli.
+   Nessun invio al cliente da qui: l'invio lo decide Sante. Accesso: il gettone personale del portale (come portale-elenchi). */
+(function(){
+ var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/video-cliente';
+ function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [].slice.call((c||document).querySelectorAll(s));}
+ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+ function pid(){return ($('#last_saved_id')||{}).value||($('#existing_prev_id')||{}).value||'';}
+ function croce(){return !!((($('#map_lat')||{}).value)&&(($('#map_lon')||{}).value));}
+ function gettone(){return (typeof attendiGettone==='function')?attendiGettone():Promise.resolve('');}
+ var S={scelte:{tre_quarti_alto:null,frontale:null},piani:null,dati:null,firma:'',sporco:false,ascolto:null};
+ var STATI={in_coda:'Bozza in coda',preso:'Bozza in lavorazione sul Mac',attesa_mac:'In attesa del Mac',pronte:'Miniature pronte',anteprima_pronta:'Bozza pronta: la guarda e la conferma Sante',
+  pronto_da_approvare:'HD pronto: l\'invio al cliente lo decide Sante',approvata_sante:'Bozza confermata da Sante',inviato:'Inviato al cliente',errore:'Errore',annullato:'Annullato',nessuno:'Non ancora richiesto'};
+ var STATI_HD={in_coda:'Confermata: HD in coda',preso:'HD in preparazione sul Mac'};
+ /* #5187: immagini e video arrivano solo col gettone del portale e diventano blob locali (nessun URL, pubblico o firmato) */
+ var BLOB={};
+ function carica(chiave,qs){chiave=pid()+'|'+chiave;if(BLOB[chiave])return BLOB[chiave];   /* D4: la chiave comprende il preventivo */
+  BLOB[chiave]=gettone().then(function(g){if(!g)throw 0;return fetch(FN+'?pid='+encodeURIComponent(pid())+'&'+qs,{headers:{'X-Portale-Token':g}});})
+   .then(function(r){if(!r.ok)throw r.status;return r.blob();}).then(function(b){return URL.createObjectURL(b);})
+   .catch(function(e){delete BLOB[chiave];throw e;});
+  return BLOB[chiave];}
+ function metti(el,chiave,qs){carica(chiave,qs).then(function(u){if(el.isConnected){el.src=u;el.dataset.u=u;el.dataset.k=pid()+'|'+chiave;}},function(e){el.alt=e===413?'File troppo grande per l\'anteprima':'Immagine non disponibile';el.classList.add('md-rotta');});}
+ function rilascia(box){[].forEach.call(box.querySelectorAll('[data-u]'),function(m){try{URL.revokeObjectURL(m.dataset.u);}catch(e){}delete BLOB[m.dataset.k];m.removeAttribute('src');});}   /* D4 */
+ function chiama(metodo,corpo){return gettone().then(function(g){
+   if(!g)return {ok:false,errore:'Serve l\'accesso personale al portale.'};
+   var o={method:metodo,headers:{'X-Portale-Token':g},cache:'no-store'};
+   if(corpo){o.headers['Content-Type']='application/json';o.body=JSON.stringify(corpo);}
+   return fetch(FN+(metodo==='GET'?'?pid='+encodeURIComponent(pid()):''),o).then(function(r){
+    if(r.status===401){if(typeof accessoMancante==='function')accessoMancante(r.status);return {ok:false,errore:'Accesso al portale scaduto.'};}
+    if(r.status===403)return r.json().then(function(x){return {ok:false,errore:(x&&x.errore)||'Non permesso.',vietato:true};},function(){return {ok:false,errore:'Non permesso.',vietato:true};});
+    return r.json().catch(function(){return {ok:false,errore:'Risposta non leggibile ('+r.status+')'};});},function(){return {ok:false,errore:'Servizio non raggiungibile, riprovo tra poco.'};});});}
+
+ /* ---------------- scheda e passo nella barra */
+ function costruisci(){
+  var mappa=$('#tabMappa'),btn=$('.tab-btn[data-tab="mappa"]');if(!mappa||!btn)return setTimeout(costruisci,200);
+  if($('#tabMedia'))return;
+  var b=document.createElement('button');b.type='button';b.className='tab-btn';b.dataset.tab='media';b.textContent='Media';btn.after(b);
+  var T=document.createElement('div');T.id='tabMedia';T.style.display='none';
+  T.innerHTML='<p class="intro">Le miniature compaiono da sole dopo la croce in <b>Mappa tetto</b>. Spunta una vista per ogni video (anche una sola), lascia le tue indicazioni: i video si preparano da soli. L\'invio al cliente lo decide Sante.</p>'
+   +'<div class="md-griglia">'
+   +sezione('tre_quarti_alto','sun','gr','Render emozionale dell\'impianto','Vista 3/4 dall\'alto · la casa con i moduli, in 3D')
+   +sezione('frontale','home','bl','Video istituzionale','Vista frontale dalla strada · coda con la casa disegnata a matita')
+   +'</div>'
+   +'<section class="pc md-dialogo"><div class="ph"><span class="pi vi">'+ico('chat')+'</span><div><b>Indicazioni per chi fa il video</b><small>Scrivi o detta come in una sessione: «qua farei così, qua sposterei»</small></div><span class="px md-regista" id="mdRegista"></span></div>'
+   +'<div class="pb"><div class="md-filo" id="mdFilo"><p class="md-vuoto">Ancora nessuna indicazione.</p></div>'
+   +'<div class="md-scrivi"><textarea id="mdTesto" form="mdFuoriForm" rows="3" placeholder="Es. «Nel render partirei dal lato del giardino e girerei verso la strada; nella frontale sposterei la vista un po\' a sinistra, si vede il cancello»"></textarea>'
+   +'<div class="md-comandi"><select id="mdPer" form="mdFuoriForm" title="A quale video si riferisce"><option value="entrambi">Per tutti e due</option><option value="tre_quarti_alto">Render emozionale</option><option value="frontale">Istituzionale</option></select>'
+   +'<button type="button" class="btn btn-secondary" id="mdMic" title="Detta a voce (il testo si scrive qui, l\'audio non si salva)">'+ico('mic')+'<span>Detta</span></button>'
+   +'<button type="button" class="btn btn-secondary" id="mdAggiungi">'+ico('plus')+'<span>Aggiungi</span></button>'
+   +'<button type="button" class="btn btn-primary" id="mdManda" title="Manda tutte le indicazioni nuove a chi fa il video">'+ico('send')+'<span>Manda a chi fa il video</span></button></div></div>'
+   +'<p class="md-nota" id="mdNotaDialogo"></p></div></section>'
+   +'<div class="pf md-barra"><label class="md-piani">Piani della casa <input type="number" id="mdPiani" form="mdFuoriForm" min="1" max="6" step="1" placeholder="auto"></label>'
+   +'<span class="md-nota" id="mdNota"></span><button type="button" class="btn btn-secondary" id="mdRicalcola">'+ico('giro')+'<span>Ricalcola le miniature</span></button>'
+   +'<button type="button" class="btn btn-primary" id="mdSalva" disabled>'+ico('ok')+'<span>Salva scelta e prepara i video</span></button></div>';
+  mappa.after(T);
+  stile();
+  /* il passo nella barra: gli altri passi li governa lo script di prima; qui si accende/spegne solo «Media» */
+  document.addEventListener('click',function(e){var x=e.target.closest&&e.target.closest('.tab-btn');if(!x)return;
+   var su=x.dataset.tab==='media';T.style.display=su?'block':'none';
+   if(su){['tabContatto','tabProdotti','tabMappa','tabImpianto','tabGenera'].forEach(function(id){var n=document.getElementById(id);if(n)n.style.display='none';});
+    $$('.tab-btn').forEach(function(y){y.classList.toggle('active',y===x);});aggiorna(true);}},true);
+  $('#mdSalva').addEventListener('click',salva);
+  T.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.md-conferma');if(b)conferma(b.dataset.video,b);var g=e.target.closest&&e.target.closest('.md-guarda');if(g)guarda(g);});$('#mdRicalcola').addEventListener('click',ricalcola);
+  $('#mdAggiungi').addEventListener('click',function(){aggiungi(false);});$('#mdManda').addEventListener('click',function(){aggiungi(true);});
+  $('#mdPiani').addEventListener('change',function(){var n=parseInt(this.value);S.piani=(n>=1&&n<=6)?n:null;if(!S.piani)this.value='';S.sporco=true;pulsante();});
+  voce();
+  /* A2: giro veloce (5 s) solo mentre qualcosa è in coda o in lavorazione, altrimenti 15 s */
+  (function giro(){if(T.style.display!=='none'&&!document.hidden)aggiorna(false);
+   var d=S.dati||{},vv=d.video||{},occ=/^(in_coda|preso)$/.test(d.stato||'')||['video_3d','istituzionale'].some(function(k){return /^(in_coda|preso)$/.test((vv[k]||{}).stato||'');});
+   setTimeout(giro,occ?5000:15000);})();
+ }
+ function sezione(tipo,icona,col,tit,sub){
+  return '<section class="pc md-sez" data-tipo="'+tipo+'"><div class="ph"><span class="pi '+col+'">'+ico(icona)+'</span><div><b>'+tit+'</b><small>'+sub+'</small></div><span class="px md-stato" data-stato="'+tipo+'"></span></div>'
+   +'<div class="pb"><div class="md-striscia" data-tipo="'+tipo+'"><p class="md-vuoto">Si accende quando il preventivo è salvato con la croce sul tetto.</p></div>'
+   +(tipo==='frontale'?'<p class="md-nota">La linea del tetto su cui corre la luce la calcola il sistema dal Layout veloce (o, se manca, dalla sagoma della carta regionale: stima che guarda Sante).</p>':'')
+   +'<div class="md-anteprima" data-anteprima="'+tipo+'"></div>'
+   +'<p class="md-credito" data-credito="'+tipo+'"></p></div></section>';
+ }
+ function ico(k){var I={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  home:'<path d="M3 11 12 4l9 7v9H3z"/><path d="M9 20v-6h6v6"/>',chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',plus:'<path d="M12 5v14M5 12h14"/>',send:'<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
+  ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',giro:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'};
+  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(I[k]||'')+'</svg>';}
+ function stile(){var st=document.createElement('style');st.id='media-css';st.textContent=
+  '#tabMedia .md-griglia{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;margin-bottom:16px}'
+  +'@media(max-width:980px){#tabMedia .md-griglia{grid-template-columns:1fr}}'
+  +'#tabMedia .md-striscia{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory}'
+  +'#tabMedia figure{position:relative;margin:0;flex:0 0 212px;scroll-snap-align:start;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:#0f1b2d;overflow:hidden;transition:border-color .15s,box-shadow .15s}'
+  +'#tabMedia figure:hover{border-color:var(--accent)}#tabMedia figure.on{border-color:#38c8ff;box-shadow:0 0 0 3px rgba(56,200,255,.25)}'
+  +'#tabMedia figure img{width:212px;height:119px;object-fit:cover;display:block}#tabMedia figure img.md-rotta{background:#334155}'
+  +'#tabMedia figure .md-spunta{position:absolute;top:7px;left:7px;width:22px;height:22px;border-radius:6px;background:rgba(15,27,45,.72);border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;line-height:1}'
+  +'#tabMedia figure.on .md-spunta{background:#38c8ff;border-color:#38c8ff;color:#0f1b2d}'
+  +'#tabMedia figure .md-fonte{position:absolute;top:7px;right:7px;font:600 10px "IBM Plex Mono",monospace;color:#fff;background:rgba(15,27,45,.72);padding:2px 6px;border-radius:5px}'
+  +'#tabMedia figcaption{font:11px "IBM Plex Mono",monospace;color:#cbd5e1;padding:5px 8px;display:flex;justify-content:space-between;gap:6px}'
+  +'#tabMedia .md-vuoto,#tabMedia .md-nota{font-size:12px;color:var(--text-muted);margin:4px 0}'
+  +'#tabMedia .md-credito{font-size:10.5px;color:var(--text-muted);margin:0;text-align:right}'
+  +'#tabMedia .md-stato{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--acw);color:var(--accent);white-space:nowrap}'
+  +'#tabMedia .md-stato[data-tono="ok"]{background:var(--grw2,#DCFCE7);color:var(--gr2,#15803D)}#tabMedia .md-stato[data-tono="err"]{background:#FEE2E2;color:#B91C1C}#tabMedia .md-stato[data-tono="att"]{background:var(--amw2,#FEF3C7);color:var(--am2,#B45309)}'
+  +'#tabMedia .md-comandi{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}'
+  +'#tabMedia .md-anteprima:empty{display:none}#tabMedia .md-anteprima{border:1px dashed var(--border);border-radius:10px;padding:8px}#tabMedia .md-anteprima video,#tabMedia .md-anteprima img{width:100%;border-radius:8px;display:block}'
+  +'#tabMedia .md-anteprima small{display:block;color:var(--text-muted);margin-top:4px}'
+  +'#tabMedia .md-dialogo{margin-bottom:16px}#tabMedia .md-filo{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}'
+  +'#tabMedia .md-msg{max-width:82%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.4;white-space:pre-wrap}'
+  +'#tabMedia .md-msg.io{align-self:flex-end;background:var(--acw);border:1px solid var(--border)}#tabMedia .md-msg.lui{align-self:flex-start;background:var(--sf2,#f4f6f8);border:1px solid var(--border)}'
+  +'#tabMedia .md-msg small{display:block;font-size:10.5px;color:var(--text-muted);margin-top:3px}'
+  +'#tabMedia textarea{width:100%;resize:vertical;font:inherit;font-size:13px}#tabMedia #mdMic.rec{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}'
+  +'#tabMedia .md-barra{border:1px solid var(--border);border-radius:14px;background:var(--surface);flex-wrap:wrap;margin-bottom:96px}#tabMedia .md-barra .md-nota{flex:1 1 260px}'
+  +'#tabMedia .md-regista{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--viw2,#EDE9FE);color:var(--vi2,#6D28D9);white-space:nowrap}'
+  +'#tabMedia #mdPer{width:auto;min-width:170px}'
+  +'#tabMedia .md-piani{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;white-space:nowrap}#tabMedia .md-piani input{width:72px!important}';
+  document.head.appendChild(st);}
+
+ /* ---------------- lettura dello stato */
+ function aggiorna(forza){var nota=$('#mdNota');
+  if(!pid()||!croce()){nota.textContent='Salva il preventivo con la croce sul tetto (Mappa tetto): poi qui compaiono le miniature.';return;}
+  chiama('GET').then(function(j){
+   if(!j.ok){nota.textContent=j.errore||'Servizio non raggiungibile.';return;}
+   /* A2: la firma guarda solo gli STATI (gli URL firmati cambiano a ogni lettura e non devono rifare le strisce) */
+   var fs=JSON.stringify([j.stato,j.agg,JSON.stringify(j.scelte),JSON.stringify(j.crediti)]);
+   var fv=JSON.stringify(j.video&&Object.keys(j.video).map(function(k){var v=j.video[k]||{};return k+':'+v.stato+':'+v.qualita+':'+(v.il||'')+':'+(v.errore||'');}))+':'+!!j.puo_confermare;
+   var fd=JSON.stringify([j.dialogo&&j.dialogo.length,j.dialogo&&j.dialogo.map(function(m){return m.stato;}),j.regista&&j.regista.stato]);
+   S.dati=j;   /* S2: sempre i dati dell'ultima lettura */
+   var f=fs+fv+fd;if(f===S.firma&&!forza)return;var vecchia=S.f3||['','',''];S.firma=f;S.f3=[fs,fv,fd];
+   if(!S.sporco){S.scelte.tre_quarti_alto=(j.scelte||{}).tre_quarti_alto||null;S.scelte.frontale=(j.scelte||{}).frontale||null;S.piani=j.piani||null;}
+   if(document.activeElement!==$('#mdPiani'))$('#mdPiani').value=S.piani||'';
+   ['tre_quarti_alto','frontale'].forEach(function(t){if(forza||fs!==vecchia[0])striscia(t,j);statoVideo(t,j);});
+   if(forza||fd!==vecchia[2])filo(j.dialogo||[],j.regista||{});
+   if(S.msg&&Date.now()-S.msgT<8000){nota.textContent=S.msg;}else nota.textContent=({in_coda:'Calcolo dei punti di ripresa in coda…',preso:'Il Mac sta preparando le miniature…',attesa_mac:'In attesa del Mac (spento o occupato).',errore:'Errore: '+(j.errore||'')}[j.stato])||(j.avvisi&&j.avvisi.length?j.avvisi.join(' · '):'');
+   pulsante();});}
+ function striscia(t,j){var s=$('.md-striscia[data-tipo="'+t+'"]'),L=(j.candidati||{})[t]||[];
+  if(!L.length){s.innerHTML='<p class="md-vuoto">'+(j.stato==='pronte'?'Nessuna vista utile trovata qui: scrivilo nelle indicazioni.':'Le miniature arrivano appena il Mac le ha pronte.')+'</p>';return;}
+  s.innerHTML='';L.forEach(function(c){var f=document.createElement('figure');f.dataset.id=c.id;if(S.scelte[t]===c.id)f.className='on';
+   var dir=c.heading!=null?Math.round(c.heading)+'°':(c.bussola_camera!=null?Math.round(c.bussola_camera)+'°':'');
+   var fonte={google_3d_tiles:'Google 3D',street_view:'Street View',modello:'Modello'}[c.fonte_miniatura||c.fonte]||'';
+   f.innerHTML='<span class="md-spunta">'+(S.scelte[t]===c.id?'✓':'')+'</span>'+(fonte?'<span class="md-fonte">'+esc(fonte)+'</span>':'')
+    +'<img alt="Vista '+esc(c.id)+'"><figcaption><span>'+esc(c.id)+' · '+dir+(c.distanza_m?' · '+Math.round(c.distanza_m)+' m':'')+'</span><span>'+(c.punteggio!=null?Math.round(c.punteggio*100):'')+'</span></figcaption>';
+   if(c.img)metti(f.querySelector('img'),'i|'+t+'|'+c.id+'|'+(j.agg||''),'img='+encodeURIComponent(c.img)+'&c='+encodeURIComponent(c.id)+(c.img==='mini'?'&t='+t:''));
+   f.addEventListener('click',function(){var gia=S.scelte[t]===c.id;S.scelte[t]=gia?null:c.id;S.sporco=true;striscia(t,S.dati);pulsante();});
+   s.appendChild(f);});
+  var cr=$('.md-credito[data-credito="'+t+'"]');cr.textContent=((j.crediti||{})[t])||(t==='frontale'?'Immagini © Google Street View':'');}
+ function statoVideo(t,j){var tv=t==='tre_quarti_alto'?'video_3d':'istituzionale',v=((j.video||{})[tv])||{stato:'nessuno'};
+  var p=$('.md-stato[data-stato="'+t+'"]');p.textContent=(v.qualita==='finale'&&STATI_HD[v.stato])||STATI[v.stato]||v.stato;p.dataset.tono=/approvata|inviato|pronto/.test(v.stato)?'ok':(v.stato==='errore'?'err':(/attesa|preso|in_coda|anteprima/.test(v.stato)?'att':''));
+  var a=$('.md-anteprima[data-anteprima="'+t+'"]'),h='',file=v.anteprima?'anteprima':(v.foglio?'foglio':(v.prova?'prova':''));
+  if(v.anteprima)h+='<video controls preload="none" hidden></video><button type="button" class="btn btn-secondary md-guarda">Guarda la bozza</button>';   /* D3: il video si scarica solo al clic */
+  else if(file)h+='<img alt="Anteprima">';
+  if(h)h+='<small>'+esc(v.stato==='anteprima_pronta'?'Bozza a bassa qualità, visibile solo nel portale. L\'HD parte quando Sante la conferma.':(v.stato==='pronto_da_approvare'?'Video HD'+(v.whatsapp_mb?' · file per WhatsApp '+v.whatsapp_mb+' MB':'')+': si manda al cliente come file, mai come link.':''))+'</small>';
+  if(v.errore)h+='<small style="color:#B91C1C">'+esc(v.errore)+'</small>';
+  if(v.stato==='anteprima_pronta'&&j.puo_confermare)h+='<div class="md-comandi"><button type="button" class="btn btn-primary md-conferma" data-video="'+tv+'">Conferma la bozza e prepara l\'HD</button></div>';
+  if(v.stato==='pronto_da_approvare')h+='<div class="md-comandi"><button type="button" class="btn btn-secondary md-invia" disabled title="Spento: l\'invio al cliente su WhatsApp lo approva Sante a parte">Invia al cliente su WhatsApp</button><small>Spento: l\'invio al cliente lo approva Sante a parte.</small></div>';
+  /* A2: si rifà solo se cambia lo stato (le immagini e i video sono blob locali: non scadono) */
+  var chiave=v.stato+'|'+(v.il||'')+'|'+file+'|'+(v.errore||'')+'|'+!!j.puo_confermare;
+  if(a.dataset.s!==chiave){rilascia(a);a.innerHTML=h;a.dataset.s=chiave;a.dataset.tv=tv;a.dataset.fk='f|'+tv+'|'+file+'|'+(v.il||'');a.dataset.fq='file='+file+'&v='+tv;
+   var m=a.querySelector('img');if(m)metti(m,a.dataset.fk,a.dataset.fq);}}
+ function guarda(b){var a=b.closest('.md-anteprima'),vd=a.querySelector('video');b.disabled=true;b.textContent='Scarico la bozza…';
+  carica(a.dataset.fk,a.dataset.fq).then(function(u){vd.src=u;vd.dataset.u=u;vd.dataset.k=pid()+'|'+a.dataset.fk;vd.hidden=false;b.remove();vd.play().catch(function(){});},
+   function(e){b.disabled=false;b.textContent=e===413?'File troppo grande per l\'anteprima':'Bozza non disponibile, riprova';});}
+ function conferma(tv,b){
+  var vai=(typeof chiedi==='function')?chiedi('Confermare la bozza?','Si prepara il video HD e il file per WhatsApp. Al cliente non parte niente: l\'invio lo decidi a parte.','Conferma'):Promise.resolve(window.confirm('Confermare la bozza? Si prepara l\'HD; al cliente non parte niente.'));
+  vai.then(function(si){if(!si)return;b.disabled=true;
+   chiama('POST',{azione:'conferma',pid:pid(),video:tv}).then(function(j){S.msg=j.ok?'Bozza confermata: si prepara l\'HD. Al cliente non parte niente.':(j.errore||'Conferma non riuscita');S.msgT=Date.now();$('#mdNota').textContent=S.msg;S.firma='';aggiorna(true);});});}
+
+ function pulsante(){var b=$('#mdSalva'),ok=!!(S.scelte.tre_quarti_alto||S.scelte.frontale);b.disabled=!ok||!S.sporco;}
+
+ /* ---------------- dialogo */
+ function filo(L,reg){var f=$('#mdFilo');if(!L.length){f.innerHTML='<p class="md-vuoto">Ancora nessuna indicazione. Quello che scrivi o detti qui arriva a chi prepara i video, come in una sessione di lavoro.</p>';}
+  else{var giu=f.scrollTop+f.clientHeight>=f.scrollHeight-20;f.innerHTML=L.map(function(m){var per={tre_quarti_alto:'render',frontale:'istituzionale',entrambi:'tutti e due'}[m.per]||'';
+   return '<div class="md-msg '+(m.da_regista?'lui':'io')+'">'+esc(m.testo)+'<small>'+esc(m.chi||'')+' · '+esc(m.quando||'')+(per?' · '+per:'')+(m.miniatura?' · vista '+esc(m.miniatura):'')+(m.da_regista?'':' · '+esc({nuova:'da mandare',mandata:'mandata',presa:'letta da chi fa il video',fatta:'fatta'}[m.stato]||m.stato||''))+'</small></div>';}).join('');if(giu)f.scrollTop=f.scrollHeight;}
+  var r=$('#mdRegista'),M={inattivo:'',avviato:'Chi fa il video è al lavoro',in_attesa:'Avvio già in corso',non_configurato:'Attività cloud non ancora collegata'};
+  r.textContent=reg.stato?(M.hasOwnProperty(reg.stato)?M[reg.stato]:reg.stato):'';r.hidden=!r.textContent;}
+ function aggiungi(manda){var t=$('#mdTesto'),testo=(t.value||'').trim(),per=$('#mdPer').value;
+  var nuove=((S.dati||{}).dialogo||[]).filter(function(m){return !m.da_regista&&m.stato==='nuova';}).length;
+  if(!testo&&!(manda&&nuove)){$('#mdNotaDialogo').textContent='Scrivi o detta prima un\'indicazione.';return;}
+  var mini=per==='entrambi'?(S.scelte.tre_quarti_alto||S.scelte.frontale):S.scelte[per];
+  var p=testo?chiama('POST',{azione:'indicazione',pid:pid(),testo:testo,per:per,miniatura:mini||null}):Promise.resolve({ok:true});
+  p.then(function(j){if(!j.ok){$('#mdNotaDialogo').textContent=j.errore||'Non salvata.';return j;}t.value='';
+   return manda?chiama('POST',{azione:'manda',pid:pid()}).then(function(k){$('#mdNotaDialogo').textContent=k.ok?(k.avvio?'Mandate: chi fa il video le legge e risponde qui.':(k.motivo||(k.in_attesa?'Indicazioni salvate. In attesa: l\'attività non è ancora attiva.':'Salvate: partono col prossimo avvio.'))):(k.errore||'Non mandate.');}):($('#mdNotaDialogo').textContent='Salvata. Premi «Manda a chi fa il video» quando hai finito.');})
+   .then(function(){S.firma='';aggiorna(true);});}
+ function voce(){var R=window.SpeechRecognition||window.webkitSpeechRecognition,b=$('#mdMic');
+  if(!R){b.title='Questo browser non detta: usa la tastiera (o il microfono della tastiera del telefono).';b.disabled=true;return;}
+  b.addEventListener('click',function(){if(S.ascolto){S.ascolto.stop();return;}
+   var r=new R();r.lang='it-IT';r.continuous=true;r.interimResults=true;var t=$('#mdTesto'),base=t.value?t.value.replace(/\s*$/,' '):'';
+   r.onresult=function(e){var s='';for(var i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;t.value=base+s;};
+   r.onend=function(){S.ascolto=null;b.classList.remove('rec');b.querySelector('span').textContent='Detta';};
+   r.onerror=function(e){$('#mdNotaDialogo').textContent='Dettatura: '+(e.error==='not-allowed'?'permesso del microfono negato':e.error);};
+   S.ascolto=r;b.classList.add('rec');b.querySelector('span').textContent='Ferma';r.start();});}
+
+ /* ---------------- salvataggio */
+ function salva(){var b=$('#mdSalva');b.disabled=true;
+  chiama('POST',{azione:'scegli',pid:pid(),tre_quarti_alto:S.scelte.tre_quarti_alto,frontale:S.scelte.frontale,piani:S.piani})
+  .then(function(j){S.msg=j.ok?'Scelta salvata: i video si preparano da soli. L\'invio al cliente lo decide Sante.':(j.errore||'Errore nel salvataggio');S.msgT=Date.now();$('#mdNota').textContent=S.msg;
+   if(j.ok){S.sporco=false;S.firma='';aggiorna(true);}else b.disabled=false;});}
+ function ricalcola(){chiama('POST',{azione:'ricalcola',pid:pid(),piani:S.piani}).then(function(j){$('#mdNota').textContent=j.ok?'Miniature rimesse in coda.':(j.errore||'Non riuscito');S.firma='';aggiorna(true);});}
+
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(costruisci,50);});else setTimeout(costruisci,50);
+})();
+</script>
+
 </body>
