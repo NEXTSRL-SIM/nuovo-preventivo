@@ -3536,7 +3536,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if($('#tabMedia'))return;
   var b=document.createElement('button');b.type='button';b.className='tab-btn';b.dataset.tab='media';b.textContent='Media';btn.after(b);
   var T=document.createElement('div');T.id='tabMedia';T.style.display='none';
-  T.innerHTML='<p class="intro">Le miniature compaiono da sole dopo la croce in <b>Mappa tetto</b>. Spunta una vista per ogni video (anche una sola), lascia le tue indicazioni: i video si preparano da soli. L\'invio al cliente lo decide Sante.</p>'
+  T.innerHTML='<p class="intro md-intro">Spunta una vista per video (anche una sola) e premi <b>Prepara i video</b>: le miniature arrivano da sole dopo la croce in <b>Mappa tetto</b>.</p>'
    +'<div class="md-griglia">'
    +sezione('tre_quarti_alto','sun','gr','Render emozionale dell\'impianto','Vista 3/4 dall\'alto · la casa con i moduli, in 3D')
    +sezione('frontale','home','bl','Video istituzionale','Vista frontale dalla strada · coda con la casa disegnata a matita')
@@ -3549,9 +3549,9 @@ document.addEventListener('DOMContentLoaded', function(){
    +'<button type="button" class="btn btn-secondary" id="mdAggiungi">'+ico('plus')+'<span>Aggiungi</span></button>'
    +'<button type="button" class="btn btn-primary" id="mdManda" title="Manda tutte le indicazioni nuove a chi fa il video">'+ico('send')+'<span>Manda a chi fa il video</span></button></div></div>'
    +'<p class="md-nota" id="mdNotaDialogo"></p></div></section>'
-   +'<div class="pf md-barra"><label class="md-piani">Piani della casa <input type="number" id="mdPiani" form="mdFuoriForm" min="1" max="6" step="1" placeholder="auto"></label>'
-   +'<span class="md-nota" id="mdNota"></span><button type="button" class="btn btn-secondary" id="mdRicalcola">'+ico('giro')+'<span>Ricalcola le miniature</span></button>'
-   +'<button type="button" class="btn btn-primary" id="mdSalva" disabled>'+ico('ok')+'<span>Salva scelta e prepara i video</span></button></div>';
+   +'<section class="pc md-azioni"><div class="pf md-barra"><span class="md-nota" id="mdNota"></span>'
+   +'<div class="md-az"><button type="button" class="btn btn-secondary" id="mdRicalcola" title="Rifai le miniature se hai spostato la croce sul tetto">'+ico('giro')+'<span>Rifai le miniature</span></button><small>se hai spostato la croce sul tetto</small></div>'
+   +'<div class="md-az"><button type="button" class="btn btn-primary" id="mdSalva" disabled title="Parte la bozza: la guarda e la conferma Sante">'+ico('ok')+'<span>Prepara i video</span></button><small>parte la bozza: la guarda e la conferma Sante</small></div></div></section>';
   mappa.after(T);
   stile();
   /* il passo nella barra: gli altri passi li governa lo script di prima; qui si accende/spegne solo «Media» */
@@ -3562,7 +3562,6 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#mdSalva').addEventListener('click',salva);
   T.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.md-conferma');if(b)conferma(b.dataset.video,b);var g=e.target.closest&&e.target.closest('.md-guarda');if(g)guarda(g);});$('#mdRicalcola').addEventListener('click',ricalcola);
   $('#mdAggiungi').addEventListener('click',function(){aggiungi(false);});$('#mdManda').addEventListener('click',function(){aggiungi(true);});
-  $('#mdPiani').addEventListener('change',function(){var n=parseInt(this.value);S.piani=(n>=1&&n<=6)?n:null;if(!S.piani)this.value='';S.sporco=true;pulsante();});
   voce();
   /* A2: giro veloce (5 s) solo mentre qualcosa è in coda o in lavorazione, altrimenti 15 s */
   (function giro(){if(T.style.display!=='none'&&!document.hidden)aggiorna(false);
@@ -3604,10 +3603,17 @@ document.addEventListener('DOMContentLoaded', function(){
   +'#tabMedia .md-msg.io{align-self:flex-end;background:var(--acw);border:1px solid var(--border)}#tabMedia .md-msg.lui{align-self:flex-start;background:var(--sf2,#f4f6f8);border:1px solid var(--border)}'
   +'#tabMedia .md-msg small{display:block;font-size:10.5px;color:var(--text-muted);margin-top:3px}'
   +'#tabMedia textarea{width:100%;resize:vertical;font:inherit;font-size:13px}#tabMedia #mdMic.rec{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}'
-  +'#tabMedia .md-barra{border:1px solid var(--border);border-radius:14px;background:var(--surface);flex-wrap:wrap;margin-bottom:96px}#tabMedia .md-barra .md-nota{flex:1 1 260px}'
+  +'#tabMedia .md-azioni{margin-bottom:96px}#tabMedia .md-azioni>.pf.md-barra{border-top:0;border-radius:14px;flex-wrap:wrap;align-items:flex-start;justify-content:flex-end;gap:12px 14px}'
+  +'#tabMedia .md-barra .md-nota{flex:1 1 240px;align-self:center;margin:0}#tabMedia .md-barra .md-nota:empty{visibility:hidden}'
+  +'#tabMedia .md-az{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}#tabMedia .md-az small{font-size:11px;color:var(--text-muted);text-align:center;line-height:1.3}'
   +'#tabMedia .md-regista{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--viw2,#EDE9FE);color:var(--vi2,#6D28D9);white-space:nowrap}'
   +'#tabMedia #mdPer{width:auto;min-width:170px}'
-  +'#tabMedia .md-piani{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;white-space:nowrap}#tabMedia .md-piani input{width:72px!important}';
+  +'#tabMedia .md-intro{margin:0 0 12px}#tabMedia .pc>.pb{padding-top:14px}'
+  +'#tabMedia .md-griglia{align-items:stretch}#tabMedia .md-griglia>.pc{display:flex;flex-direction:column}#tabMedia .md-griglia>.pc>.pb{flex:1}'
+  +'#tabMedia .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;font-size:12.5px;height:32px;min-height:0;line-height:1;white-space:nowrap;box-sizing:border-box}#tabMedia .btn svg{width:15px;height:15px;flex:none}'
+  +'#tabMedia #mdPer{height:32px;padding-top:0;padding-bottom:0;font-size:12.5px}'
+  +'@media(max-width:640px){#tabMedia .md-comandi>*{flex:1 1 calc(50% - 4px);min-width:0}#tabMedia #mdPer,#tabMedia #mdManda{flex-basis:100%;min-width:0;width:100%}'
+  +'#tabMedia .md-azioni>.pf.md-barra{flex-direction:column;align-items:stretch}#tabMedia .md-barra .md-nota{flex:none;text-align:center}#tabMedia .md-barra .md-nota:empty{display:none}#tabMedia .pc>.ph{flex-wrap:wrap}#tabMedia .pc>.ph>div{flex:1 1 170px;min-width:0}#tabMedia .md-az .btn{width:100%}#tabMedia .md-az small{white-space:normal}}';
   document.head.appendChild(st);}
 
  /* ---------------- lettura dello stato */
@@ -3622,7 +3628,6 @@ document.addEventListener('DOMContentLoaded', function(){
    S.dati=j;   /* S2: sempre i dati dell'ultima lettura */
    var f=fs+fv+fd;if(f===S.firma&&!forza)return;var vecchia=S.f3||['','',''];S.firma=f;S.f3=[fs,fv,fd];
    if(!S.sporco){S.scelte.tre_quarti_alto=(j.scelte||{}).tre_quarti_alto||null;S.scelte.frontale=(j.scelte||{}).frontale||null;S.piani=j.piani||null;}
-   if(document.activeElement!==$('#mdPiani'))$('#mdPiani').value=S.piani||'';
    ['tre_quarti_alto','frontale'].forEach(function(t){if(forza||fs!==vecchia[0])striscia(t,j);statoVideo(t,j);});
    if(forza||fd!==vecchia[2])filo(j.dialogo||[],j.regista||{});
    if(S.msg&&Date.now()-S.msgT<8000){nota.textContent=S.msg;}else nota.textContent=({in_coda:'Calcolo dei punti di ripresa in coda…',preso:'Il Mac sta preparando le miniature…',attesa_mac:'In attesa del Mac (spento o occupato).',errore:'Errore: '+(j.errore||'')}[j.stato])||(j.avvisi&&j.avvisi.length?j.avvisi.join(' · '):'');
