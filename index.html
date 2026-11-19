@@ -3495,12 +3495,24 @@ document.addEventListener('DOMContentLoaded', function(){
      Solo aggiunta: nessuna riga esistente cambia. Sostituisce la proposta precedente proposta_pagina_video_cliente.js
      (card «Video al cliente» dentro Mappa tetto): ora è un passo a sé, «Media», tra Mappa tetto e Impianto esistente. -->
 <script id="media-js">
-/* PORTALE NEXT 2.0-145 (PROPOSTA): passo «Media» del Nuovo preventivo.
-   Dopo la croce in Mappa tetto il Mac calcola i punti di ripresa e prepara le MINIATURE in due strisce:
-   «Render emozionale dell'impianto» (3/4 dall'alto, Google 3D Tiles) e «Video istituzionale» (frontale, Street View).
-   Il commerciale spunta una miniatura per striscia (si può anche una sola; la linea del tetto la calcola il sistema),
-   lascia indicazioni scritte o dettate per chi fa il video e salva: i video si preparano da soli.
-   Nessun invio al cliente da qui: l'invio lo decide Sante. Accesso: il gettone personale del portale (come portale-elenchi). */
+/* PORTALE NEXT 2.0-145 — sezione «Media» del Nuovo preventivo, versione CHIARA (PROPOSTA del 19/11, NON pubblicata).
+   Indicazioni di Sante del 19/11 12:46-12:54:
+   - due video con nomi semplici: «Video render della casa» e «Video istituzionale» (mai «emozionale»);
+   - Video render della casa: parte sempre dall'alto e si avvicina (regia, voce e struttura uguali per tutti); la vista
+     dall'alto è GIÀ scelta di serie, un solo tasto «Prepara la bozza»; le altre viste stanno nel riquadro richiudibile
+     «Cambia inquadratura iniziale»;
+   - Video istituzionale: si sceglie la vista della casa da Street View e si preme «Usa questa inquadratura»; si salvano
+     SOLO i parametri (panorama, posizione, direzione, inclinazione, ampiezza), mai l'immagine; sotto compaiono la casa
+     come uscirà nel render (tre quarti, camera alzata) e la stessa casa disegnata a matita, poi «Prepara la bozza»;
+   - miniature grandi, didascalie semplici senza codici, gradi o metri; una riga di stato comprensibile;
+   - NESSUNA funzione di invio: l'invio al cliente lo decide Sante a parte.
+   Street View: «Apri Street View» apre la stessa finestra di Google Maps del tasto di Mappa tetto, ma sulla croce del
+   preventivo (nessuna chiave nella pagina); il commerciale gira la vista sulla casa, copia l'indirizzo della finestra e lo
+   incolla qui; la pagina ne ricava panorama, posizione, direzione, inclinazione e ampiezza e li manda alla edge.
+   PORTALE NEXT 2.0-145 (sera, dopo l'interfaccia v6): stati 'superate' ed 'errore' con motivo e «Rifai le viste».
+   PORTALE NEXT 2.0-145 (sera): riquadro «Video istituzionale» con le due anteprime affiancate («Come apparirà la casa» e
+   «La casa nel libro»), il tasto «Prepara la bozza del video istituzionale» e le righe di stato fisse.
+   Accesso: il gettone personale del portale (come portale-elenchi). */
 (function(){
  var FN='https://pnxhthrheqeucoisifjw.supabase.co/functions/v1/video-cliente';
  function $(s,c){return (c||document).querySelector(s);} function $$(s,c){return [].slice.call((c||document).querySelectorAll(s));}
@@ -3508,19 +3520,56 @@ document.addEventListener('DOMContentLoaded', function(){
  function pid(){return ($('#last_saved_id')||{}).value||($('#existing_prev_id')||{}).value||'';}
  function croce(){return !!((($('#map_lat')||{}).value)&&(($('#map_lon')||{}).value));}
  function gettone(){return (typeof attendiGettone==='function')?attendiGettone():Promise.resolve('');}
- var S={scelte:{tre_quarti_alto:null,frontale:null},piani:null,dati:null,firma:'',sporco:false,ascolto:null};
- var STATI={in_coda:'Bozza in coda',preso:'Bozza in lavorazione sul Mac',attesa_mac:'In attesa del Mac',pronte:'Miniature pronte',anteprima_pronta:'Bozza pronta: la guarda e la conferma Sante',
-  pronto_da_approvare:'HD pronto: l\'invio al cliente lo decide Sante',approvata_sante:'Bozza confermata da Sante',inviato:'Inviato al cliente',errore:'Errore',annullato:'Annullato',nessuno:'Non ancora richiesto'};
- var STATI_HD={in_coda:'Confermata: HD in coda',preso:'HD in preparazione sul Mac'};
- /* #5187: immagini e video arrivano solo col gettone del portale e diventano blob locali (nessun URL, pubblico o firmato) */
+ var S={scelte:{tre_quarti_alto:null,frontale:null},piani:null,dati:null,firma:'',ascolto:null,sv:null,msg:{}};
+ /* la riga di stato, in parole semplici */
+ /* Video istituzionale (indicazioni del 19/11): righe fisse e semplici, nell'ordine in cui il commerciale le incontra.
+    Contratto: claude/portale/istituzionale-interfaccia-145.md (edge video-cliente v6, video_media_stato):
+    s.street_view (parametri), s.anteprime_istituzionale {stato: nessuna|in_preparazione|pronte|errore|superate, candidati:[id],
+    motivo, rifare}, s.firma_istituzionale (riga «Nome – Indirizzo» o null). c.img è solo 'mini' o null. */
+ function statoAnt(j){var a=j.anteprime_istituzionale;return (a&&a.stato)||(j.street_view?'in_preparazione':'nessuna');}
+ function anteprimeIst(j){if(statoAnt(j)!=='pronte')return [];var ids=(j.anteprime_istituzionale||{}).candidati||[];
+  return (((j.candidati||{}).frontale)||[]).filter(function(c){return ids.indexOf(c.id)>=0&&c.img==='mini';});}
+ function infoAnt(j){var a=j.anteprime_istituzionale||{};return {motivo:a.motivo?String(a.motivo):'',rifare:a.rifare===true};}
+ /* 'superate' (viste di una scelta Street View precedente) ed 'errore': si dice il motivo e, se la edge lo permette
+    (rifare=true), compare «Rifai le viste» (azione 'ricalcola', già esistente) */
+ function testoAnt(j){var a=statoAnt(j),i=infoAnt(j);
+  if(a==='superate')return i.motivo||'Le anteprime sono di una vista precedente'+(i.rifare?': premi «Rifai le viste».':'.');
+  if(a==='errore')return i.motivo||'Anteprime non riuscite'+(i.rifare?': premi «Rifai le viste».':': avvisa lo studio.');
+  return '';}
+ /* casa 3D mancante: il worker chiude il lavoro con esito {errore:'casa 3D non ancora ricostruita'} se la casa non è in
+    scene_case.json; la edge v6 lo riporta anche in s.anteprime_istituzionale.motivo */
+ function casaMancante(v,j){v=v||{};var m=j?infoAnt(j).motivo:'';
+  return (v.stato==='errore'&&/casa\s*3d/i.test(String((v.esito&&v.esito.errore)||v.errore||'')))||(/casa\s*3d/i.test(m)&&statoAnt(j)!=='pronte');}
+ function rigaIst(v,j){var s=v.stato||'nessuno',a=statoAnt(j);
+  if(casaMancante(v,j)&&a!=='pronte')return ['Casa 3D non ancora ricostruita: avvisa lo studio','err'];
+  if(s==='in_coda'||s==='preso')return [v.qualita==='finale'?'HD in lavorazione sul computer dello studio':'Bozza in lavorazione sul computer dello studio','att'];
+  if(s==='anteprima_pronta')return ['Bozza pronta: guardala','ok'];
+  if(!/^(nessuno|annullato)$/.test(s))return null;                /* errore, confermata, HD pronto, inviato: righe comuni */
+  if(a==='nessuna'||!j.street_view)return ['Scegli la vista',''];
+  if(a==='errore'||a==='superate')return [testoAnt(j),a==='errore'?'err':'att'];
+  if(a==='pronte'&&anteprimeIst(j).length)return ['Anteprime pronte','ok'];
+  return ['Anteprime in preparazione','att'];}
+ function rigaStato(tv,v,j){
+  var s=(v||{}).stato||'nessuno';
+  if(tv==='istituzionale'){var ri=rigaIst(v||{},j);if(ri)return ri;}
+  if(s==='nessuno'||s==='annullato')return ['Pronto da preparare',''];
+  if(s==='in_coda')return [v.qualita==='finale'?'Confermata: HD in attesa':'In attesa','att'];
+  if(s==='preso')return [v.qualita==='finale'?'HD in lavorazione sul computer dello studio':'In lavorazione sul computer dello studio','att'];
+  if(s==='anteprima_pronta')return ['Bozza pronta: guardala','ok'];
+  if(s==='approvata_sante')return ['Confermata da Sante: HD in preparazione','ok'];
+  if(s==='pronto_da_approvare')return ['HD pronto: l\'invio lo decide Sante','ok'];
+  if(s==='inviato')return ['Inviato al cliente','ok'];
+  if(s==='errore')return ['Non disponibile: '+(v.errore?String(v.errore).split(/[.:;]/)[0]:'errore sul computer dello studio'),'err'];
+  return [s,''];}
+ /* #5187: immagini e video arrivano solo col gettone del portale e diventano blob locali (nessun URL) */
  var BLOB={};
- function carica(chiave,qs){chiave=pid()+'|'+chiave;if(BLOB[chiave])return BLOB[chiave];   /* D4: la chiave comprende il preventivo */
+ function carica(chiave,qs){chiave=pid()+'|'+chiave;if(BLOB[chiave])return BLOB[chiave];
   BLOB[chiave]=gettone().then(function(g){if(!g)throw 0;return fetch(FN+'?pid='+encodeURIComponent(pid())+'&'+qs,{headers:{'X-Portale-Token':g}});})
    .then(function(r){if(!r.ok)throw r.status;return r.blob();}).then(function(b){return URL.createObjectURL(b);})
    .catch(function(e){delete BLOB[chiave];throw e;});
   return BLOB[chiave];}
  function metti(el,chiave,qs){carica(chiave,qs).then(function(u){if(el.isConnected){el.src=u;el.dataset.u=u;el.dataset.k=pid()+'|'+chiave;}},function(e){el.alt=e===413?'File troppo grande per l\'anteprima':'Immagine non disponibile';el.classList.add('md-rotta');});}
- function rilascia(box){[].forEach.call(box.querySelectorAll('[data-u]'),function(m){try{URL.revokeObjectURL(m.dataset.u);}catch(e){}delete BLOB[m.dataset.k];m.removeAttribute('src');});}   /* D4 */
+ function rilascia(box){[].forEach.call(box.querySelectorAll('[data-u]'),function(m){try{URL.revokeObjectURL(m.dataset.u);}catch(e){}delete BLOB[m.dataset.k];m.removeAttribute('src');});}
  function chiama(metodo,corpo){return gettone().then(function(g){
    if(!g)return {ok:false,errore:'Serve l\'accesso personale al portale.'};
    var o={method:metodo,headers:{'X-Portale-Token':g},cache:'no-store'};
@@ -3536,66 +3585,87 @@ document.addEventListener('DOMContentLoaded', function(){
   if($('#tabMedia'))return;
   var b=document.createElement('button');b.type='button';b.className='tab-btn';b.dataset.tab='media';b.textContent='Media';btn.after(b);
   var T=document.createElement('div');T.id='tabMedia';T.style.display='none';
-  T.innerHTML='<p class="intro md-intro">Spunta una vista per video (anche una sola) e premi <b>Prepara i video</b>: le miniature arrivano da sole dopo la croce in <b>Mappa tetto</b>.</p>'
+  T.innerHTML='<p class="intro md-intro">Due video per il cliente. Il <b>video render della casa</b> è già impostato: basta <b>Prepara la bozza</b>. Per il <b>video istituzionale</b> scegli prima la vista della casa da Street View. Le bozze le guarda e le conferma Sante; al cliente non parte niente da qui.</p>'
    +'<div class="md-griglia">'
-   +sezione('tre_quarti_alto','sun','gr','Render emozionale dell\'impianto','Vista 3/4 dall\'alto · la casa con i moduli, in 3D')
-   +sezione('frontale','home','bl','Video istituzionale','Vista frontale dalla strada · coda con la casa disegnata a matita')
+   /* --- Video render della casa */
+   +'<section class="pc md-sez" data-video="video_3d"><div class="ph"><span class="pi gr">'+ico('sun')+'</span><div><b>Video render della casa</b><small>Parte dall\'alto e si avvicina alla casa con l\'impianto. Regia, voce e musica sono uguali per tutti: cambiano solo la casa e i dati.</small></div></div>'
+   +'<div class="pb"><p class="md-stato" data-stato="video_3d"></p>'
+   +'<figure class="md-grande" id="mdTreGrande"><div class="md-vuoto-img">La vista arriva appena il computer dello studio l\'ha preparata.</div></figure>'
+   +'<details class="md-cambia"><summary>Cambia inquadratura iniziale <small>(facoltativo)</small></summary><div class="md-scelte" data-tipo="tre_quarti_alto"></div></details>'
+   +'<div class="md-anteprima" data-anteprima="video_3d"></div>'
+   +'<div class="md-comandi md-fondo"><button type="button" class="btn btn-primary md-prepara" data-video="video_3d">'+ico('ok')+'<span>Prepara la bozza</span></button></div>'
+   +'<p class="md-nota" data-nota="video_3d"></p></div></section>'
+   /* --- Video istituzionale */
+   +'<section class="pc md-sez" data-video="istituzionale"><div class="ph"><span class="pi bl">'+ico('home')+'</span><div><b>Video istituzionale</b><small>Il video di Next con, alla fine, la casa del cliente: prima com\'è nel render, poi disegnata a matita nel libro.</small></div></div>'
+   +'<div class="pb"><p class="md-stato" data-stato="istituzionale"></p>'
+   +'<ol class="md-passi"><li><b>Scegli la vista della casa da Street View.</b> Girati verso la casa finché vedi bene la facciata.'
+   +'<div class="md-sv" id="mdSv"></div></li>'
+   +'<li><b>Controlla come uscirà.</b><div class="md-coppia" id="mdCoppia"></div><p class="md-firma" id="mdFirma" hidden></p>'
+   +'<div class="md-comandi" id="mdRifaiIst" hidden><button type="button" class="btn btn-secondary md-rifai">'+ico('giro')+'<span>Rifai le viste</span></button></div></li></ol>'
+   +'<div class="md-anteprima" data-anteprima="istituzionale"></div>'
+   +'<div class="md-comandi md-fondo"><button type="button" class="btn btn-primary md-prepara" data-video="istituzionale">'+ico('ok')+'<span>Prepara la bozza del video istituzionale</span></button></div>'
+   +'<p class="md-nota" data-nota="istituzionale"></p></div></section>'
    +'</div>'
+   /* --- Dialogo (com'era, solo i nomi nuovi) */
    +'<section class="pc md-dialogo"><div class="ph"><span class="pi vi">'+ico('chat')+'</span><div><b>Indicazioni per chi fa il video</b><small>Scrivi o detta come in una sessione: «qua farei così, qua sposterei»</small></div><span class="px md-regista" id="mdRegista"></span></div>'
    +'<div class="pb"><div class="md-filo" id="mdFilo"><p class="md-vuoto">Ancora nessuna indicazione.</p></div>'
-   +'<div class="md-scrivi"><textarea id="mdTesto" form="mdFuoriForm" rows="3" placeholder="Es. «Nel render partirei dal lato del giardino e girerei verso la strada; nella frontale sposterei la vista un po\' a sinistra, si vede il cancello»"></textarea>'
-   +'<div class="md-comandi"><select id="mdPer" form="mdFuoriForm" title="A quale video si riferisce"><option value="entrambi">Per tutti e due</option><option value="tre_quarti_alto">Render emozionale</option><option value="frontale">Istituzionale</option></select>'
+   +'<div class="md-scrivi"><textarea id="mdTesto" form="mdFuoriForm" rows="3" placeholder="Es. «Nel video della casa partirei dal lato del giardino; nell\'istituzionale si vede troppo il cancello»"></textarea>'
+   +'<div class="md-comandi"><select id="mdPer" form="mdFuoriForm" title="A quale video si riferisce"><option value="entrambi">Per tutti e due</option><option value="tre_quarti_alto">Video render della casa</option><option value="frontale">Video istituzionale</option></select>'
    +'<button type="button" class="btn btn-secondary" id="mdMic" title="Detta a voce (il testo si scrive qui, l\'audio non si salva)">'+ico('mic')+'<span>Detta</span></button>'
    +'<button type="button" class="btn btn-secondary" id="mdAggiungi">'+ico('plus')+'<span>Aggiungi</span></button>'
    +'<button type="button" class="btn btn-primary" id="mdManda" title="Manda tutte le indicazioni nuove a chi fa il video">'+ico('send')+'<span>Manda a chi fa il video</span></button></div></div>'
    +'<p class="md-nota" id="mdNotaDialogo"></p></div></section>'
    +'<section class="pc md-azioni"><div class="pf md-barra"><span class="md-nota" id="mdNota"></span>'
-   +'<div class="md-az"><button type="button" class="btn btn-secondary" id="mdRicalcola" title="Rifai le miniature se hai spostato la croce sul tetto">'+ico('giro')+'<span>Rifai le miniature</span></button><small>se hai spostato la croce sul tetto</small></div>'
-   +'<div class="md-az"><button type="button" class="btn btn-primary" id="mdSalva" disabled title="Parte la bozza: la guarda e la conferma Sante">'+ico('ok')+'<span>Prepara i video</span></button><small>parte la bozza: la guarda e la conferma Sante</small></div></div></section>';
+   +'<div class="md-az"><button type="button" class="btn btn-secondary" id="mdRicalcola" title="Rifai le viste se hai spostato la croce sul tetto">'+ico('giro')+'<span>Rifai le viste</span></button><small>se hai spostato la croce sul tetto</small></div></div></section>';
   mappa.after(T);
-  stile();
-  /* il passo nella barra: gli altri passi li governa lo script di prima; qui si accende/spegne solo «Media» */
+  stile(); pannelloSv();
   document.addEventListener('click',function(e){var x=e.target.closest&&e.target.closest('.tab-btn');if(!x)return;
    var su=x.dataset.tab==='media';T.style.display=su?'block':'none';
    if(su){['tabContatto','tabProdotti','tabMappa','tabImpianto','tabGenera'].forEach(function(id){var n=document.getElementById(id);if(n)n.style.display='none';});
     $$('.tab-btn').forEach(function(y){y.classList.toggle('active',y===x);});aggiorna(true);}},true);
-  $('#mdSalva').addEventListener('click',salva);
-  T.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.md-conferma');if(b)conferma(b.dataset.video,b);var g=e.target.closest&&e.target.closest('.md-guarda');if(g)guarda(g);});$('#mdRicalcola').addEventListener('click',ricalcola);
+  T.addEventListener('click',function(e){var t=e.target.closest&&e.target;if(!t)return;
+   var p=t.closest('.md-prepara');if(p)prepara(p.dataset.video,p);
+   var c=t.closest('.md-conferma');if(c)conferma(c.dataset.video,c);
+   var g=t.closest('.md-guarda');if(g)guarda(g);
+   var rf=t.closest('.md-rifai');if(rf)ricalcola(rf);
+   var f=t.closest('figure[data-scegli]');if(f)scegliVista(f.dataset.tipo,f.dataset.scegli);});
+  $('#mdRicalcola').addEventListener('click',ricalcola);
   $('#mdAggiungi').addEventListener('click',function(){aggiungi(false);});$('#mdManda').addEventListener('click',function(){aggiungi(true);});
   voce();
-  /* A2: giro veloce (5 s) solo mentre qualcosa è in coda o in lavorazione, altrimenti 15 s */
   (function giro(){if(T.style.display!=='none'&&!document.hidden)aggiorna(false);
    var d=S.dati||{},vv=d.video||{},occ=/^(in_coda|preso)$/.test(d.stato||'')||['video_3d','istituzionale'].some(function(k){return /^(in_coda|preso)$/.test((vv[k]||{}).stato||'');});
    setTimeout(giro,occ?5000:15000);})();
  }
- function sezione(tipo,icona,col,tit,sub){
-  return '<section class="pc md-sez" data-tipo="'+tipo+'"><div class="ph"><span class="pi '+col+'">'+ico(icona)+'</span><div><b>'+tit+'</b><small>'+sub+'</small></div><span class="px md-stato" data-stato="'+tipo+'"></span></div>'
-   +'<div class="pb"><div class="md-striscia" data-tipo="'+tipo+'"><p class="md-vuoto">Si accende quando il preventivo è salvato con la croce sul tetto.</p></div>'
-   +(tipo==='frontale'?'<p class="md-nota">La linea del tetto su cui corre la luce la calcola il sistema dal Layout veloce (o, se manca, dalla sagoma della carta regionale: stima che guarda Sante).</p>':'')
-   +'<div class="md-anteprima" data-anteprima="'+tipo+'"></div>'
-   +'<p class="md-credito" data-credito="'+tipo+'"></p></div></section>';
- }
  function ico(k){var I={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   home:'<path d="M3 11 12 4l9 7v9H3z"/><path d="M9 20v-6h6v6"/>',chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
   mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',plus:'<path d="M12 5v14M5 12h14"/>',send:'<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
-  ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',giro:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'};
+  ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',giro:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',occhio:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'};
   return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(I[k]||'')+'</svg>';}
  function stile(){var st=document.createElement('style');st.id='media-css';st.textContent=
-  '#tabMedia .md-griglia{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;margin-bottom:16px}'
+  '#tabMedia [hidden]{display:none!important}#tabMedia .btn:disabled{opacity:.45;cursor:not-allowed}#tabMedia .md-coppia>.md-vuoto{grid-column:1/-1}'
+  +'#tabMedia .md-griglia{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch;margin-bottom:16px}'
   +'@media(max-width:980px){#tabMedia .md-griglia{grid-template-columns:1fr}}'
-  +'#tabMedia .md-striscia{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory}'
-  +'#tabMedia figure{position:relative;margin:0;flex:0 0 212px;scroll-snap-align:start;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:#0f1b2d;overflow:hidden;transition:border-color .15s,box-shadow .15s}'
-  +'#tabMedia figure:hover{border-color:var(--accent)}#tabMedia figure.on{border-color:#38c8ff;box-shadow:0 0 0 3px rgba(56,200,255,.25)}'
-  +'#tabMedia figure img{width:212px;height:119px;object-fit:cover;display:block}#tabMedia figure img.md-rotta{background:#334155}'
-  +'#tabMedia figure .md-spunta{position:absolute;top:7px;left:7px;width:22px;height:22px;border-radius:6px;background:rgba(15,27,45,.72);border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;line-height:1}'
-  +'#tabMedia figure.on .md-spunta{background:#38c8ff;border-color:#38c8ff;color:#0f1b2d}'
-  +'#tabMedia figure .md-fonte{position:absolute;top:7px;right:7px;font:600 10px "IBM Plex Mono",monospace;color:#fff;background:rgba(15,27,45,.72);padding:2px 6px;border-radius:5px}'
-  +'#tabMedia figcaption{font:11px "IBM Plex Mono",monospace;color:#cbd5e1;padding:5px 8px;display:flex;justify-content:space-between;gap:6px}'
-  +'#tabMedia .md-vuoto,#tabMedia .md-nota{font-size:12px;color:var(--text-muted);margin:4px 0}'
-  +'#tabMedia .md-credito{font-size:10.5px;color:var(--text-muted);margin:0;text-align:right}'
-  +'#tabMedia .md-stato{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--acw);color:var(--accent);white-space:nowrap}'
+  +'#tabMedia .md-griglia>.pc{display:flex;flex-direction:column}#tabMedia .md-griglia>.pc>.pb{flex:1;display:flex;flex-direction:column;gap:10px;padding-top:14px}'
+  +'#tabMedia .md-stato{margin:0;font-size:13.5px;font-weight:600;padding:8px 12px;border-radius:10px;background:var(--acw);color:var(--accent)}'
   +'#tabMedia .md-stato[data-tono="ok"]{background:var(--grw2,#DCFCE7);color:var(--gr2,#15803D)}#tabMedia .md-stato[data-tono="err"]{background:#FEE2E2;color:#B91C1C}#tabMedia .md-stato[data-tono="att"]{background:var(--amw2,#FEF3C7);color:var(--am2,#B45309)}'
-  +'#tabMedia .md-comandi{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}'
+  +'#tabMedia figure{position:relative;margin:0;border:2px solid var(--border);border-radius:12px;background:#0f1b2d;overflow:hidden}'
+  +'#tabMedia figure img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}#tabMedia figure img.md-rotta{background:#334155}'
+  +'#tabMedia figure.on{border-color:#38c8ff;box-shadow:0 0 0 3px rgba(56,200,255,.25)}'
+  +'#tabMedia figcaption{font-size:13px;color:#e2e8f0;padding:8px 12px;display:flex;align-items:center;gap:8px;background:#0f1b2d}'
+  +'#tabMedia figcaption .md-spunta{width:20px;height:20px;border-radius:6px;border:1.5px solid #cbd5e1;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}'
+  +'#tabMedia figure.on figcaption .md-spunta{background:#38c8ff;border-color:#38c8ff;color:#0f1b2d}'
+  +'#tabMedia .md-vuoto-img{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;color:#94a3b8;font-size:13px}'
+  +'#tabMedia .md-cambia{border:1px solid var(--border);border-radius:10px;padding:8px 12px}#tabMedia .md-cambia summary{cursor:pointer;font-size:13px;font-weight:600}#tabMedia .md-cambia summary small{font-weight:400;color:var(--text-muted)}'
+  +'#tabMedia .md-scelte{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}#tabMedia .md-scelte figure{cursor:pointer}'
+  +'#tabMedia .md-passi{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:12px;font-size:13px}#tabMedia .md-passi li>b{display:inline}'
+  +'#tabMedia .md-sv{margin-top:8px;display:flex;flex-direction:column;gap:8px}#tabMedia .md-sv .md-pano{width:100%;aspect-ratio:16/9;border-radius:10px;border:1px solid var(--border);background:#0f1b2d}'
+  +'#tabMedia .md-sv input{width:100%;font:inherit;font-size:12.5px;box-sizing:border-box}#tabMedia .md-etichetta{font-size:12.5px;font-weight:600;margin-top:2px}'
+  +'#tabMedia .md-coppia{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}@media(max-width:340px){#tabMedia .md-coppia{grid-template-columns:1fr}}@media(max-width:640px){#tabMedia .md-coppia figcaption{font-size:12px;padding:6px 8px}}'
+  +'#tabMedia .md-varianti-box{grid-column:1/-1}#tabMedia .md-varianti{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}#tabMedia .md-varianti figure{cursor:pointer}'
+  +'#tabMedia .md-firma{margin:8px 0 0;font-size:12.5px;color:var(--text-muted)}#tabMedia .md-firma b{color:var(--text,#0f172a)}#tabMedia .md-manca{color:#B45309}'
+  +'#tabMedia #mdRifaiIst{margin-top:8px}#tabMedia figure.md-attesa{border-style:dashed}#tabMedia .md-coppia figcaption{font-weight:600}'
+  +'#tabMedia .md-vuoto,#tabMedia .md-nota{font-size:12px;color:var(--text-muted);margin:2px 0}#tabMedia .md-nota:empty{display:none}'
+  +'#tabMedia .md-comandi{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#tabMedia .md-fondo{margin-top:auto;justify-content:flex-end}'
   +'#tabMedia .md-anteprima:empty{display:none}#tabMedia .md-anteprima{border:1px dashed var(--border);border-radius:10px;padding:8px}#tabMedia .md-anteprima video,#tabMedia .md-anteprima img{width:100%;border-radius:8px;display:block}'
   +'#tabMedia .md-anteprima small{display:block;color:var(--text-muted);margin-top:4px}'
   +'#tabMedia .md-dialogo{margin-bottom:16px}#tabMedia .md-filo{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}'
@@ -3604,72 +3674,151 @@ document.addEventListener('DOMContentLoaded', function(){
   +'#tabMedia .md-msg small{display:block;font-size:10.5px;color:var(--text-muted);margin-top:3px}'
   +'#tabMedia textarea{width:100%;resize:vertical;font:inherit;font-size:13px}#tabMedia #mdMic.rec{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}'
   +'#tabMedia .md-azioni{margin-bottom:96px}#tabMedia .md-azioni>.pf.md-barra{border-top:0;border-radius:14px;flex-wrap:wrap;align-items:flex-start;justify-content:flex-end;gap:12px 14px}'
-  +'#tabMedia .md-barra .md-nota{flex:1 1 240px;align-self:center;margin:0}#tabMedia .md-barra .md-nota:empty{visibility:hidden}'
+  +'#tabMedia .md-barra .md-nota{flex:1 1 240px;align-self:center;margin:0}'
   +'#tabMedia .md-az{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}#tabMedia .md-az small{font-size:11px;color:var(--text-muted);text-align:center;line-height:1.3}'
   +'#tabMedia .md-regista{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--viw2,#EDE9FE);color:var(--vi2,#6D28D9);white-space:nowrap}'
-  +'#tabMedia #mdPer{width:auto;min-width:170px}'
-  +'#tabMedia .md-intro{margin:0 0 12px}#tabMedia .pc>.pb{padding-top:14px}'
-  +'#tabMedia .md-griglia{align-items:stretch}#tabMedia .md-griglia>.pc{display:flex;flex-direction:column}#tabMedia .md-griglia>.pc>.pb{flex:1}'
+  +'#tabMedia #mdPer{width:auto;min-width:190px;height:32px;padding-top:0;padding-bottom:0;font-size:12.5px}'
+  +'#tabMedia .md-intro{margin:0 0 12px}'
   +'#tabMedia .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;font-size:12.5px;height:32px;min-height:0;line-height:1;white-space:nowrap;box-sizing:border-box}#tabMedia .btn svg{width:15px;height:15px;flex:none}'
-  +'#tabMedia #mdPer{height:32px;padding-top:0;padding-bottom:0;font-size:12.5px}'
-  +'@media(max-width:640px){#tabMedia .md-comandi>*{flex:1 1 calc(50% - 4px);min-width:0}#tabMedia #mdPer,#tabMedia #mdManda{flex-basis:100%;min-width:0;width:100%}'
-  +'#tabMedia .md-azioni>.pf.md-barra{flex-direction:column;align-items:stretch}#tabMedia .md-barra .md-nota{flex:none;text-align:center}#tabMedia .md-barra .md-nota:empty{display:none}#tabMedia .pc>.ph{flex-wrap:wrap}#tabMedia .pc>.ph>div{flex:1 1 170px;min-width:0}#tabMedia .md-az .btn{width:100%}#tabMedia .md-az small{white-space:normal}}';
+  +'#tabMedia .md-prepara{height:38px;padding:0 18px;font-size:13.5px}'
+  +'@media(max-width:640px){#tabMedia .md-comandi>*{flex:1 1 calc(50% - 4px);min-width:0}#tabMedia #mdPer,#tabMedia #mdManda,#tabMedia .md-prepara{flex-basis:100%;width:100%}'
+  +'#tabMedia .md-azioni>.pf.md-barra{flex-direction:column;align-items:stretch}#tabMedia .pc>.ph{flex-wrap:wrap}#tabMedia .pc>.ph>div{flex:1 1 170px;min-width:0}#tabMedia .md-az .btn{width:100%}}';
   document.head.appendChild(st);}
 
+ /* ---------------- Street View: si salvano SOLO i parametri */
+ function leggiIndirizzoSv(u){
+  /* indirizzo della finestra di Google Maps in Street View, es.
+     https://www.google.com/maps/@45.6313043,12.5221717,3a,82.3y,124.67h,87.28t/data=!3m6!1e1!3m4!1s<pano>!2e0!7i16384!8i8192
+     dopo «@»: lat, lon, poi pezzi con la lettera in coda: 3a = Street View, y = ampiezza (fov), h = direzione (heading),
+     t = inclinazione + 90 (90t = orizzontale). Il panorama sta in !1s<pano>. Si salvano SOLO questi numeri. */
+  u=String(u||'').trim();try{u=decodeURIComponent(u);}catch(e){}
+  var m=/@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+),([^\/?#]*)/.exec(u);if(!m)return null;
+  var pz={};m[3].split(',').forEach(function(x){var k=/^(-?[\d.]+)([a-z])$/.exec(x);if(k)pz[k[2]]=+k[1];});
+  if(pz.a!==3||!isFinite(pz.h))return null;                       /* senza «3a» è la mappa, non Street View */
+  var p=/!1s([A-Za-z0-9_\-]{10,64})!2e/.exec(u)||[];
+  var r={lat:+m[1],lon:+m[2],heading:Math.round(((pz.h%360)+360)%360*100)/100,
+   pitch:isFinite(pz.t)?Math.round((pz.t-90)*100)/100:0,fov:isFinite(pz.y)?pz.y:75,pano_id:p[1]||null};
+  if(!(Math.abs(r.lat)<=90&&Math.abs(r.lon)<=180))return null;
+  r.pitch=Math.max(-90,Math.min(90,r.pitch));r.fov=Math.max(10,Math.min(120,r.fov));
+  return r;}
+ function pannelloSv(){var box=$('#mdSv');if(!box)return;
+  box.innerHTML='<div class="md-comandi"><button type="button" class="btn btn-secondary" id="mdApriSv">'+ico('occhio')+'<span>Apri Street View</span></button></div>'
+   +'<small class="md-nota" style="display:block">Si apre Google Maps sulla croce del preventivo. Girati verso la casa, poi copia l\'indirizzo della finestra (in alto) e incollalo qui sotto.</small>'
+   +'<label class="md-etichetta" for="mdSvUrl">Incolla qui l\'indirizzo della vista Street View</label>'
+   +'<input type="text" id="mdSvUrl" form="mdFuoriForm" placeholder="https://www.google.com/maps/@…" autocomplete="off" spellcheck="false" inputmode="url">'
+   +'<div class="md-comandi"><button type="button" class="btn btn-primary" id="mdUsaSv">'+ico('ok')+'<span>Usa questa inquadratura</span></button><span class="md-nota" id="mdSvLetto"></span></div>';
+  $('#mdApriSv').addEventListener('click',function(){var c=centro();
+   if(c[2]){if(typeof window.apriStreetView==='function')return window.apriStreetView();return nota('istituzionale','Metti prima la croce sul tetto in Mappa tetto.');}
+   /* come il tasto «Street View» di Mappa tetto, ma sulla croce salvata (non sul centro della mappa) */
+   window.open('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='+c[0].toFixed(6)+','+c[1].toFixed(6),'next-streetview','popup,width=1200,height=800');});
+  $('#mdSvUrl').addEventListener('input',function(){var v=this.value.trim(),r=leggiIndirizzoSv(v);
+   $('#mdSvLetto').textContent=v?(r?'Vista letta: premi «Usa questa inquadratura».':(/goo\.gl|maps\.app/.test(v)?'Questo è un link corto: copia invece l\'indirizzo in alto nella finestra di Street View.':'Questo indirizzo non è una vista di Street View.')):'';});
+  $('#mdSvUrl').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('#mdUsaSv').click();}});
+  $('#mdUsaSv').addEventListener('click',function(){var r=leggiIndirizzoSv($('#mdSvUrl').value);if(!r)return nota('istituzionale','Incolla prima l\'indirizzo della vista di Street View.');usaSv(r);});}
+ function centro(){var la=parseFloat(($('#map_lat')||{}).value),lo=parseFloat(($('#map_lon')||{}).value);return [la,lo,!(isFinite(la)&&isFinite(lo))];}
+ function usaSv(r){var b=$('#mdUsaSv'),u=$('#mdSvUrl').value.trim();if(!pid())return nota('istituzionale','Salva prima il preventivo.');b.disabled=true;
+  /* edge video-cliente v6 → video_street_view_salva: la edge rilegge l'indirizzo e salva SOLO i parametri in
+     lead_preventivi.vista_casa.street_view, poi rimette in coda le viste. Nessuna immagine, nessun invio.
+     La lettura qui (leggiIndirizzoSv) serve solo a dire subito al commerciale se l'indirizzo è giusto. */
+  chiama('POST',{azione:'street_view',pid:pid(),url:u})
+   .then(function(j){b.disabled=false;
+    if(j.ok){S.sv=j.street_view||r;$('#mdSvUrl').value='';$('#mdSvLetto').textContent='';S.scelte.frontale=null;
+     nota('istituzionale','Inquadratura salvata: il computer dello studio prepara le anteprime (qualche minuto).');S.firma='';aggiorna(true);}
+    else nota('istituzionale',j.errore||'Inquadratura non salvata.');});}
+ function nota(tv,t){var n=$('.md-nota[data-nota="'+tv+'"]');if(n)n.textContent=t||'';}
+
  /* ---------------- lettura dello stato */
- function aggiorna(forza){var nota=$('#mdNota');
-  if(!pid()||!croce()){nota.textContent='Salva il preventivo con la croce sul tetto (Mappa tetto): poi qui compaiono le miniature.';return;}
+ function aggiorna(forza){var nb=$('#mdNota');
+  if(!pid()||!croce()){nb.textContent='Salva il preventivo con la croce sul tetto (Mappa tetto): poi qui compaiono le viste della casa.';return;}
   chiama('GET').then(function(j){
-   if(!j.ok){nota.textContent=j.errore||'Servizio non raggiungibile.';return;}
-   /* A2: la firma guarda solo gli STATI (gli URL firmati cambiano a ogni lettura e non devono rifare le strisce) */
-   var fs=JSON.stringify([j.stato,j.agg,JSON.stringify(j.scelte),JSON.stringify(j.crediti)]);
+   if(!j.ok){nb.textContent=j.errore||'Servizio non raggiungibile.';return;}
+   var vi=(j.video||{}).istituzionale||{};
+   var fs=JSON.stringify([j.stato,j.agg,j.scelte,j.street_view||0,j.anteprime_istituzionale||0,j.firma_istituzionale||0,casaMancante(vi,j)]);
    var fv=JSON.stringify(j.video&&Object.keys(j.video).map(function(k){var v=j.video[k]||{};return k+':'+v.stato+':'+v.qualita+':'+(v.il||'')+':'+(v.errore||'');}))+':'+!!j.puo_confermare;
    var fd=JSON.stringify([j.dialogo&&j.dialogo.length,j.dialogo&&j.dialogo.map(function(m){return m.stato;}),j.regista&&j.regista.stato]);
-   S.dati=j;   /* S2: sempre i dati dell'ultima lettura */
-   var f=fs+fv+fd;if(f===S.firma&&!forza)return;var vecchia=S.f3||['','',''];S.firma=f;S.f3=[fs,fv,fd];
-   if(!S.sporco){S.scelte.tre_quarti_alto=(j.scelte||{}).tre_quarti_alto||null;S.scelte.frontale=(j.scelte||{}).frontale||null;S.piani=j.piani||null;}
-   ['tre_quarti_alto','frontale'].forEach(function(t){if(forza||fs!==vecchia[0])striscia(t,j);statoVideo(t,j);});
+   S.dati=j;var f=fs+fv+fd;if(f===S.firma&&!forza)return;var vecchia=S.f3||['','',''];S.firma=f;S.f3=[fs,fv,fd];
+   S.scelte.tre_quarti_alto=(j.scelte||{}).tre_quarti_alto||S.scelte.tre_quarti_alto;S.scelte.frontale=(j.scelte||{}).frontale||S.scelte.frontale;S.piani=j.piani||null;
+   if(forza||fs!==vecchia[0]){casaDallAlto(j);coppiaIstituzionale(j);}
+   ['video_3d','istituzionale'].forEach(function(tv){statoVideo(tv,j);});
    if(forza||fd!==vecchia[2])filo(j.dialogo||[],j.regista||{});
-   if(S.msg&&Date.now()-S.msgT<8000){nota.textContent=S.msg;}else nota.textContent=({in_coda:'Calcolo dei punti di ripresa in coda…',preso:'Il Mac sta preparando le miniature…',attesa_mac:'In attesa del Mac (spento o occupato).',errore:'Errore: '+(j.errore||'')}[j.stato])||(j.avvisi&&j.avvisi.length?j.avvisi.join(' · '):'');
-   pulsante();});}
- function striscia(t,j){var s=$('.md-striscia[data-tipo="'+t+'"]'),L=(j.candidati||{})[t]||[];
-  if(!L.length){s.innerHTML='<p class="md-vuoto">'+(j.stato==='pronte'?'Nessuna vista utile trovata qui: scrivilo nelle indicazioni.':'Le miniature arrivano appena il Mac le ha pronte.')+'</p>';return;}
-  s.innerHTML='';L.forEach(function(c){var f=document.createElement('figure');f.dataset.id=c.id;if(S.scelte[t]===c.id)f.className='on';
-   var dir=c.heading!=null?Math.round(c.heading)+'°':(c.bussola_camera!=null?Math.round(c.bussola_camera)+'°':'');
-   var fonte={google_3d_tiles:'Google 3D',street_view:'Street View',modello:'Modello'}[c.fonte_miniatura||c.fonte]||'';
-   f.innerHTML='<span class="md-spunta">'+(S.scelte[t]===c.id?'✓':'')+'</span>'+(fonte?'<span class="md-fonte">'+esc(fonte)+'</span>':'')
-    +'<img alt="Vista '+esc(c.id)+'"><figcaption><span>'+esc(c.id)+' · '+dir+(c.distanza_m?' · '+Math.round(c.distanza_m)+' m':'')+'</span><span>'+(c.punteggio!=null?Math.round(c.punteggio*100):'')+'</span></figcaption>';
-   if(c.img)metti(f.querySelector('img'),'i|'+t+'|'+c.id+'|'+(j.agg||''),'img='+encodeURIComponent(c.img)+'&c='+encodeURIComponent(c.id)+(c.img==='mini'?'&t='+t:''));
-   f.addEventListener('click',function(){var gia=S.scelte[t]===c.id;S.scelte[t]=gia?null:c.id;S.sporco=true;striscia(t,S.dati);pulsante();});
-   s.appendChild(f);});
-  var cr=$('.md-credito[data-credito="'+t+'"]');cr.textContent=((j.crediti||{})[t])||(t==='frontale'?'Immagini © Google Street View':'');}
- function statoVideo(t,j){var tv=t==='tre_quarti_alto'?'video_3d':'istituzionale',v=((j.video||{})[tv])||{stato:'nessuno'};
-  var p=$('.md-stato[data-stato="'+t+'"]');p.textContent=(v.qualita==='finale'&&STATI_HD[v.stato])||STATI[v.stato]||v.stato;p.dataset.tono=/approvata|inviato|pronto/.test(v.stato)?'ok':(v.stato==='errore'?'err':(/attesa|preso|in_coda|anteprima/.test(v.stato)?'att':''));
-  var a=$('.md-anteprima[data-anteprima="'+t+'"]'),h='',file=v.anteprima?'anteprima':(v.foglio?'foglio':(v.prova?'prova':''));
-  if(v.anteprima)h+='<video controls preload="none" hidden></video><button type="button" class="btn btn-secondary md-guarda">Guarda la bozza</button>';   /* D3: il video si scarica solo al clic */
+   nb.textContent=({in_coda:'Le viste della casa sono in coda sul computer dello studio…',preso:'Il computer dello studio sta preparando le viste della casa…',attesa_mac:'Il computer dello studio è spento o occupato: le viste arrivano appena è libero.',errore:'Le viste non sono riuscite: scrivilo nelle indicazioni o premi «Rifai le viste».'}[j.stato])||'';});}
+ function figura(c,tipo,img,on,cliccabile){var f=document.createElement('figure');if(on)f.className='on';
+  if(cliccabile){f.dataset.scegli=c.id;f.dataset.tipo=tipo;}
+  f.innerHTML='<img alt="'+esc(c.didascalia||'Vista della casa')+'"><figcaption>'+(cliccabile?'<span class="md-spunta">'+(on?'✓':'')+'</span>':'')+'<span>'+esc(c.didascalia||'Vista della casa')+'</span></figcaption>';
+  if(img)metti(f.querySelector('img'),img[0],img[1]);return f;}
+ function qsMini(t,c,j){return c.img?['i|'+t+'|'+c.id+'|'+(j.agg||''),'img='+encodeURIComponent(c.img)+'&c='+encodeURIComponent(c.id)+'&t='+t]:null;}
+ function casaDallAlto(j){var L=((j.candidati||{}).tre_quarti_alto)||[],g=$('#mdTreGrande'),box=$('.md-scelte[data-tipo="tre_quarti_alto"]');rilascia(g);rilascia(box);
+  if(!L.length){g.innerHTML='<div class="md-vuoto-img">'+(j.stato==='pronte'?'Nessuna vista dall\'alto trovata: scrivilo nelle indicazioni.':'La vista arriva appena il computer dello studio l\'ha preparata.')+'</div>';box.innerHTML='';return;}
+  var serie=L.filter(function(c){return c.regia_standard;})[0]||L[0];var sc=L.filter(function(c){return c.id===S.scelte.tre_quarti_alto;})[0]||serie;S.scelte.tre_quarti_alto=sc.id;
+  var nuova=figura(sc,'tre_quarti_alto',qsMini('tre_quarti_alto',sc,j),true,false);nuova.id='mdTreGrande';nuova.className='md-grande on';g.replaceWith(nuova);
+  box.innerHTML='';L.forEach(function(c){box.appendChild(figura(c,'tre_quarti_alto',qsMini('tre_quarti_alto',c,j),c.id===sc.id,true));});}
+ function riquadroVuoto(tit,testo){var f=document.createElement('figure');f.className='md-attesa';
+  f.innerHTML='<div class="md-vuoto-img">'+esc(testo)+'</div><figcaption><span>'+esc(tit)+'</span></figcaption>';return f;}
+ function coppiaIstituzionale(j){var conSv=anteprimeIst(j),box=$('#mdCoppia'),a=statoAnt(j),v=(j.video||{}).istituzionale||{};rilascia(box);
+  var T1='Come apparirà la casa',T2='La casa nel libro';box.innerHTML='';
+  var attesa=(a==='nessuna'||!j.street_view)?'Compare dopo «Usa questa inquadratura».':((casaMancante(v,j)&&a!=='pronte')?'Casa 3D non ancora ricostruita: avvisa lo studio.':
+   ((a==='errore'||a==='superate')?testoAnt(j):(!conSv.length?'Anteprima in preparazione sul computer dello studio…':'')));
+  firmaIst(j,!attesa);rifaiIst(j);
+  if(attesa){box.appendChild(riquadroVuoto(T1,attesa));box.appendChild(riquadroVuoto(T2,attesa));return;}
+  var sc=conSv.filter(function(c){return c.id===S.scelte.frontale;})[0]||conSv[Math.floor((conSv.length-1)/2)];S.scelte.frontale=sc.id;
+  box.appendChild(figura({id:sc.id,didascalia:T1},'frontale',qsMini('frontale',sc,j),false,false));
+  box.appendChild(sc.img_matita?figura({id:sc.id+'_m',didascalia:T2},'frontale',['m|'+sc.id+'|'+(j.agg||''),'img=matita&c='+encodeURIComponent(sc.id)+'&t=frontale'],false,false)
+   :riquadroVuoto(T2,'Il disegno a matita arriva tra poco.'));
+  if(conSv.length>1){var d=document.createElement('details');d.className='md-cambia md-varianti-box';
+   d.innerHTML='<summary>Cambia altezza della camera <small>(facoltativo)</small></summary><div class="md-varianti"></div>';
+   var w=d.querySelector('.md-varianti');conSv.forEach(function(c){w.appendChild(figura(c,'frontale',qsMini('frontale',c,j),c.id===sc.id,true));});
+   if(S.variantiAperte)d.open=true;d.addEventListener('toggle',function(){S.variantiAperte=d.open;});box.appendChild(d);}}
+ /* la riga che chiude il video (nome e indirizzo): la compone il sistema, qui si mostra soltanto */
+ function firmaIst(j,vedi){var f=$('#mdFirma');if(!f)return;
+  if(!vedi){f.hidden=true;return;}f.hidden=false;
+  f.innerHTML=j.firma_istituzionale?'Alla fine del video: <b>'+esc(j.firma_istituzionale)+'</b>':'<span class="md-manca">Manca il nome o l\'indirizzo del cliente: completalo in Contatto e salva il preventivo.</span>';}
+ function rifaiIst(j){var f=$('#mdRifaiIst');if(!f)return;
+  f.hidden=!(infoAnt(j).rifare&&/^(errore|superate)$/.test(statoAnt(j)));}
+ function scegliVista(tipo,id){S.scelte[tipo]=id;S.firma='';
+  if(tipo==='tre_quarti_alto')casaDallAlto(S.dati||{});else coppiaIstituzionale(S.dati||{});}
+ function statoVideo(tv,j){var v=((j.video||{})[tv])||{stato:'nessuno'},r=rigaStato(tv,v,j),p=$('.md-stato[data-stato="'+tv+'"]');
+  p.textContent=r[0];p.dataset.tono=r[1];
+  var bp=$('.md-prepara[data-video="'+tv+'"]'),occ=/^(in_coda|preso)$/.test(v.stato),manca=false,perche='';
+  if(tv==='istituzionale'){
+   if(casaMancante(v,j)&&statoAnt(j)!=='pronte'){manca=true;perche='La casa 3D non è ancora ricostruita: avvisa lo studio';}
+   else if(!j.street_view){manca=true;perche='Prima scegli la vista da Street View e premi «Usa questa inquadratura»';}
+   else if(/^(errore|superate)$/.test(statoAnt(j))){manca=true;perche=testoAnt(j);}
+   else if(!anteprimeIst(j).length||!S.scelte.frontale){manca=true;perche='Aspetta le anteprime della casa';}
+   else if(!j.firma_istituzionale){manca=true;perche='Manca il nome o l\'indirizzo del cliente';}}
+  bp.disabled=occ||manca||!((j.candidati||{})[tv==='video_3d'?'tre_quarti_alto':'frontale']||[]).length;
+  bp.title=manca?perche:(occ?'La bozza è già in preparazione':'Parte la bozza: la guarda e la conferma Sante');
+  var a=$('.md-anteprima[data-anteprima="'+tv+'"]'),h='',file=v.anteprima?'anteprima':(v.foglio?'foglio':(v.prova?'prova':''));
+  if(v.anteprima)h+='<video controls preload="none" hidden></video><button type="button" class="btn btn-secondary md-guarda">'+ico('occhio')+'<span>Guarda la bozza</span></button>';
   else if(file)h+='<img alt="Anteprima">';
-  if(h)h+='<small>'+esc(v.stato==='anteprima_pronta'?'Bozza a bassa qualità, visibile solo nel portale. L\'HD parte quando Sante la conferma.':(v.stato==='pronto_da_approvare'?'Video HD'+(v.whatsapp_mb?' · file per WhatsApp '+v.whatsapp_mb+' MB':'')+': si manda al cliente come file, mai come link.':''))+'</small>';
-  if(v.errore)h+='<small style="color:#B91C1C">'+esc(v.errore)+'</small>';
+  if(h)h+='<small>'+esc(v.stato==='anteprima_pronta'?'Bozza a bassa qualità, solo nel portale. L\'HD parte quando Sante la conferma.':(v.stato==='pronto_da_approvare'?'Video HD'+(v.whatsapp_mb?' · file per WhatsApp '+v.whatsapp_mb+' MB':'')+'. L\'invio al cliente lo decide Sante.':''))+'</small>';
   if(v.stato==='anteprima_pronta'&&j.puo_confermare)h+='<div class="md-comandi"><button type="button" class="btn btn-primary md-conferma" data-video="'+tv+'">Conferma la bozza e prepara l\'HD</button></div>';
-  if(v.stato==='pronto_da_approvare')h+='<div class="md-comandi"><button type="button" class="btn btn-secondary md-invia" disabled title="Spento: l\'invio al cliente su WhatsApp lo approva Sante a parte">Invia al cliente su WhatsApp</button><small>Spento: l\'invio al cliente lo approva Sante a parte.</small></div>';
-  /* A2: si rifà solo se cambia lo stato (le immagini e i video sono blob locali: non scadono) */
-  var chiave=v.stato+'|'+(v.il||'')+'|'+file+'|'+(v.errore||'')+'|'+!!j.puo_confermare;
-  if(a.dataset.s!==chiave){rilascia(a);a.innerHTML=h;a.dataset.s=chiave;a.dataset.tv=tv;a.dataset.fk='f|'+tv+'|'+file+'|'+(v.il||'');a.dataset.fq='file='+file+'&v='+tv;
+  var chiave=v.stato+'|'+(v.il||'')+'|'+file+'|'+!!j.puo_confermare;
+  if(a.dataset.s!==chiave){rilascia(a);a.innerHTML=h;a.dataset.s=chiave;a.dataset.fk='f|'+tv+'|'+file+'|'+(v.il||'');a.dataset.fq='file='+file+'&v='+tv;
    var m=a.querySelector('img');if(m)metti(m,a.dataset.fk,a.dataset.fq);}}
- function guarda(b){var a=b.closest('.md-anteprima'),vd=a.querySelector('video');b.disabled=true;b.textContent='Scarico la bozza…';
+ function guarda(b){var a=b.closest('.md-anteprima'),vd=a.querySelector('video');b.disabled=true;b.querySelector('span').textContent='Scarico la bozza…';
   carica(a.dataset.fk,a.dataset.fq).then(function(u){vd.src=u;vd.dataset.u=u;vd.dataset.k=pid()+'|'+a.dataset.fk;vd.hidden=false;b.remove();vd.play().catch(function(){});},
-   function(e){b.disabled=false;b.textContent=e===413?'File troppo grande per l\'anteprima':'Bozza non disponibile, riprova';});}
+   function(e){b.disabled=false;b.querySelector('span').textContent=e===413?'File troppo grande per l\'anteprima':'Bozza non disponibile, riprova';});}
  function conferma(tv,b){
   var vai=(typeof chiedi==='function')?chiedi('Confermare la bozza?','Si prepara il video HD e il file per WhatsApp. Al cliente non parte niente: l\'invio lo decidi a parte.','Conferma'):Promise.resolve(window.confirm('Confermare la bozza? Si prepara l\'HD; al cliente non parte niente.'));
   vai.then(function(si){if(!si)return;b.disabled=true;
-   chiama('POST',{azione:'conferma',pid:pid(),video:tv}).then(function(j){S.msg=j.ok?'Bozza confermata: si prepara l\'HD. Al cliente non parte niente.':(j.errore||'Conferma non riuscita');S.msgT=Date.now();$('#mdNota').textContent=S.msg;S.firma='';aggiorna(true);});});}
+   chiama('POST',{azione:'conferma',pid:pid(),video:tv}).then(function(j){nota(tv,j.ok?'Bozza confermata: si prepara l\'HD. Al cliente non parte niente.':(j.errore||'Conferma non riuscita'));S.firma='';aggiorna(true);});});}
+ /* «Prepara la bozza» del video render: la stessa azione «scegli» di prima (video_scegli), con tutte e due le scelte
+    correnti. Il video istituzionale ha la sua azione (edge v6 → video_istituzionale_prepara), che non tocca il render. */
+ function prepara(tv,b){b.disabled=true;
+  if(tv==='istituzionale')return chiama('POST',{azione:'istituzionale',pid:pid(),frontale:S.scelte.frontale})
+   .then(function(j){nota(tv,j.ok?'Bozza in preparazione sul computer dello studio. La guarda e la conferma Sante.':(j.errore||'Non partita, riprova'));
+    S.firma='';aggiorna(true);if(!j.ok)b.disabled=false;});
+  var d=S.dati||{},sc=d.scelte||{};
+  var tre=tv==='video_3d'?S.scelte.tre_quarti_alto:(sc.tre_quarti_alto||null);
+  var fr=null;   /* 145 #4658: il video render non manda la frontale; l'istituzionale passa da 'istituzionale' */
+  chiama('POST',{azione:'scegli',pid:pid(),tre_quarti_alto:tre,frontale:fr,piani:S.piani})
+  .then(function(j){nota(tv,j.ok?'Bozza in preparazione sul computer dello studio. La guarda e la conferma Sante.':(j.errore||'Non partita, riprova'));
+   S.firma='';aggiorna(true);if(!j.ok)b.disabled=false;});}
 
- function pulsante(){var b=$('#mdSalva'),ok=!!(S.scelte.tre_quarti_alto||S.scelte.frontale);b.disabled=!ok||!S.sporco;}
-
- /* ---------------- dialogo */
- function filo(L,reg){var f=$('#mdFilo');if(!L.length){f.innerHTML='<p class="md-vuoto">Ancora nessuna indicazione. Quello che scrivi o detti qui arriva a chi prepara i video, come in una sessione di lavoro.</p>';}
-  else{var giu=f.scrollTop+f.clientHeight>=f.scrollHeight-20;f.innerHTML=L.map(function(m){var per={tre_quarti_alto:'render',frontale:'istituzionale',entrambi:'tutti e due'}[m.per]||'';
-   return '<div class="md-msg '+(m.da_regista?'lui':'io')+'">'+esc(m.testo)+'<small>'+esc(m.chi||'')+' · '+esc(m.quando||'')+(per?' · '+per:'')+(m.miniatura?' · vista '+esc(m.miniatura):'')+(m.da_regista?'':' · '+esc({nuova:'da mandare',mandata:'mandata',presa:'letta da chi fa il video',fatta:'fatta'}[m.stato]||m.stato||''))+'</small></div>';}).join('');if(giu)f.scrollTop=f.scrollHeight;}
+ /* ---------------- dialogo (come prima) */
+ function filo(L,reg){var f=$('#mdFilo');if(!L.length){f.innerHTML='<p class="md-vuoto">Ancora nessuna indicazione. Quello che scrivi o detti qui arriva a chi prepara i video.</p>';}
+  else{var giu=f.scrollTop+f.clientHeight>=f.scrollHeight-20;f.innerHTML=L.map(function(m){var per={tre_quarti_alto:'video della casa',frontale:'istituzionale',entrambi:'tutti e due'}[m.per]||'';
+   return '<div class="md-msg '+(m.da_regista?'lui':'io')+'">'+esc(m.testo)+'<small>'+esc(m.chi||'')+' · '+esc(m.quando||'')+(per?' · '+per:'')+(m.da_regista?'':' · '+esc({nuova:'da mandare',mandata:'mandata',presa:'letta da chi fa il video',fatta:'fatta'}[m.stato]||m.stato||''))+'</small></div>';}).join('');if(giu)f.scrollTop=f.scrollHeight;}
   var r=$('#mdRegista'),M={inattivo:'',avviato:'Chi fa il video è al lavoro',in_attesa:'Avvio già in corso',non_configurato:'Attività cloud non ancora collegata'};
   r.textContent=reg.stato?(M.hasOwnProperty(reg.stato)?M[reg.stato]:reg.stato):'';r.hidden=!r.textContent;}
  function aggiungi(manda){var t=$('#mdTesto'),testo=(t.value||'').trim(),per=$('#mdPer').value;
@@ -3688,13 +3837,9 @@ document.addEventListener('DOMContentLoaded', function(){
    r.onend=function(){S.ascolto=null;b.classList.remove('rec');b.querySelector('span').textContent='Detta';};
    r.onerror=function(e){$('#mdNotaDialogo').textContent='Dettatura: '+(e.error==='not-allowed'?'permesso del microfono negato':e.error);};
    S.ascolto=r;b.classList.add('rec');b.querySelector('span').textContent='Ferma';r.start();});}
-
- /* ---------------- salvataggio */
- function salva(){var b=$('#mdSalva');b.disabled=true;
-  chiama('POST',{azione:'scegli',pid:pid(),tre_quarti_alto:S.scelte.tre_quarti_alto,frontale:S.scelte.frontale,piani:S.piani})
-  .then(function(j){S.msg=j.ok?'Scelta salvata: i video si preparano da soli. L\'invio al cliente lo decide Sante.':(j.errore||'Errore nel salvataggio');S.msgT=Date.now();$('#mdNota').textContent=S.msg;
-   if(j.ok){S.sporco=false;S.firma='';aggiorna(true);}else b.disabled=false;});}
- function ricalcola(){chiama('POST',{azione:'ricalcola',pid:pid(),piani:S.piani}).then(function(j){$('#mdNota').textContent=j.ok?'Miniature rimesse in coda.':(j.errore||'Non riuscito');S.firma='';aggiorna(true);});}
+ function ricalcola(b){b=(b&&b.nodeType===1)?b:null;if(b)b.disabled=true;
+  chiama('POST',{azione:'ricalcola',pid:pid(),piani:S.piani}).then(function(j){var t=j.ok?'Viste rimesse in coda.':(j.errore||'Non riuscito');$('#mdNota').textContent=t;
+   if(b){nota('istituzionale',t);b.disabled=false;}S.firma='';aggiorna(true);});}
 
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(costruisci,50);});else setTimeout(costruisci,50);
 })();
