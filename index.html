@@ -345,6 +345,17 @@ input.az-ok{border-color:#16a34a!important}input.az-ko{border-color:#dc2626!impo
 .lv-pann.dock .lv-sez{border-top:0;margin-top:0;flex:0 1 auto}.lv-pann.dock .lv-gt{font:700 10px Manrope,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#075E73;padding-top:4px}
 .lv-pann.dock .lv-sc{display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;max-width:560px}.lv-pann.dock .lv-sc .lv-pst{display:none}.lv-pann.dock .lv-pr span{width:auto;margin-right:2px}.lv-pann.dock .lv-pr{margin-top:3px}.lv-pann.dock .lv-sc{padding-bottom:0}.lv-pann.dock .lv-sc .lv-pv{display:none}.lv-pann.dock .lv-pst{margin-top:3px;max-width:300px;font-size:11px}.lv-pann.dock .lv-pn{font-size:11.5px}
 .lv-r3{grid-column:2;display:flex;align-items:center;gap:0;font-size:11.5px;color:var(--text-muted)}.lv-r3 span{margin-right:8px}.lv-r3 button{border:1px solid var(--border);background:var(--sf2);color:var(--text-muted);font:600 11.5px Manrope,sans-serif;padding:4px 7px;cursor:pointer;margin-left:-1px}.lv-r3 button:first-of-type{border-radius:7px 0 0 7px}.lv-r3 button:last-child{border-radius:0 7px 7px 0}.lv-r3 button.on{background:var(--acw);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.lv-pia{flex-wrap:wrap;row-gap:4px;white-space:nowrap;min-width:0}
+.lv-pia .lv-pl{display:inline-flex;align-items:center;gap:2px;margin-right:3px;font-size:10px}
+.lv-pia .lv-pl input{margin:0!important;width:13px!important;height:13px!important}
+.lv-pia .lv-pl i{opacity:.7;font-style:italic}
+.lv-seg{display:inline-flex}
+.lv-r3 .lv-seg button{display:inline-flex;align-items:center;gap:2px;font:600 10.5px Manrope,sans-serif;padding:3px 4px;margin-left:-1px}
+.lv-seg button svg{pointer-events:none;flex:none}
+.lv-pia select.lv-gr{flex:none;width:42px!important;min-width:42px!important;height:24px!important;padding:0 11px 0 3px!important;margin:0 0 0 3px!important;font-size:10.5px!important;background-position:right 2px center!important;background-size:10px 10px!important}
+.lv-ori select{width:auto!important;max-width:100%!important;height:24px!important;padding:0 18px 0 4px!important;background-position:right 4px center!important;margin:0 0 0 4px!important;font-size:10.5px!important;display:inline-block!important}
+.lv-piatto{display:inline-flex;align-items:center;gap:4px;transform:translate(-50%,-50%)}
+.lv-piatto svg path{stroke:#fff}
 .lv-r2{grid-column:2;font-size:11.5px;color:var(--text-muted)}.lv-r2 a{color:#dc2626}
 .lv-az{display:flex;flex-direction:column;gap:8px;margin-top:14px}.lv-az2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lv-az .btn{width:100%;justify-content:center}
 .lv-rev{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:7px 9px;margin-bottom:6px;font-size:12px}.lv-rev.on{border-color:var(--accent);background:var(--acw)}
@@ -1855,7 +1866,9 @@ document.addEventListener('DOMContentLoaded', function(){
    var a=R[ig],b=R[(ig+1)%n],th=Math.atan2(b[1]-a[1],b[0]-a[0]),k=1/Math.cos(f.tilt*Math.PI/180),inc=null;
    if(pianoDi(f)){k=1;if(f.posa==='inclinata'){var bt=[5,10,15,20,30].indexOf(+f.incl)>=0?+f.incl:10,hs=Math.max(10,90-LAT0-23.44)*Math.PI/180,mk=function(ew){return {b:bt*Math.PI/180,ew:ew,hs:hs,corr:.3,gradi:bt};};
     var thb=(function(){var li=-1,ll=-1;for(var q=0;q<n;q++){var L2=lato(R,q);if(L2>ll){ll=L2;li=q;}}var A0=R[li],B0=R[(li+1)%n],t=Math.atan2(B0[1]-A0[1],B0[0]-A0[0]);while(t>Math.PI/4)t-=Math.PI/2;while(t<=-Math.PI/4)t+=Math.PI/2;return t;})(),thDi=function(ori){return ori==='ew'?Math.PI/2:ori==='edi'?thb:ori==='edi_ew'?thb+Math.PI/2:0;},azK=function(ori){var a=ori==='edi'?Math.abs(thb):0;return 1-(1-Math.cos(a))*.15;},rotI=(f.rot&&f.rot!=='auto')?f.rot:'orizz';var prova=function(ori){var thx=thDi(ori),cc=Math.cos(-thx),ss=Math.sin(-thx),avx=function(p){return [p[0]*cc-p[1]*ss,p[0]*ss+p[1]*cc];};INC=mk(ori==='ew'||ori==='edi_ew');var g0=f.nessuno?{m:[]}:posaAuto(R.map(avx),ostacoliIn(R,avx),rotI);INC=null;var nm0=g0.m.length*((ori==='ew'||ori==='edi_ew')?2:1),kq=parseFloat(String((document.getElementById('fv_kwp')||{}).value||'').replace(',','.')),NV=kq>0&&WP>0?Math.ceil(kq*1000/WP):Infinity;return {n:nm0,kwh:Math.min(nm0,NV)*resaRel(bt,ori==='ew'||ori==='edi_ew')*azK(ori)};};
-    var ori=(['sud','ew','edi','edi_ew'].indexOf(f.ori)>=0)?f.ori:null;if(!ori){var best=null;['sud','edi','ew','edi_ew'].forEach(function(o){var A=prova(o);if(!best||A.kwh>best.kwh*1.0001)best={o:o,kwh:A.kwh};});ori=best.o;}
+    var ori=(['sud','ew','edi','edi_ew'].indexOf(f.ori)>=0)?f.ori:null;/* 2.0-145 (Sante 20/11): l'automatico sceglie fra le file verso sud (sud pieno o parallele all'edificio), che hanno il varco contro l'ombra;
+       l'est-ovest a coppie (moduli schiena contro schiena, solo corridoio) si usa solo se scelto a mano */
+    if(!ori){var best=null;['sud','edi'].forEach(function(o){var A=prova(o);if(!best||A.kwh>best.kwh*1.0001)best={o:o,kwh:A.kwh};});ori=best.o;}
     th=thDi(ori);inc=mk(ori==='ew'||ori==='edi_ew');inc.ori=ori;inc.az=ori==='ew'?-90:ori==='edi'?Math.round(-thb*180/Math.PI):ori==='edi_ew'?Math.round(-thb*180/Math.PI)-90:0;inc.rot=rotI;}}
    INC=inc;var c=Math.cos(-th),s=Math.sin(-th);
    var av=function(p){return [p[0]*c-p[1]*s,(p[0]*s+p[1]*c)*k];},ind=function(p){var x=p[0],y=p[1]/k,ci=Math.cos(th),si=Math.sin(th);return [x*ci-y*si,x*si+y*ci];};
@@ -1876,7 +1889,7 @@ document.addEventListener('DOMContentLoaded', function(){
       precedenti: {r,k} (cella) e {c} (punto sulla mappa). Un modulo aggiunto non valido in quella posizione non si conta. */
    var cella=function(r2,k2){return [g.ax+k2*g.PX,g.ay+r2*g.PY];},idx=function(x,y){return [Math.round((y-g.ay)/g.PY),Math.round((x-g.ax)/g.PX)];};
    var RET=[];mods.forEach(function(m){if(spento(m)<0)RET.push({x:m.cell[0],y:m.cell[1],w:m.cell[2],h:m.cell[3],id:m.key});});
-   var urta=function(x,y,w,h,salta){return RET.some(function(o){return o.id!==salta&&x<o.x+o.w+GAP-1e-4&&x+w>o.x-GAP+1e-4&&y<o.y+o.h+GAP-1e-4&&y+h>o.y-GAP+1e-4;});};
+   var GY=inc?Math.max(GAP,g.PY-g.h):GAP;var urta=function(x,y,w,h,salta){return RET.some(function(o){return o.id!==salta&&x<o.x+o.w+GAP-1e-4&&x+w>o.x-GAP+1e-4&&y<o.y+o.h+GY-1e-4&&y+h>o.y-GY+1e-4;});};
    var vale=function(x,y,salta){return valido(PR,box,x,y,g.w,g.h)&&!urta(x,y,g.w,g.h,salta);};
    var libera=function(r2,k2,salta){var c2=cella(r2,k2);return vale(c2[0],c2[1],salta);};
    var vicina=function(r2,k2,salta,px2,py2){var C=[];for(var dr=-1;dr<=1;dr++)for(var dk=-1;dk<=1;dk++){var c2=cella(r2+dr,k2+dk);C.push([r2+dr,k2+dk,px2==null?Math.abs(dr)+Math.abs(dk)*.9:Math.hypot(c2[0]+g.w/2-px2,c2[1]+g.h/2-py2)]);}
@@ -1886,14 +1899,15 @@ document.addEventListener('DOMContentLoaded', function(){
     if(ad.x===undefined&&ad.c){var cc=av(aM(ad.c)),t=idx(cc[0]-g.w/2,cc[1]-g.h/2),v0=vicina(t[0],t[1],null,cc[0],cc[1])||t,c0=cella(v0[0],v0[1]);ad.x=c0[0]-g.ax;ad.y=c0[1]-g.ay;delete ad.c;}
     var x=g.ax+ad.x,y=g.ay+ad.y,w=g.w,h=g.h;if(!vale(x,y,null)){SP.fuori=(SP.fuori||0)+1;return;}
     RET.push({x:x,y:y,w:w,h:h,id:'a'+ai});mods.push({q:[[x,y],[x+w,y],[x+w,y+h],[x,y+h]].map(ind),cell:[x,y,w,h],key:'a'+ai,agg:ai});});
-   SP.ax=g.ax;SP.ay=g.ay;SP.PX=g.PX;SP.PY=g.PY;SP.w=g.w;SP.h=g.h;SP.av=av;SP.ind=ind;SP.RET=RET;SP.vale=vale;SP.libera=libera;SP.vicina=vicina;SP.cella=cella;SP.idx=idx;SP.PR=PR;
+   SP.ax=g.ax;SP.ay=g.ay;SP.PX=g.PX;SP.PY=g.PY;SP.GY=GY;SP.w=g.w;SP.h=g.h;SP.av=av;SP.ind=ind;SP.RET=RET;SP.vale=vale;SP.libera=libera;SP.vicina=vicina;SP.cella=cella;SP.idx=idx;SP.PR=PR;
    var on=mods.filter(function(m){return spento(m)<0;});
    /* verso della falda: normale alla gronda (il lato esterno più lungo), verso l'esterno del tetto; con una falda sola, o se scelto a mano, verso l'esposizione indicata */
    var gi=-1,gl=-1;for(i=0;i<n;i++){if(sulBordo(R[i],R[(i+1)%n],fi))continue;var l2=lato(R,i);if(l2>gl){gl=l2;gi=i;}}if(gi<0)gi=ig;
    var ga=R[gi],gb=R[(gi+1)%n],nx=gb[1]-ga[1],ny=-(gb[0]-ga[0]),ll=Math.hypot(nx,ny);nx/=ll;ny/=ll;
    var D={sud:[0,-1],'sud-est':[.7,-.7],'sud-ovest':[-.7,-.7],est:[1,0],ovest:[-1,0],'nord-est':[.7,.7],'nord-ovest':[-.7,.7],nord:[0,1]}[f.espo];
    if(D){if(nx*D[0]+ny*D[1]<0){nx=-nx;ny=-ny;}}else if(RR.length>1){var cx2=(ga[0]+gb[0])/2-GX,cy2=(ga[1]+gb[1])/2-GY;if(nx*cx2+ny*cy2<0){nx=-nx;ny=-ny;}}else if(ny>0){nx=-nx;ny=-ny;}
-   var _inc=inc?{gradi:inc.gradi,ori:inc.ori,az:inc.az,passo:+g.PY.toFixed(2),varco:+Math.max(0,g.PY-g.h).toFixed(2)}:null;INC=null;return {inc:_inc,R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,sp:SP,dir:[nx,ny],az:inc?inc.az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));})),marg:MARG};});MARG=MARG0;}
+   if(inc){var ar=inc.az*Math.PI/180;nx=-Math.sin(ar);ny=-Math.cos(ar);}
+   var _inc=inc?{gradi:inc.gradi,ori:inc.ori,az:inc.az,ew:!!inc.ew,passo:+g.PY.toFixed(2),varco:+Math.max(0,g.PY-g.h).toFixed(2),ombra:inc.ew?0:+(g.h*Math.tan(inc.b)/Math.tan(inc.hs)).toFixed(3)}:null;INC=null;return {inc:_inc,piatto:pianoDi(f)&&!inc,R:R,orig:P,mods:mods,on:on,ind:ind,obs:obs,sp:SP,dir:[nx,ny],az:inc?inc.az:Math.round(Math.atan2(-nx,-ny)*180/Math.PI),areaF:area(R)*k,spost:Math.max.apply(0,P.map(function(q){return Math.min.apply(0,R.map(function(p){return Math.hypot(p[0]-q[0],p[1]-q[1]);}));})),marg:MARG};});MARG=MARG0;}
  /* ---------- spostamento della griglia con aggancio (Sante 28/10) ---------- */
  var SEL=-1;
  /* un modulo è spento se in ST.S c'è un punto della stessa falda entro 30 cm dal suo centro (chiavi «p:falda:xcm:ycm»); i moduli aggiunti hanno chiave propria */
@@ -1946,7 +1960,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var ok=function(ax,v,o){return ax==='x'?sp.vale(v,o,salta):sp.vale(o,v,salta);};
   /* confine preciso al millimetro fra una posizione buona e una no */
   var bordo=function(ax,buono,cattivo,o){for(var k=0;k<12;k++){var mid=(buono+cattivo)/2;if(ok(ax,mid,o))buono=mid;else cattivo=mid;}return buono;};
-  var causa=function(ax,v,o,dir){var x=ax==='x'?v+dir*.004:o,y=ax==='x'?o:v+dir*.004;if(valido(sp.PR,[],x,y,w,h)){var R=sp.RET.filter(function(r){return r.id!==salta&&x<r.x+r.w+GAP&&x+w>r.x-GAP&&y<r.y+r.h+GAP&&y+h>r.y-GAP;});if(R.length)return {tipo:'modulo',r:R[0]};}return {tipo:'margine'};};
+  var causa=function(ax,v,o,dir){var x=ax==='x'?v+dir*.004:o,y=ax==='x'?o:v+dir*.004;if(valido(sp.PR,[],x,y,w,h)){var GY=sp.GY||GAP,R=sp.RET.filter(function(r){return r.id!==salta&&x<r.x+r.w+GAP&&x+w>r.x-GAP&&y<r.y+r.h+GY&&y+h>r.y-GY;});if(R.length)return {tipo:'modulo',r:R[0]};}return {tipo:'margine'};};
   var aggancia=function(ax,raw,o,cur){
    if(cur&&Math.abs(raw-cur.v)<tol*1.5&&ok(ax,cur.v,o))return cur;
    var best=null,prova=function(c){if(!best||Math.abs(c.v-raw)<Math.abs(best.v-raw))best=c;};
@@ -2083,14 +2097,21 @@ document.addEventListener('DOMContentLoaded', function(){
  function disegna(){if(!MAP)return;calcola();LG.clearLayers();var sel=TOOL==='spegni';
   ESITO.forEach(function(e,fi){L.polygon(ST.F[fi].pts,{color:'#fff',weight:1.2,dashArray:'5 4',fill:false,interactive:false,opacity:.8}).addTo(LG);
    L.polygon(e.R.map(aLL),{color:fi===SEL?'#FF7A00':'#FFD400',weight:fi===SEL?4.2:2.4,fillColor:'#FFD400',fillOpacity:.08,interactive:false}).addTo(LG);
+   if(e.inc)struttura(e,'sotto');
    e.mods.forEach(function(m){var off=spento(m)>=0,agg=m.agg!==undefined,att=sel||TOOL==='aggiungi';var p=L.polygon(m.q.map(aLL),{color:off?'#fff':(agg?'#fff':'#075E73'),weight:off?1:(agg?1.6:.8),dashArray:off?'3 3':null,fillColor:off?'#fff':'#0AA6C9',fillOpacity:off?.06:.9,interactive:att,bubblingMouseEvents:false}).addTo(LG);
     var clic=function(){if(agg){memo();ST.A.splice(m.agg,1);disegna();return;}if(TOOL!=='spegni')return;memo();var i=spento(m);if(i>=0)ST.S.splice(i,1);else ST.S.push(m.key);disegna();};
     if(att&&!off)p.on('mousedown',function(ev){L.DomEvent.stop(ev);trascina(m,fi,ev,clic);});else if(att)p.on('click',clic);});
+   if(e.inc)struttura(e,'sopra');
    var g=e.R.reduce(function(s,p){return [s[0]+p[0]/e.R.length,s[1]+p[1]/e.R.length];},[0,0]);
    L.marker(aLL(g),{interactive:true,bubblingMouseEvents:false,keyboard:false,title:'Seleziona la falda '+(fi+1),icon:L.divIcon({className:'lv-num'+(fi===SEL?' lv-num-sel':''),html:String(fi+1),iconSize:[22,22]})}).on('mousedown',function(ev){L.DomEvent.stop(ev);trascinaFalda(fi,ev);}).on('click',function(ev){L.DomEvent.stop(ev);}).addTo(LG);
    /* verso della falda: freccia dalla falda verso dove scende, con esposizione e azimut */
-   var ang=Math.atan2(-e.dir[1],e.dir[0])*180/Math.PI,pf=aLL([g[0]+e.dir[0]*1.9,g[1]+e.dir[1]*1.9]);
-   L.marker(pf,{interactive:false,icon:L.divIcon({className:'lv-dir',iconSize:[0,0],html:'<div class="lv-frecc" style="transform:translate(-50%,-50%) rotate('+ang.toFixed(1)+'deg)"><svg width="46" height="16" viewBox="0 0 46 16"><path d="M2 8h34" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M30 2l12 6-12 6z" fill="#fff"/><path d="M2 8h34" stroke="#0F172A" stroke-width="1.4" stroke-linecap="round"/><path d="M31 4l8 4-8 4z" fill="#0F172A"/></svg></div><div class="lv-dirlab">'+nomeEspo(e.az)+' · '+(e.az>0?'+':'')+e.az+'°</div>'})}).addTo(LG);
+   /* 2.0-145 (Sante 20/11): tetto piano. Complanari: nessuna freccia, solo l'indicazione «piano». Su zavorre: la freccia segue l'azimut dei moduli
+      (lo stesso della riga della falda); est-ovest: due frecce opposte */
+   var frec=function(d,lab){var ang=Math.atan2(-d[1],d[0])*180/Math.PI,pf=aLL([g[0]+d[0]*1.9,g[1]+d[1]*1.9]);
+    L.marker(pf,{interactive:false,icon:L.divIcon({className:'lv-dir',iconSize:[0,0],html:'<div class="lv-frecc" style="transform:translate(-50%,-50%) rotate('+ang.toFixed(1)+'deg)"><svg width="46" height="16" viewBox="0 0 46 16"><path d="M2 8h34" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M30 2l12 6-12 6z" fill="#fff"/><path d="M2 8h34" stroke="#0F172A" stroke-width="1.4" stroke-linecap="round"/><path d="M31 4l8 4-8 4z" fill="#0F172A"/></svg></div>'+(lab?'<div class="lv-dirlab">'+lab+'</div>':'')})}).addTo(LG);};
+   if(e.piatto){L.marker(aLL([g[0],g[1]-1.6]),{interactive:false,icon:L.divIcon({className:'lv-dir',iconSize:[0,0],html:'<div class="lv-dirlab lv-piatto">'+ICO_C+'piano · 0°</div>'})}).addTo(LG);}
+   else if(e.inc&&e.inc.ew){frec(e.dir,'');frec([-e.dir[0],-e.dir[1]],espoTesto(e));}
+   else frec(e.dir,espoTesto(e));
    ST.F[fi].pts.forEach(function(ll,i){var mk=L.marker(ll,{draggable:true,icon:L.divIcon({className:'lv-vtx',iconSize:[14,14]})}).addTo(LG);
     mk.on('dragstart',function(){memo();});mk.on('drag',function(ev){var p=ev.target.getLatLng(),sn=aggancioPunto(aM([p.lat,p.lng]),fi);mostraAggancio(sn);ST.F[fi].pts[i]=sn?aLL(sn.p):[p.lat,p.lng];});
     mk.on('dragend',function(){mostraAggancio(null);disegna();});});});
@@ -2107,7 +2128,7 @@ document.addEventListener('DOMContentLoaded', function(){
  function nM(x){return x.toFixed(2).replace('.',',');}
  function misura(a,b){var A=aM(a),B=aM(b),dx=B[0]-A[0],dy=B[1]-A[1],p=Math.hypot(dx,dy),fi=-1;
   ESITO.forEach(function(e,i){if(fi<0&&dentro(A,e.R)&&dentro(B,e.R))fi=i;});if(fi<0)return {p:p,r:p,fi:-1};
-  var e=ESITO[fi],t=(+ST.F[fi].tilt||0)*Math.PI/180,s=dx*e.dir[0]+dy*e.dir[1],q=Math.sqrt(Math.max(0,p*p-s*s));return {p:p,r:Math.hypot(q,s/Math.cos(t)),fi:fi};}
+  var e=ESITO[fi],t=(pianoDi(ST.F[fi])?0:(+ST.F[fi].tilt||0))*Math.PI/180,s=dx*e.dir[0]+dy*e.dir[1],q=Math.sqrt(Math.max(0,p*p-s*s));return {p:p,r:Math.hypot(q,s/Math.cos(t)),fi:fi};}
  /* METV (Sante 13/11 02:27): «Sul tetto», «In pianta» (vista dall'alto) o «Entrambe»; fuori dalle falde c'è solo la pianta */
  function metTesto(r,p,dove,fuori){if(fuori===undefined)fuori=!dove;var d=dove?' <i>· '+dove+'</i>':'';
   if(fuori)return nM(p)+' m <i>in pianta</i>';
@@ -2121,19 +2142,44 @@ document.addEventListener('DOMContentLoaded', function(){
   if(MET.length>2)L.marker(MET[MET.length-1],{interactive:false,icon:L.divIcon({className:'lv-met lv-met-tot',iconSize:[0,0],html:'<div>Totale '+metTesto(tr,tp,'',MET.slice(1).every(function(x,i){return misura(MET[i],x).fi<0;}))+'</div>'})}).addTo(LG);}
  function aiuto(){$('#lvAiuto').textContent={falda:CORR.length?(CORR.length<3?'Continua a cliccare gli angoli della falda.':'Clicca il primo angolo (quello giallo grande) per chiudere la falda.'):'Clicca gli angoli della falda uno dopo l\'altro. Trascina un angolo giallo per correggerlo; la mappa si sposta trascinando.',
   camino:'Clicca dove c\'è un camino: toglie i moduli che tocca, con 25 cm di rispetto. Clicca un camino per toglierlo.',ostacolo:'Trascina un rettangolo sopra lucernario, antenna o abbaino: 40 cm di rispetto. Clicca un ostacolo per toglierlo.',metro:MET.length?(MET.length<2?'Clicca il punto d\'arrivo. Puoi continuare a cliccare per misurare una spezzata.':'Clicca altri punti per continuare, o di nuovo l\'ultimo punto per ricominciare. Dentro una falda la misura tiene conto della pendenza.'):'Clicca il punto di partenza e poi quello d\'arrivo: vedi la distanza. Dentro una falda è misurata sul tetto, con la pendenza; fuori è in pianta.',spegni:'Clicca un modulo per toglierlo o rimetterlo. Tienilo premuto e trascinalo per spostarlo: si aggancia ai margini e agli altri moduli.',aggiungi:'Clicca dove vuoi un modulo in più: si aggancia alla griglia, accostato agli altri. Tieni premuto un modulo e trascinalo: si aggancia al margine, agli altri moduli e ai loro allineamenti. Clicca un modulo aggiunto (bordo bianco) per toglierlo.'}[TOOL];}
+ /* 2.0-145: icone del modulo complanare e del modulo inclinato su zavorra (pulsanti della falda e indicazione «piano» sulla mappa) */
+ var ICO_C='<svg width="15" height="10" viewBox="0 0 18 12" aria-hidden="true"><path d="M1 11h16" stroke="currentColor" stroke-width="1.2"/><rect x="2" y="7.4" width="14" height="2.4" rx=".5" fill="#0AA6C9" stroke="#075E73" stroke-width=".6"/></svg>',
+  ICO_Z='<svg width="15" height="10" viewBox="0 0 18 12" aria-hidden="true"><path d="M1 11h16" stroke="currentColor" stroke-width="1.2"/><path d="M3 10.4V8.7L14.6 4.9v5.5z" fill="#334155"/><path d="M2.3 8.3 15.7 3.8" stroke="#0AA6C9" stroke-width="2.4" stroke-linecap="round"/><path d="M2.3 8.3 15.7 3.8" stroke="#075E73" stroke-width=".5"/></svg>';
+ function fAz(a){return (a>0?'+':'')+a+'°';}
+ function az2(a){return a<=0?a+180:a-180;}
+ /* esposizione e azimut come si scrivono sulla freccia, nella riga della falda e nella tavola: un solo testo per tutti */
+ function espoTesto(e){if(e.piatto)return 'piano · 0°';if(e.inc&&e.inc.ew)return nomeEspo(e.az)+' / '+nomeEspo(az2(e.az))+' · '+fAz(e.az)+' / '+fAz(az2(e.az));return nomeEspo(e.az)+' · '+fAz(e.az);}
+ function azTesto(e){if(e.piatto)return 'moduli in piano (0°): azimut indifferente';if(e.inc&&e.inc.ew)return 'azimut '+fAz(e.az)+' / '+fAz(az2(e.az));return 'azimut '+fAz(e.az);}
+ /* 2.0-145 (Sante 20/11): struttura su zavorre come Sun Ballast, disegnata per tratto di fila (non per modulo, per non appesantire la mappa).
+    sotto i moduli: l'ombra verso nord lunga quanto il varco del 21 dicembre; sopra: il bordo alto del modulo più chiaro e le zavorre,
+    blocchetti scuri sotto i lati corti, n+1 per tratto di n moduli. Est-ovest: il colmo chiaro al centro della coppia, nessuna ombra. */
+ function struttura(e,fase){var sp=e.sp;if(!sp||!sp.PY)return;var T=[],G={};
+  e.mods.forEach(function(m){if(spento(m)>=0)return;var c=m.cell,k=Math.round(c[1]*1000)+':'+Math.round(c[3]*1000);(G[k]=G[k]||[]).push(c);});
+  Object.keys(G).forEach(function(k){var run=null;G[k].sort(function(a,b){return a[0]-b[0];}).forEach(function(c){if(run&&c[0]-run.x1<=GAP+.03){run.j.push((run.x1+c[0])/2);run.x1=c[0]+c[2];}else{run={x0:c[0],x1:c[0]+c[2],y:c[1],h:c[3],j:[]};T.push(run);}});});
+  var pol=function(x0,y0,x1,y1,o){return L.polygon([[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(function(p){return aLL(e.ind(p));}),Object.assign({interactive:false,stroke:false},o)).addTo(LG);};
+  T.forEach(function(r){var y0=r.y,y1=r.y+r.h,alto=y1,lb=Math.min(.22*r.h,.25);
+   if(e.inc.ew){var rel=(((r.y-sp.ay)%sp.PY)+sp.PY)%sp.PY;if(r.h<sp.h-1e-6&&rel>r.h/2)alto=y0;}
+   if(fase==='sotto'){if(!e.inc.ew&&e.inc.ombra>0)pol(r.x0,y1,r.x1,y1+e.inc.ombra,{fillColor:'#0F172A',fillOpacity:.38});return;}
+   pol(r.x0+.03,alto===y1?y1-lb:y0,r.x1-.03,alto===y1?y1-.02:y0+lb,{fillColor:'#B9F1FC',fillOpacity:.9});
+   [r.x0].concat(r.j,[r.x1]).forEach(function(x){pol(x-.07,y0-.06,x+.07,y1+.06,{fillColor:'#1E293B',fillOpacity:.95,stroke:true,color:'#0F172A',weight:.6});});});}
+ /* 2.0-145 (Sante 20/11): il tetto piano non arriva da nessun dato (nel database non c'è quota né inclinazione rilevata): se una falda
+    del disegno è già segnata «Tetto piano», la falda nuova nasce piana con la stessa posa, gradi e orientamento */
+ function nuovaFalda(pts){var nf={pts:pts,espo:'auto',tilt:22},m=null;for(var i=ST.F.length-1;i>=0;i--)if(ST.F[i].piano===true){m=ST.F[i];break;}
+  if(m){nf.piano=true;['posa','incl','ori','rot'].forEach(function(k){if(m[k]!=null)nf[k]=m[k];});}return nf;}
  function nomeEspo(az){var a=Math.abs(az),w=az>0;return a<=22.5?'sud':a<=67.5?(w?'sud-ovest':'sud-est'):a<=112.5?(w?'ovest':'est'):a<=157.5?(w?'nord-ovest':'nord-est'):'nord';}
  function nMod(){return ESITO.reduce(function(s,e){return s+e.on.length;},0);}
  function riepilogo(){var nm=nMod();$('#lvM').textContent=nm;$('#lvP').innerHTML=(nm*WP/1000).toFixed(2).replace('.',',')+' <small>kWp</small>';
   $('#lvC').textContent=ST.O.filter(function(o){return o.t==='camino';}).length;$('#lvO').textContent=ST.O.filter(function(o){return o.t!=='camino';}).length;
   var Lf=$('#lvFalde');if(!ST.F.length){Lf.innerHTML='<div class="lv-vuoto">Nessuna falda: clicca gli angoli sulla mappa.</div>';}else{Lf.innerHTML='';
    ST.F.forEach(function(f,fi){var e=ESITO[fi],d=document.createElement('div');d.className='lv-falda';
-    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+nomeEspo(e.az)+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
+    d.innerHTML='<span class="lv-n">'+(fi+1)+'</span><div class="lv-r1"><select data-f="'+fi+'" data-k="espo" aria-label="Esposizione">'+'<option value="auto"'+(!f.espo||f.espo==='auto'?' selected':'')+'>auto · '+(e.piatto?'piano':e.inc&&e.inc.ew?'est-ovest':nomeEspo(e.az))+'</option>'+['sud','sud-est','sud-ovest','est','ovest','nord-est','nord-ovest','nord'].map(function(x){return '<option'+(x===f.espo?' selected':'')+'>'+x+'</option>';}).join('')+'</select><input type="number" min="0" max="60" value="'+f.tilt+'" data-f="'+fi+'" data-k="tilt" aria-label="Inclinazione">°<b>'+e.on.length+' moduli</b></div>'
      +'<div class="lv-r3"><span>Moduli</span>'+[['auto','Automatico'],['vert','Verticali'],['orizz','Orizzontali']].map(function(o){return '<button type="button" data-f="'+fi+'" data-rot="'+o[0]+'" class="'+((f.rot||'auto')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')+'</div>'
-     +'<div class="lv-r3"><label style="display:inline-flex;align-items:center;gap:4px;margin-right:6px"><input type="checkbox" data-f="'+fi+'" data-k="piano"'+(pianoDi(f)?' checked':'')+'>Tetto piano'+(f.piano==null&&pianoDi(f)?' <i style="opacity:.7">(rilevato)</i>':'')+'</label>'
-     +(pianoDi(f)?[['complanare','Complanari'],['inclinata','Inclinati su zavorre']].map(function(o){return '<button type="button" data-f="'+fi+'" data-posa="'+o[0]+'" class="'+((f.posa||'complanare')===o[0]?'on':'')+'">'+o[1]+'</button>';}).join('')
-       +(f.posa==='inclinata'?' <select data-f="'+fi+'" data-k="incl" aria-label="Inclinazione dei moduli">'+[5,10,15,20,30].map(function(x){return '<option value="'+x+'"'+(([5,10,15,20,30].indexOf(+f.incl)>=0?+f.incl:10)===x?' selected':'')+'>'+x+'°</option>';}).join('')+'</select> <select data-f="'+fi+'" data-k="ori" aria-label="Orientamento">'+[['auto','orientamento automatico'],['sud','verso sud pieno'],['edi','verso sud, file parallele all\'edificio'],['ew','est-ovest'],['edi_ew','est-ovest parallelo all\'edificio']].map(function(o){return '<option value="'+o[0]+'"'+((f.ori||'auto')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>':''):'')+'</div>'
-     +(e.inc?'<div class="lv-r2">Su zavorre a '+e.inc.gradi+'° · '+((e.inc.ori==='ew'||e.inc.ori==='edi_ew')?'est-ovest'+(e.inc.ori==='edi_ew'?' parallelo all\'edificio':'')+', file a coppie con corridoio di '+String(e.inc.varco).replace('.',',')+' m':(e.inc.ori==='edi'?'verso sud con file parallele all\'edificio (azimut '+e.inc.az+'°)':'verso sud pieno')+', una fila ogni '+String(e.inc.passo).replace('.',',')+' m (varco di '+String(e.inc.varco).replace('.',',')+' m contro l\'ombra del 21 dicembre)')+((f.ori||'auto')==='auto'?' · orientamento scelto in automatico':'')+'</div>':'')
-     +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · azimut '+(e.az>0?'+':'')+e.az+'°'+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
+     +'<div class="lv-r3 lv-pia"><label class="lv-pl"><input type="checkbox" data-f="'+fi+'" data-k="piano"'+(pianoDi(f)?' checked':'')+'>Tetto piano'+(f.piano==null&&pianoDi(f)?' <i>(rilevato)</i>':'')+'</label>'
+     +(pianoDi(f)?'<span class="lv-seg">'+[['complanare','Complanare',ICO_C,'Moduli complanari, appoggiati in piano'],['inclinata','Zavorra',ICO_Z,'Moduli inclinati su zavorre']].map(function(o){return '<button type="button" data-f="'+fi+'" data-posa="'+o[0]+'" title="'+o[3]+'" class="'+((f.posa||'complanare')===o[0]?'on':'')+'">'+o[2]+o[1]+'</button>';}).join('')+'</span>'
+       +(f.posa==='inclinata'?'<select class="lv-gr" data-f="'+fi+'" data-k="incl" aria-label="Inclinazione dei moduli" title="Inclinazione dei moduli">'+[5,10,15,20,30].map(function(x){return '<option value="'+x+'"'+(([5,10,15,20,30].indexOf(+f.incl)>=0?+f.incl:10)===x?' selected':'')+'>'+x+'°</option>';}).join('')+'</select>':''):'')+'</div>'
+     +(pianoDi(f)&&f.posa==='inclinata'?'<div class="lv-r2 lv-ori">Orientamento <select data-f="'+fi+'" data-k="ori" aria-label="Orientamento">'+[['auto','automatico (verso sud)'],['sud','sud pieno'],['edi','sud, file parallele all\'edificio'],['ew','est-ovest'],['edi_ew','est-ovest parallelo all\'edificio']].map(function(o){return '<option value="'+o[0]+'"'+((f.ori||'auto')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>':'')
+     +(e.inc?'<div class="lv-r2">Su zavorre a '+e.inc.gradi+'° · '+((e.inc.ori==='ew'||e.inc.ori==='edi_ew')?'est-ovest'+(e.inc.ori==='edi_ew'?' parallelo all\'edificio':'')+' (azimut '+fAz(e.inc.az)+' / '+fAz(az2(e.inc.az))+'), file a coppie schiena contro schiena con corridoio di '+String(e.inc.varco).replace('.',',')+' m':(e.inc.ori==='edi'?'verso sud con file parallele all\'edificio (azimut '+fAz(e.inc.az)+')':'verso sud pieno')+', una fila ogni '+String(e.inc.passo).replace('.',',')+' m (varco di '+String(e.inc.varco).replace('.',',')+' m contro l\'ombra del 21 dicembre)')+((f.ori||'auto')==='auto'?' · orientamento scelto in automatico':'')+'</div>':'')
+     +'<div class="lv-r2">'+Math.round(e.areaF)+' m² di falda · '+azTesto(e)+(e.spost>0.02?' · raddrizzata di '+Math.round(e.spost*100)+' cm':'')+' · <a href="#" data-del="'+fi+'">elimina</a></div>';Lf.appendChild(d);});}
   mostraModulo();pannello();$('#lvTav').disabled=!nm;$('#lvSalva').disabled=!nm||(APERTA>=0&&!MOD);$('#lvNuova').disabled=!nm;boxB();}
  /* ---------- revisioni ---------- */
  /* revisioni su Supabase (tabella layout_veloce) attraverso la funzione layout-veloce, con la password della regia */
@@ -2195,7 +2241,7 @@ document.addEventListener('DOMContentLoaded', function(){
   for(i=0;i<6;i++)o+='<text x="'+(sx+i*seg*sc)+'" y="'+(sy-1.3)+'" font-size="2.4" text-anchor="middle" '+F+'>'+i*seg+'</text>';o+='<text x="'+(sx+5*seg*sc+3)+'" y="'+(sy+1.4)+'" font-size="2.4" '+F+'>m · scala 1:'+S+'</text>';
   var cols=[["Falda",11],["Esposizione",19],["Azimut",14],["Inclin.",12],["Superficie",17],["Moduli",20],["kWp",14]],tx0=18,ty0=FR[1]+FR[3]-14-E.length*5,xx=tx0;o+='<g '+F+' font-size="2.2">';
   cols.forEach(function(cw){o+='<rect x="'+xx+'" y="'+ty0+'" width="'+cw[1]+'" height="5" fill="#075E73"/><text x="'+(xx+1.5)+'" y="'+(ty0+3.5)+'" fill="#fff" font-weight="bold">'+cw[0]+'</text>';xx+=cw[1];});
-  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),nomeEspo(e.az),(e.az>0?'+':'')+e.az+'°',ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' mq',e.sp&&e.sp.esclusa?'non utilizzata':String(e.on.length),e.sp&&e.sp.esclusa?'—':f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
+  E.forEach(function(e,k){var yy=ty0+5+k*5;xx=tx0;[String(EI[k]+1),e.piatto?'piano':e.inc&&e.inc.ew?'est-ovest':nomeEspo(e.az),e.piatto?'—':e.inc&&e.inc.ew?fAz(e.az)+'/'+fAz(az2(e.az)):fAz(e.az),e.piatto?'0°':e.inc?e.inc.gradi+'° zav.':ST.F[EI[k]].tilt+'°',Math.round(e.areaF)+' mq',e.sp&&e.sp.esclusa?'non utilizzata':String(e.on.length),e.sp&&e.sp.esclusa?'—':f2(e.on.length*WP/1000)].forEach(function(x,i){o+='<rect x="'+xx+'" y="'+yy+'" width="'+cols[i][1]+'" height="5" fill="#ECFAFD" stroke="#cbd5e1" stroke-width=".2"/><text x="'+(xx+1.5)+'" y="'+(yy+3.5)+'">'+x+'</text>';xx+=cols[i][1];});});
   o+='<text x="'+tx0+'" y="'+(ty0+5+E.length*5+3.4)+'" fill="#6b7280" font-size="1.8">Azimut: 0° = sud, positivo verso ovest</text></g>';
   /* cartiglio */
   var X0=217,Wc=W-12-X0,Y0=12,Hc=186,c='<rect x="'+X0+'" y="'+Y0+'" width="'+Wc+'" height="'+Hc+'" fill="none" stroke="#111" stroke-width=".6"/>';
@@ -2238,8 +2284,9 @@ document.addEventListener('DOMContentLoaded', function(){
   $('#lvRadd').addEventListener('change',function(){modificato(true);disegna();});
   $('#lvAnnulla').addEventListener('click',function(){var s=STORIA.pop();if(!s)return;ST=JSON.parse(s);if(!ST.A)ST.A=[];CORR=[];disegna();});
   $('#lvSvuota').addEventListener('click',async function(){if(!await chiedi('Ricomincia','Tolgo tutte le falde, i camini e gli ostacoli disegnati?','Ricomincia',true))return;memo();ST={F:[],O:[],S:[],A:[]};CORR=[];disegna();});
-  $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else if(t.dataset.k==='nessuno'){if(t.checked)f.nessuno=true;else delete f.nessuno;}else if(t.dataset.k==='piano'){f.piano=!!t.checked;}else if(t.dataset.k==='incl'){f.incl=+t.value;}else if(t.dataset.k==='ori'){f.ori=t.value;}else f.espo=t.value;disegna();});
-  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.posa!==undefined){memo();ST.F[+t.dataset.f].posa=t.dataset.posa;disegna();return;}if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.bt!==undefined){muovi(+t.dataset.f,t.dataset.bt,0,true);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){var b2=JSON.parse(JSON.stringify(a));b2.fi=a.fi>df?a.fi-1:a.fi;return b2;});disegna();});
+  $('#lvFalde').addEventListener('change',function(ev){var t=ev.target;if(t.dataset.f===undefined)return;memo();var f=ST.F[+t.dataset.f];if(t.dataset.k==='tilt')f.tilt=Math.max(0,Math.min(60,+t.value||0));else if(t.dataset.k==='nessuno'){if(t.checked)f.nessuno=true;else delete f.nessuno;}else if(t.dataset.k==='piano'){f.piano=!!t.checked;if(f.piano){var al=[];ST.F.forEach(function(o,oi){if(o!==f&&o.piano==null&&+o.tilt===22&&(!o.espo||o.espo==='auto')){o.piano=true;['posa','incl','ori'].forEach(function(k){if(f[k]!=null)o[k]=f[k];});al.push(oi+1);}});if(al.length)setTimeout(function(){avviso('Segnate come tetto piano anche '+(al.length===1?'la falda ':'le falde ')+al.join(', ')+': avevano ancora i valori di partenza.');},60);}}else if(t.dataset.k==='incl'){f.incl=+t.value;}else if(t.dataset.k==='ori'){f.ori=t.value;}else f.espo=t.value;disegna();});
+  $('#lvFalde').addEventListener('click',async function(ev){var t=ev.target;if(t.dataset.posa===undefined&&t.closest){var tb=t.closest('[data-posa]');if(tb)t=tb;}
+  if(t.dataset.posa!==undefined){memo();var f0=ST.F[+t.dataset.f];f0.posa=t.dataset.posa;ST.F.forEach(function(o){if(o!==f0&&o.piano===true&&o.posa==null){o.posa=f0.posa;if(o.incl==null&&f0.incl!=null)o.incl=f0.incl;}});disegna();return;}if(t.dataset.rot!==undefined){memo();ST.F[+t.dataset.f].rot=t.dataset.rot;disegna();return;}if(t.dataset.mv!==undefined){muovi(+t.dataset.f,t.dataset.mv,ev.shiftKey?.25:.05);return;}if(t.dataset.bt!==undefined){muovi(+t.dataset.f,t.dataset.bt,0,true);return;}if(t.dataset.del===undefined)return;ev.preventDefault();if(!await chiedi('Elimina la falda','Tolgo la falda <b>'+(+t.dataset.del+1)+'</b> con i suoi moduli?','Elimina',true))return;memo();var df=+t.dataset.del;ST.F.splice(df,1);ST.A=ST.A.filter(function(a){return a.fi!==df;}).map(function(a){var b2=JSON.parse(JSON.stringify(a));b2.fi=a.fi>df?a.fi-1:a.fi;return b2;});disegna();});
   $('#lvChiudi').addEventListener('click',async function(){if(MOD&&nMod()&&!await chiedi('Chiudi il layout veloce','Ci sono modifiche non salvate. Chiudo lo stesso?','Chiudi senza salvare',true))return;OV.classList.remove('on');document.body.style.overflow='';});
   async function tasto(b,nuova){var t=b.textContent;b.disabled=true;b.textContent='Salvo…';try{await salvaRev(nuova);}catch(e){await avvisa('errore','Revisione non salvata',esc(e.message||e));}finally{b.textContent=t;riepilogo();}}
   $('#lvSalva').addEventListener('click',function(){tasto(this,false);});
@@ -2281,7 +2328,7 @@ document.addEventListener('DOMContentLoaded', function(){
    L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+TOK,{attribution:'© Mapbox',maxZoom:22,tileSize:512,zoomOffset:-1}).addTo(MAP);LG=L.layerGroup().addTo(MAP);window.__lvMap=MAP;costruisciPann();
    MAP.on('click',function(ev){var ll=[ev.latlng.lat,ev.latlng.lng];
     if(TOOL==='metro'){if(MET.length){var pl=MAP.latLngToContainerPoint(MET[MET.length-1]);if(pl.distanceTo(ev.containerPoint)<10){MET=[];disegna();return;}}MET.push(ll);disegna();return;}
-    if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push({pts:CORR,espo:'auto',tilt:22});CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
+    if(TOOL==='falda'){if(CORR.length>=3){var p0=MAP.latLngToContainerPoint(CORR[0]);if(p0.distanceTo(ev.containerPoint)<14){memo();ST.F.push(nuovaFalda(CORR));CORR=[];disegna();return;}}CORR.push(ll);disegna();return;}
     if(TOOL==='aggiungi'){var m2=aM(ll),fi2=-1,dmin=1.2;ESITO.forEach(function(e,i){if(dentro(m2,e.R))fi2=i;});
      if(fi2<0)ESITO.forEach(function(e,i){var d=Math.min.apply(0,e.R.map(function(p,k){return dseg(m2,p,e.R[(k+1)%e.R.length]);}));if(d<dmin){dmin=d;fi2=i;}});
      if(fi2<0){avviso('Clicca dentro una falda per aggiungere un modulo.');return;}SEL=fi2;aggiungi(fi2,m2);return;}
